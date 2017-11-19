@@ -28,6 +28,7 @@
 								<option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.exe.debug.option.optimization.level.2137941490" name="Optimization Level" superClass="gnu.c.compiler.exe.debug.option.optimization.level" useByScannerDiscovery="false" valueType="enumerated"/>
 								<option id="gnu.c.compiler.exe.debug.option.debugging.level.481518663" name="Debug Level" superClass="gnu.c.compiler.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.1741356929" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+									<listOptionValue builtIn="false" value="/usr/include/libxml2"/>
 									<listOptionValue builtIn="false" value="/usr/include/gtk-3.0"/>
 									<listOptionValue builtIn="false" value="/usr/include/at-spi2-atk/2.0"/>
 									<listOptionValue builtIn="false" value="/usr/include/at-spi-2.0"/>
@@ -135,6 +136,7 @@
 						<entry flags="BUILTIN" kind="includePath" name="/usr/include/gdk-pixbuf-2.0"/>
 						<entry flags="BUILTIN" kind="includePath" name="/usr/include/glib-2.0"/>
 						<entry flags="BUILTIN" kind="includePath" name="/usr/lib/x86_64-linux-gnu/glib-2.0/include"/>
+						<entry flags="BUILTIN" kind="includePath" name="/usr/include/libxml2"/>
 					</externalSetting>
 				</externalSettings>
 			</storageModule>
