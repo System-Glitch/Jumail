@@ -6,6 +6,7 @@
  *  Description : The main file
  */
 #include "MainWindow.h"
+#include "mailing.h"
 
 
 int main(int argc, char** argv) {
