@@ -11,7 +11,7 @@
 #include<gtk/gtk.h>
 
 /**
- * Starts the program. Return the frame exit code.
+ * Starts the program. Returns the frame exit code.
  */
 int main_window_start(int argc, char** argv);
 
