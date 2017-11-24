@@ -8,6 +8,8 @@
 #include "MainWindow.h"
 #include "mailing.h"
 
+#include <stdlib.h>
+#include <time.h>
 
 int main(int argc, char** argv) {
 	return main_window_start(argc, argv);

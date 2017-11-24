@@ -6,6 +6,7 @@
  *  Description : Mailing utilities
  */
 #include <stdlib.h>
+#include <time.h>
 #include "mailing.h"
 
 static const char *payload_text[] = {
@@ -26,6 +27,26 @@ static const char *payload_text[] = {
 struct upload_status {
 	int lines_read;
 };
+
+static char * get_date() {
+	char * date = malloc(100);
+	time_t now = time(NULL);
+	struct tm *t = localtime(&now);
+
+	strftime(date, sizeof(date)-1, "Date: %a, %d %h %Y %H:%M:%S %z\r\n", t);
+	return date;
+}
+
+static void enable_ssl(CURL *curl) {
+#ifdef SKIP_PEER_VERIFICATION
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+#endif
+
+#ifdef SKIP_HOSTNAME_VERIFICATION
+		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+#endif
+		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+}
 
 static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp)
 {
@@ -85,13 +106,6 @@ int ssl_fetch() {
 
 
 		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
-#ifdef SKIP_PEER_VERIFICATION
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-#endif
-
-#ifdef SKIP_HOSTNAME_VERIFICATION
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-#endif
 
 		/* Set username and password */
 		curl_easy_setopt(curl, CURLOPT_USERNAME, "jumailimap@gmail.com");
@@ -100,7 +114,7 @@ int ssl_fetch() {
 																			//INBOX?ALL returns * SEARCH 1 2 3 4
 		curl_easy_setopt(curl, CURLOPT_URL,"imaps://imap.gmail.com:993/"); // INBOX/;UID=x
 
-		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+		enable_ssl(curl);
 
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
 
@@ -147,15 +161,7 @@ int ssl_append() {
 
 		curl_easy_setopt(curl, CURLOPT_URL,"imaps://imap.gmail.com:993/INBOX");
 
-		#ifdef SKIP_PEER_VERIFICATION
-				curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-		#endif
-
-		#ifdef SKIP_HOSTNAME_VERIFICATION
-				curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-		#endif
-
-		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+		enable_ssl(curl);
 
 		curl_easy_setopt(curl, CURLOPT_READFUNCTION, payload_source);
 		curl_easy_setopt(curl, CURLOPT_READDATA, &upload_ctx);
