@@ -5,8 +5,6 @@
  *  Date : 23/11/2017
  *  Description : Mailing utilities
  */
-#include <stdlib.h>
-#include <time.h>
 #include "mailing.h"
 
 struct upload_status {
@@ -61,13 +59,13 @@ static size_t payload_source(void *ptr, size_t size, size_t nmemb, void *userp)
  * Don't forget to free it.
  */
 static char * get_date() {
-	char * date = malloc(40);
+	char * date = malloc(80);
 	if(date == NULL) return NULL;
 
 	time_t now = time(NULL);
 	struct tm *t = localtime(&now);
 
-	strftime(date, 39, "Date: %a, %d %h %Y %H:%M:%S %z\r\n", t);
+	strftime(date, 79, "Date: %a, %d %m %Y %H:%M:%S %z\r\n", t); //Linux : "Date: %a, %d %h %Y %H:%M:%S %z\r\n"
 	return date;
 }
 
@@ -313,61 +311,6 @@ static char * generate_address(char * domain, char * protocol) {
 	return address;
 }
 
-//Gets GMAIL folders
-int ssl_fetch() {
-	CURL *curl;
-	CURLcode res = CURLE_OK;
-	struct MemoryStruct chunk;
-	struct MemoryStruct headers;
-
-	chunk.memory = malloc(1);  /* will be grown as needed by the realloc above */
-	chunk.size = 0;
-	headers.memory = malloc(1);  /* will be grown as needed by the realloc above */
-	headers.size = 0;
-
-	curl = curl_easy_init();
-	if(curl) {
-
-
-		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
-
-		/* Set username and password */
-		curl_easy_setopt(curl, CURLOPT_USERNAME, "jumailimap@gmail.com");
-		curl_easy_setopt(curl, CURLOPT_PASSWORD, "azerty12");
-
-		//INBOX?ALL returns * SEARCH 1 2 3 4
-		curl_easy_setopt(curl, CURLOPT_URL,"imaps://imap.gmail.com:993/"); // INBOX/;UID=x
-
-		enable_ssl(curl);
-
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
-
-		/* we pass our 'chunk' struct to the callback function */
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
-		curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void *)&headers);
-		curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-
-		/* Perform the fetch */
-		res = curl_easy_perform(curl);
-
-		/* Check for errors */
-		if(res != CURLE_OK)
-			fprintf(stderr, "curl_easy_perform() failed: %s\n",
-					curl_easy_strerror(res));
-		else {
-			fputs(headers.memory, stdout);
-			fputs(chunk.memory, stdout);
-		}
-
-		free(headers.memory);
-		free(chunk.memory);
-		/* Always cleanup */
-		curl_easy_cleanup(curl);
-	}
-
-	return (int)res;
-}
-
 //SENDING A MAIL
 /*
  	char * id = generate_id();
@@ -392,7 +335,7 @@ int ssl_fetch() {
 	send_mail_ssl("jumailimap@gmail.com", "azerty12", "jeremy.la@outlook.fr", "smtp.gmail.com", (const char **)mail);
 	free_header(header);
 	free_mail(mail);
-*/
+ */
 
 /**
  * Sends a mail generated with get_mail using SMTP.
@@ -452,4 +395,208 @@ int send_mail_ssl(char * username, char * password, char * to, char * domain, co
 	}
 
 	return (int)res;
+}
+
+/**
+ * Parses a String result of the FETCH operation (IMAP) into an integer array containing all the UIDs.
+ */
+static struct ParsedSearch parse_search(char * answer) {
+	struct ParsedSearch search;
+	char * sub;
+	char * end;
+	int * result = NULL;
+	int size, len, len2, i, index;
+
+	search.uids = NULL;
+	search.size = 0;
+
+	size = strcount(answer, ' ') - 1;
+	len = strlen(answer);
+	len2 = len - 9;
+	i = 0;
+
+	if(size > 0) {
+		result = malloc(size*sizeof(int));
+		sub = malloc(len2);
+		if(result == NULL || sub == NULL) {
+			fprintf(stderr, "Memory allocation error when trying to parse FETCH result.\n");
+			return search;
+		}
+		strcpy(sub, answer+9);
+
+		end = sub;
+		index = 0;
+		while(*end) {
+			int n = strtol(sub+index, &end, 10);
+			result[i++] = n;
+			while (*end == ' ') {
+				end++;
+			}
+			if(*end == '\r' || *end == '\n') break;
+			index = end - sub;
+		}
+		free(sub);
+	}
+
+	search.uids = result;
+	search.size = size;
+
+	return search;
+}
+
+int ssl_fetch(char * username, char * password, char * domain, char * mailbox) {
+	CURL *curl;
+	CURLcode res = CURLE_OK;
+	struct MemoryStruct chunk;
+	struct ParsedSearch search;
+	int mailboxlen = 0;
+	char * address;
+	char * full_address;
+
+	address = generate_address(domain, "imaps");
+	if(address == NULL) {
+		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		return -1;
+	}
+	if(mailbox == NULL) {
+		fprintf(stderr, "mailbox is not nullable.\n");
+		return -1;
+	}
+	mailboxlen = strlen(mailbox);
+	full_address = malloc(strlen(address+mailboxlen+4+1));
+	if(full_address == NULL) {
+		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		return -1;
+	}
+	strcpy(full_address, address);
+	free(address);
+	strcat(full_address, mailbox);
+	strcat(full_address, "?ALL");
+
+	chunk.memory = malloc(1);
+	chunk.size = 0;
+
+	curl = curl_easy_init();
+	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
+		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
+		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+		curl_easy_setopt(curl, CURLOPT_URL,full_address);
+
+		enable_ssl(curl);
+
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+		curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+		res = curl_easy_perform(curl);
+
+		/* Check for errors */
+		if(res != CURLE_OK)
+			fprintf(stderr, "curl_easy_perform() failed: %s\n",
+					curl_easy_strerror(res));
+		else {
+			search = parse_search(chunk.memory);
+			for(int i = 0 ; i < search.size ; i++) {
+				ssl_get_mail(username,password,domain,mailbox,search.uids[i]);
+			}
+			free(search.uids);
+		}
+
+		free(chunk.memory);
+		/* Always cleanup */
+		curl_easy_cleanup(curl);
+	}
+	free(full_address);
+
+	return (int)res;
+}
+
+int ssl_get_mail(char * username, char * password, char * domain, char * mailbox, int uid) {
+	CURL *curl;
+	CURLcode res = CURLE_OK;
+	struct MemoryStruct chunk;
+	int mailboxlen = 0, uidstrlen = 0;
+	char * address;
+	char * full_address;
+	char uidStr[12];
+
+	address = generate_address(domain, "imaps");
+	if(address == NULL) {
+		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		return -1;
+	}
+	if(mailbox == NULL) {
+		fprintf(stderr, "mailbox is not nullable.\n");
+		return -1;
+	}
+
+	sprintf(uidStr, "%d", uid);
+	uidstrlen = strlen(uidStr);
+	mailboxlen = strlen(mailbox);
+	full_address = malloc(strlen(address+mailboxlen+uidstrlen+6+1));
+	if(full_address == NULL) {
+		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		return -1;
+	}
+	strcpy(full_address, address);
+	free(address);
+	strcat(full_address, mailbox);
+	strcat(full_address, "/;UID=");
+	strcat(full_address, uidStr);
+
+	chunk.memory = malloc(1);
+	chunk.size = 0;
+
+	curl = curl_easy_init();
+	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
+		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
+		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+
+		curl_easy_setopt(curl, CURLOPT_URL,full_address);
+
+		enable_ssl(curl);
+
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
+
+		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+		curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+		res = curl_easy_perform(curl);
+
+		/* Check for errors */
+		if(res != CURLE_OK)
+			fprintf(stderr, "curl_easy_perform() failed: %s\n",
+					curl_easy_strerror(res));
+		else {
+			fputs("Chunk : ",stdout);
+			fputs(chunk.memory, stdout);
+		}
+
+		free(chunk.memory);
+		/* Always cleanup */
+		curl_easy_cleanup(curl);
+	}
+	free(full_address);
+
+	return (int)res;
+}
+
+Email parse_email(char * payload) {
+	Email mail;
+	char *from, *from_name, *to, *message, *messageID, *subject;
+
+
+
+	return mail;
+}
+
+void free_email(Email email) {
+	free(email.from);
+	free(email.from_name);
+	free(email.message);
+	free(email.messageID);
+	free(email.subject);
+	free(email.to);
 }

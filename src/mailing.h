@@ -11,22 +11,39 @@
 
 #include <curl/curl.h>
 #include <string.h>
-
-#define FROM    "<jumailimap@gmail.com>"
-#define TO      "<jumailimap@gmail.com>"
+#include <stdlib.h>
+#include <time.h>
+#include "utilities.h"
 
 struct MemoryStruct {
   char *memory;
   size_t size;
 };
 
+struct ParsedSearch {
+	size_t size;
+	int * uids;
+};
+
+typedef struct Email {
+	char * to;
+	char * from;
+	char * from_name;
+	char * messageID;
+	char * subject;
+	char * message;
+} Email;
+
 char * generate_id();
 char ** get_header(char * from, char * to, char * name, char * subject, char* id);
 char ** get_mail(char ** header, char * message);
 void free_header(char ** header);
 void free_mail(char ** header);
-int ssl_fetch();
 int send_mail_ssl(char * username, char * password, char * to, char * domain, const char ** mail);
 int examine_outbox_ssl(char * username, char * password);
+int ssl_fetch(char * username, char * password, char * domain, char * mailbox);
+int ssl_get_mail(char * username, char * password, char * domain, char * mailbox, int uid);
+Email parse_email(char * payload);
+void free_email(Email email);
 
 #endif /* SRC_MAILING_H_ */
