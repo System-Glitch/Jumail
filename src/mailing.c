@@ -225,7 +225,7 @@ char ** get_header(char * from, char * to, char * name, char * subject, char* id
 	if(fromline == NULL || toline == NULL || dateline == NULL ||
 			subjectline == NULL || idline == NULL) return NULL;
 
-	separatorline = malloc(2);
+	separatorline = malloc(3);
 	if(separatorline == NULL) return NULL;
 	strcpy(separatorline, "\r\n");
 
