@@ -463,7 +463,7 @@ int ssl_fetch(char * username, char * password, char * domain, char * mailbox) {
 		return -1;
 	}
 	mailboxlen = strlen(mailbox);
-	full_address = malloc(strlen(address+mailboxlen+4+1));
+	full_address = malloc(strlen(address)+mailboxlen+4+1);
 	if(full_address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
 		return -1;
@@ -497,6 +497,10 @@ int ssl_fetch(char * username, char * password, char * domain, char * mailbox) {
 					curl_easy_strerror(res));
 		else {
 			search = parse_search(chunk.memory);
+			if(search.uids == NULL) {
+				fprintf(stderr, "Search is NULL\n");
+				return -1;
+			}
 			for(int i = 0 ; i < search.size ; i++) {
 				ssl_get_mail(username,password,domain,mailbox,search.uids[i]);
 			}
@@ -534,7 +538,7 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 	sprintf(uidStr, "%d", uid);
 	uidstrlen = strlen(uidStr);
 	mailboxlen = strlen(mailbox);
-	full_address = malloc(strlen(address+mailboxlen+uidstrlen+6+1));
+	full_address = malloc(strlen(address)+mailboxlen+uidstrlen+6+1);
 	if(full_address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
 		return -1;
