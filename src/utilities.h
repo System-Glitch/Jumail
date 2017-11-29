@@ -20,8 +20,15 @@ void free_string_array(StringArray arr);
 
 /**
  * Splits the given string according to the delimiter.
+ * Don't forget to free_string_array !
  */
 StringArray strsplit(char * str , char delimiter);
+
+/**
+ * Splits the given mail payload.
+ * Don't forget to free_string_array !
+ */
+StringArray split_mail(char * mail);
 
 /**
  * Counts the amount of the char c in the string str

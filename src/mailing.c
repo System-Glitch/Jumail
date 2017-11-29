@@ -587,20 +587,193 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 	return (int)res;
 }
 
-Email parse_email(char * payload) {
+static Email init_email() {
 	Email mail;
-	char *from, *from_name, *to, *message, *messageID, *subject;
+	mail.date = NULL;
+	mail.from = NULL;
+	mail.from_name = NULL;
+	mail.message = NULL;
+	mail.messageID = NULL;
+	mail.subject = NULL;
+	mail.to = NULL;
+	return mail;
+}
 
+static int exec_regex(regex_t * regex, char* regexp, char * source, int max_groups, regmatch_t (*pmatch)[]) {
+	if (regcomp(regex, regexp, REG_EXTENDED)) {
+		fputs("Could not compile date regular expression.\n", stderr);
+		return 0;
+	}
 
+	return regexec(regex, source, max_groups, *pmatch, 0) == 0;
+}
 
+static char * parse_header_line(char * line, char * regexp) {
+	regex_t regex;
+	regmatch_t pmatch[2];
+	int len;
+	char * dest = NULL;
+
+	if(exec_regex(&regex, regexp, line, 2, &pmatch)) {
+		len = pmatch[1].rm_eo - pmatch[1].rm_so;
+		dest = malloc(len + 1);
+		if(dest == NULL) {
+			regfree(&regex);
+			return NULL;
+		}
+		strncpy(dest, line+pmatch[1].rm_so, len);
+		dest[len] = '\0';
+	}
+
+	regfree(&regex);
+	return dest;
+}
+
+Email parse_email(char * payload) {
+	Email mail = init_email();
+	StringArray content;
+	int len;
+	char *date = NULL, *from = NULL, *from_name = NULL, *to = NULL, *message = NULL, *messageID = NULL, *subject = NULL;
+
+	content = split_mail(payload);
+
+	if(content.size < 0) {
+		fputs("Could not split mail payload.\n", stderr);
+		return mail;
+	}
+
+	date = parse_header_line(content.array[0], REGEX_DATE);
+	if(date == NULL) {
+		free_email(mail);
+		mail = init_email();
+		free_string_array(content);
+		fputs("Couldn't extract date.\n", stderr);
+		return mail;
+	}
+	fputs(date, stdout);
+	fputs("\n", stdout);
+	fflush(stdout);
+
+	to = parse_header_line(content.array[1], REGEX_TO);
+	if(to == NULL) {
+		free_email(mail);
+		mail = init_email();
+		free_string_array(content);
+		fputs("Couldn't extract TO.\n", stderr);
+		return mail;
+	}
+	fputs(to, stdout);
+	fputs("\n", stdout);
+	fflush(stdout);
+
+	//Special processing for FROM because of three groups
+	regex_t regex;
+	regmatch_t pmatch[3];
+
+	if(exec_regex(&regex, REGEX_FROM, content.array[2], 3, &pmatch)) {
+
+		//FROM address
+		len = pmatch[1].rm_eo - pmatch[1].rm_so;
+		from = malloc(len + 1);
+		if(from == NULL) {
+			free_email(mail);
+			mail = init_email();
+			free_string_array(content);
+			fputs("Error while allocation for FROM address.\n", stderr);
+			return mail;
+		}
+		strncpy(from, content.array[2]+pmatch[1].rm_so, len);
+		from[len] = '\0';
+
+		//FROM name
+		len = pmatch[2].rm_eo - pmatch[2].rm_so;
+		from_name = malloc(len + 1);
+		if(from_name == NULL) {
+			free_email(mail);
+			mail = init_email();
+			free_string_array(content);
+			fputs("Error while allocating for FROM name.\n", stderr);
+			return mail;
+		}
+		strncpy(from_name, content.array[2]+pmatch[2].rm_so, len);
+		from_name[len] = '\0';
+	} else {
+		free_email(mail);
+		mail = init_email();
+		free_string_array(content);
+		regfree(&regex);
+		fputs("Couldn't extract FROM.\n", stderr);
+		return mail;
+	}
+
+	regfree(&regex);
+	fputs(from, stdout);
+	fputs("\n", stdout);
+	fputs(from_name, stdout);
+	fputs("\n", stdout);
+	fflush(stdout);
+
+	messageID = parse_header_line(content.array[3], REGEX_MESSAGE_ID);
+	if(messageID == NULL) {
+		free_email(mail);
+		mail = init_email();
+		free_string_array(content);
+		fputs("Couldn't extract message ID.\n", stderr);
+		return mail;
+	}
+	fputs(messageID, stdout);
+	fputs("\n", stdout);
+	fflush(stdout);
+
+	subject = parse_header_line(content.array[4], REGEX_SUBJECT);
+	if(subject == NULL) {
+		free_email(mail);
+		mail = init_email();
+		free_string_array(content);
+		fputs("Couldn't extract subject.\n", stderr);
+		return mail;
+	}
+	fputs(subject, stdout);
+	fputs("\n", stdout);
+	fflush(stdout);
+
+	//Simple copy of the message body
+	len = content.array[5][0] == '\0' ? 0 : strlen(content.array[5]); //Check if message is empty
+	message = malloc(len + 1);
+	if(message == NULL) {
+		free_email(mail);
+		mail = init_email();
+		free_string_array(content);
+		fputs("Error while allocating for message.\n", stderr);
+		return mail;
+	}
+
+	if(len > 0)
+		strcpy(message,content.array[5]);
+	else
+		message[0] = '\0';
+
+	fputs(message, stdout);
+	fputs("\n", stdout);
+	fflush(stdout);
+
+	free_string_array(content);
 	return mail;
 }
 
 void free_email(Email email) {
-	free(email.from);
-	free(email.from_name);
-	free(email.message);
-	free(email.messageID);
-	free(email.subject);
-	free(email.to);
+	if(email.date != NULL)
+		free(email.date);
+	if(email.from != NULL)
+		free(email.from);
+	if(email.from_name != NULL)
+		free(email.from_name);
+	if(email.message != NULL)
+		free(email.message);
+	if(email.messageID!= NULL)
+		free(email.messageID);
+	if(email.subject != NULL)
+		free(email.subject);
+	if(email.to != NULL)
+		free(email.to);
 }
