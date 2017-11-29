@@ -13,7 +13,14 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <regex.h>
 #include "utilities.h"
+
+#define REGEX_DATE 			"Date: (.*)"
+#define REGEX_TO 			"To: <(.*?)>"
+#define REGEX_FROM			"From: <(.*?)>\\((.*?)\\)"
+#define REGEX_MESSAGE_ID 	"Message-ID: <(.*?)>"
+#define REGEX_SUBJECT		"Subject: (.*)"
 
 struct MemoryStruct {
   char *memory;
@@ -26,6 +33,7 @@ struct ParsedSearch {
 };
 
 typedef struct Email {
+	char * date;
 	char * to;
 	char * from;
 	char * from_name;

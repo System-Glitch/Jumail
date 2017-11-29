@@ -23,7 +23,7 @@ StringArray strsplit(char * str , char delimiter) {
 	count = strcount(str, delimiter);
 	len = strlen(str);
 
-	if(count == 0) {
+	if(count == 0) { //Nothing to split, return a copy of the string
 		array.array = malloc(sizeof(char *));
 		if(array.array == NULL) return array;
 		array.array[0] = malloc(len+1);
@@ -38,24 +38,24 @@ StringArray strsplit(char * str , char delimiter) {
 		next_delimiter = j = index = 0;
 
 		while(j <= len) {
-			for(int i = j ; i < len ; i++) {
+			for(int i = j ; i < len ; i++) { //Find the next delimiter
 				next_delimiter = i;
 				if(str[i] == delimiter) {
 					break;
 				}
 			}
 
-			if(next_delimiter == j-1) {
+			if(next_delimiter == j-1) { //The end of the string is the delimiter
 				array.array[index] = malloc(1);
 				if(array.array[index] == NULL) {
 					array.size = -1;
 					return array;
 				}
-				array.array[index][0] = '\0';
+				array.array[index][0] = '\0'; //Give an empty string then
 				return array;
 			}
 
-			if(next_delimiter == len-1 && str[next_delimiter] != delimiter) next_delimiter++;
+			if(next_delimiter == len-1 && str[next_delimiter] != delimiter) next_delimiter++; //The end of the string is NOT the delimiter, add 1 so the last delimiter is '\0'
 
 			array.array[index] = malloc(next_delimiter - j + 1);
 			if(array.array[index] == NULL) {
@@ -66,9 +66,62 @@ StringArray strsplit(char * str , char delimiter) {
 			strncpy(array.array[index] , str+j, next_delimiter-j);
 			array.array[index][next_delimiter-j] = '\0';
 			index++;
-			j = next_delimiter+1;
+			j = next_delimiter+1; //Skip the delimiter for next part
 		}
 	}
+	return array;
+}
+
+StringArray split_mail(char * mail) {
+	StringArray array;
+	int next_delimiter;
+	int len, index, j;
+
+	array.size = -1;
+	array.array = NULL;
+	len = strlen(mail);
+
+	array.array = malloc(6*sizeof(char*));
+	if(array.array == NULL) return array;
+	array.size = 6; //Header is composed of 5 lines. Add one for the message body
+
+	j = index = 0;
+	while(j < len) {
+		next_delimiter = -1;
+		if(index < 5) //Ignore the delimiter outside the header
+			for(int i = j ; i < len-1 ; i++) { //Find the next delimiter
+				if(mail[i] == '\r' && mail[i+1] == '\n') {
+					next_delimiter = i;
+					break;
+				}
+			}
+
+		if(next_delimiter == -1) { //Ignore the delimiters in the message body
+			j+= 2; //Skip the divider, see RFC5322
+			array.array[index] = malloc(len - j + 1);
+			if(array.array[index] == NULL) {
+				array.size = -1;
+				return array;
+			}
+			if(len - j > 0) //Check that the message is not empty
+				strcpy(array.array[index], mail+j);
+			else
+				array.array[index][0] = '\0'; //If the message is empty, give an empty string
+			return array;
+		}
+
+		array.array[index] = malloc(next_delimiter - j + 1);
+		if(array.array[index] == NULL) {
+			array.size = -1;
+			return array;
+		}
+
+		strncpy(array.array[index] , mail+j, next_delimiter-j);
+		array.array[index][next_delimiter-j] = '\0';
+		index++;
+		j = next_delimiter+2; //Skip the delimiter "\r\n"
+	}
+
 	return array;
 }
 
