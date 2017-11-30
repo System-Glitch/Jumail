@@ -40,6 +40,7 @@ typedef struct Email {
 	char * messageID;
 	char * subject;
 	char * message;
+	int uid;
 } Email;
 
 char * generate_id();
@@ -51,7 +52,7 @@ int send_mail_ssl(char * username, char * password, char * to, char * domain, co
 int examine_outbox_ssl(char * username, char * password);
 int ssl_fetch(char * username, char * password, char * domain, char * mailbox);
 int ssl_get_mail(char * username, char * password, char * domain, char * mailbox, int uid);
-Email parse_email(char * payload);
+Email parse_email(char * payload, int uid);
 void free_email(Email email);
 
 #endif /* SRC_MAILING_H_ */
