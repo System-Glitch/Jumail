@@ -574,8 +574,18 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 			fprintf(stderr, "curl_easy_perform() failed: %s\n",
 					curl_easy_strerror(res));
 		else {
-			fputs("Chunk : ",stdout);
-			fputs(chunk.memory, stdout);
+			/*fputs("Chunk : ",stdout);
+			fputs(chunk.memory, stdout);*/
+			Email mail = parse_email(chunk.memory,uid);
+			fputs(mail.date, stdout);
+			fputs("\n", stdout);
+			fputs(mail.from, stdout);
+			fputs("\n", stdout);
+			fputs(mail.to, stdout);
+			fputs("\n", stdout);
+			fputs(mail.message, stdout);
+			printf("\n%d\n", mail.uid);
+			free_email(mail);
 		}
 
 		free(chunk.memory);
@@ -591,9 +601,7 @@ static Email init_email() {
 	Email mail;
 	mail.date = NULL;
 	mail.from = NULL;
-	mail.from_name = NULL;
 	mail.message = NULL;
-	mail.messageID = NULL;
 	mail.subject = NULL;
 	mail.to = NULL;
 	return mail;
@@ -608,21 +616,26 @@ static int exec_regex(regex_t * regex, char* regexp, char * source, int max_grou
 	return regexec(regex, source, max_groups, *pmatch, 0) == 0;
 }
 
-static char * parse_header_line(char * line, char * regexp) {
+static char * parse_header_line(StringArray * content, char * regexp) {
 	regex_t regex;
 	regmatch_t pmatch[2];
 	int len;
 	char * dest = NULL;
+	char * line;
 
-	if(exec_regex(&regex, regexp, line, 2, &pmatch)) {
-		len = pmatch[1].rm_eo - pmatch[1].rm_so;
-		dest = malloc(len + 1);
-		if(dest == NULL) {
-			regfree(&regex);
-			return NULL;
+	for(int i = 0 ; i < content->size-1 ; i++) {
+		line = content->array[i];
+
+		if(exec_regex(&regex, regexp, line, 2, &pmatch)) {
+			len = pmatch[1].rm_eo - pmatch[1].rm_so;
+			dest = malloc(len + 1);
+			if(dest == NULL) {
+				regfree(&regex);
+				return NULL;
+			}
+			strncpy(dest, line+pmatch[1].rm_so, len);
+			dest[len] = '\0';
 		}
-		strncpy(dest, line+pmatch[1].rm_so, len);
-		dest[len] = '\0';
 	}
 
 	regfree(&regex);
@@ -633,7 +646,7 @@ Email parse_email(char * payload, int uid) {
 	Email mail = init_email();
 	StringArray content;
 	int len;
-	char *date = NULL, *from = NULL, *from_name = NULL, *to = NULL, *message = NULL, *messageID = NULL, *subject = NULL;
+	char *date = NULL, *from = NULL, *to = NULL, *message = NULL, *subject = NULL;
 
 	content = split_mail(payload);
 
@@ -642,64 +655,28 @@ Email parse_email(char * payload, int uid) {
 		return mail;
 	}
 
-	date = parse_header_line(content.array[0], REGEX_DATE);
+	date = parse_header_line(&content, REGEX_DATE);
 	if(date == NULL) {
 		free_string_array(content);
 		fputs("Couldn't extract date.\n", stderr);
 		return mail;
 	}
 
-	to = parse_header_line(content.array[1], REGEX_TO);
+	to = parse_header_line(&content, REGEX_TO);
 	if(to == NULL) {
 		free_string_array(content);
 		fputs("Couldn't extract TO.\n", stderr);
 		return mail;
 	}
 
-	//Special processing for FROM because of three groups
-	regex_t regex;
-	regmatch_t pmatch[3];
-
-	if(exec_regex(&regex, REGEX_FROM, content.array[2], 3, &pmatch)) {
-
-		//FROM address
-		len = pmatch[1].rm_eo - pmatch[1].rm_so;
-		from = malloc(len + 1);
-		if(from == NULL) {
-			free_string_array(content);
-			fputs("Error while allocation for FROM address.\n", stderr);
-			return mail;
-		}
-		strncpy(from, content.array[2]+pmatch[1].rm_so, len);
-		from[len] = '\0';
-
-		//FROM name
-		len = pmatch[2].rm_eo - pmatch[2].rm_so;
-		from_name = malloc(len + 1);
-		if(from_name == NULL) {
-			free_string_array(content);
-			fputs("Error while allocating for FROM name.\n", stderr);
-			return mail;
-		}
-		strncpy(from_name, content.array[2]+pmatch[2].rm_so, len);
-		from_name[len] = '\0';
-	} else {
+	from = parse_header_line(&content, REGEX_FROM);
+	if(from == NULL) {
 		free_string_array(content);
-		regfree(&regex);
 		fputs("Couldn't extract FROM.\n", stderr);
 		return mail;
 	}
 
-	regfree(&regex);
-
-	messageID = parse_header_line(content.array[3], REGEX_MESSAGE_ID);
-	if(messageID == NULL) {
-		free_string_array(content);
-		fputs("Couldn't extract message ID.\n", stderr);
-		return mail;
-	}
-
-	subject = parse_header_line(content.array[4], REGEX_SUBJECT);
+	subject = parse_header_line(&content, REGEX_SUBJECT);
 	if(subject == NULL) {
 		free_string_array(content);
 		fputs("Couldn't extract subject.\n", stderr);
@@ -707,7 +684,7 @@ Email parse_email(char * payload, int uid) {
 	}
 
 	//Simple copy of the message body
-	len = content.array[5][0] == '\0' ? 0 : strlen(content.array[5]); //Check if message is empty
+	len = content.array[content.size-1][0] == '\0' ? 0 : strlen(content.array[content.size-1]); //Check if message is empty
 	message = malloc(len + 1);
 	if(message == NULL) {
 		free_string_array(content);
@@ -716,16 +693,14 @@ Email parse_email(char * payload, int uid) {
 	}
 
 	if(len > 0)
-		strcpy(message,content.array[5]);
+		strcpy(message,content.array[content.size-1]);
 	else
 		message[0] = '\0';
 
 	//Fill the struct
 	mail.date = date;
 	mail.from = from;
-	mail.from_name = from_name;
 	mail.message = message;
-	mail.messageID = messageID;
 	mail.subject = subject;
 	mail.to = to;
 	mail.uid = uid;
@@ -739,12 +714,8 @@ void free_email(Email email) {
 		free(email.date);
 	if(email.from != NULL)
 		free(email.from);
-	if(email.from_name != NULL)
-		free(email.from_name);
 	if(email.message != NULL)
 		free(email.message);
-	if(email.messageID!= NULL)
-		free(email.messageID);
 	if(email.subject != NULL)
 		free(email.subject);
 	if(email.to != NULL)

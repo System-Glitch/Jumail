@@ -17,9 +17,8 @@
 #include "utilities.h"
 
 #define REGEX_DATE 			"Date: (.*)"
-#define REGEX_TO 			"To: <(.*?)>"
-#define REGEX_FROM			"From: <(.*?)>\\((.*?)\\)"
-#define REGEX_MESSAGE_ID 	"Message-ID: <(.*?)>"
+#define REGEX_TO 			"To: (.*?)"
+#define REGEX_FROM			"From: (.*?)"
 #define REGEX_SUBJECT		"Subject: (.*)"
 
 struct MemoryStruct {
@@ -36,8 +35,6 @@ typedef struct Email {
 	char * date;
 	char * to;
 	char * from;
-	char * from_name;
-	char * messageID;
 	char * subject;
 	char * message;
 	int uid;
