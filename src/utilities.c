@@ -132,6 +132,7 @@ StringArray split_mail(char * mail) {
 		if(!strcmp(next,"\r\n")) { //Check if end of header was reached
 			outsideHeader = 1;
 		}
+		free(next);
 	}
 
 	return array;
