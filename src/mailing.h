@@ -49,6 +49,10 @@ int send_mail_ssl(char * username, char * password, char * to, char * domain, co
 int examine_outbox_ssl(char * username, char * password);
 int ssl_fetch(char * username, char * password, char * domain, char * mailbox);
 int ssl_get_mail(char * username, char * password, char * domain, char * mailbox, int uid);
+int ssl_mail_request(char * username, char * password, char * domain, char * mailbox, int uid, const char *request);
+int ssl_delete_mail(char * username, char * password, char * domain, char * mailbox, int uid);
+int ssl_see_mail(char * username, char * password, char * domain, char * mailbox, int uid, char seen);
+int ssl_list(char * username, char * password, char * domain);
 Email parse_email(char * payload, int uid);
 void free_email(Email email);
 
