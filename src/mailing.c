@@ -501,9 +501,9 @@ int ssl_fetch(char * username, char * password, char * domain, char * mailbox) {
 				fprintf(stderr, "Search is NULL\n");
 				return -1;
 			}
-			/*for(int i = 0 ; i < search.size ; i++) {
-				ssl_get_mail(username,password,domain,mailbox,search.uids[i]); TODO
-			}*/
+			for(int i = 0 ; i < search.size ; i++) {
+				ssl_get_mail(username,password,domain,mailbox,search.uids[i]); //TODO
+			}
 			free(search.uids);
 		}
 
@@ -574,9 +574,9 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 			fprintf(stderr, "curl_easy_perform() failed: %s\n",
 					curl_easy_strerror(res));
 		else {
-			/*fputs("Chunk : ",stdout); TODO
-			fputs(chunk.memory, stdout);*/
-			Email mail = parse_email(chunk.memory,uid);
+			fputs("Chunk : ",stdout); //TODO
+			fputs(chunk.memory, stdout);
+			/*Email mail = parse_email(chunk.memory,uid);
 			fputs(mail.date, stdout);
 			fputs("\n", stdout);
 			fputs(mail.from, stdout);
@@ -587,7 +587,7 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 			fputs("\n", stdout);
 			fputs(mail.message, stdout);
 			printf("\n%d\n", mail.uid);
-			free_email(mail);
+			free_email(mail);*/
 		}
 
 		free(chunk.memory);
