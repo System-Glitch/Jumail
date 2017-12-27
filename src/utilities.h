@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <curl/curl.h>
 
 typedef struct StringArray {
 	size_t  size;
@@ -31,8 +32,20 @@ StringArray strsplit(char * str , char delimiter);
 StringArray split_mail(char * mail);
 
 /**
+ * Splits the given list payload.
+ * Don't forget to free_string_array !
+ */
+StringArray split_list(char * list);
+
+/**
  * Counts the amount of the char c in the string str
  */
 int strcount(char * str, char c);
+
+/**
+ * Splits the given string by slashes, URL encodes it, reassemble it and returns the result.
+ * Don't forget to free it.
+ */
+char * url_encode(CURL *curl, char * str);
 
 #endif /* SRC_UTILITIES_H_ */

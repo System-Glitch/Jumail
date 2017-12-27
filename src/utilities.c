@@ -9,8 +9,9 @@
 #include <stdio.h>
 
 void free_string_array(StringArray arr) {
-	for(int i  = 0 ; i < arr.size ; i++)
-		free(arr.array[i]);
+	if(arr.array != NULL)
+		for(int i  = 0 ; i < arr.size ; i++)
+			free(arr.array[i]);
 }
 
 StringArray strsplit(char * str , char delimiter) {
@@ -138,6 +139,47 @@ StringArray split_mail(char * mail) {
 	return array;
 }
 
+StringArray split_list(char * list) {
+	StringArray array;
+	int next_delimiter;
+	int len, index, j;
+	int outsideHeader = 0;
+
+	array.size = -1;
+	array.array = NULL;
+	len = strlen(list);
+
+	array.array = malloc(1*sizeof(char*));
+	if(array.array == NULL) return array;
+
+	j = index = 0;
+	while(j < len) {
+		next_delimiter = -1;
+		if(!outsideHeader) //Ignore the delimiter outside the header
+			for(int i = j ; i < len-1 ; i++) { //Find the next delimiter
+				if(list[i] == '\r' && list[i+1] == '\n') {
+					next_delimiter = i;
+					break;
+				}
+			}
+
+		array.array = realloc(array.array, (index+1)*sizeof(char*));
+		array.array[index] = malloc(next_delimiter - j + 1);
+		if(array.array[index] == NULL) {
+			array.size = -1;
+			return array;
+		}
+
+		strncpy(array.array[index] , list+j, next_delimiter-j);
+		array.array[index][next_delimiter-j] = '\0';
+		index++;
+		array.size = index;
+		j = next_delimiter+2; //Skip the delimiter "\r\n"
+	}
+
+	return array;
+}
+
 int strcount(char * str, char c) {
 	int i,count,len;
 
@@ -152,4 +194,34 @@ int strcount(char * str, char c) {
 	return count;
 }
 
+char * url_encode(CURL *curl, char * str) {
+	char * result = NULL;
+	char * tmp;
+	int sum = 0;
 
+	result = malloc(strlen(str));
+	if(result == NULL)
+		return result;
+
+	result[0] = '\0';
+
+	StringArray arr = strsplit(str, '/');
+
+	for(int i = 0 ; i < arr.size ; i++) {
+		tmp = curl_easy_escape(curl, arr.array[i], 0);
+		sum += strlen(tmp)+1;
+
+		result = realloc(result, sum+1);
+		if(result == NULL)
+			return result;
+
+		strcat(result,tmp);
+
+		if(i != arr.size-1)
+			strcat(result,"/");
+
+		curl_free(tmp);
+	}
+
+	return result;
+}
