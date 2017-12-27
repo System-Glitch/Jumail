@@ -13,12 +13,14 @@
 
 int main(int argc, char** argv) {
 	//ssl_fetch("jumailimap@gmail.com", "azerty12", "imap.gmail.com", "[Gmail]/Messages envoy&AOk-s");
-	StringArray *list = ssl_list("jumailimap@gmail.com", "azerty12", "imap.gmail.com");
+	/*StringArray *list = ssl_list("jumailimap@gmail.com", "azerty12", "imap.gmail.com");
 	for(int i = 0 ; i < list->size ; i++) {
 		fputs(list->array[i], stdout);
 		fputs("\n", stdout);
 	}
-	free_string_array(*list);
+	free_string_array(*list);*/
+
+	ssl_move_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", "INBOX", "Test", 1);
 
 	/*Email mail = parse_email("Date: Sun, 26 Nov 2017 16:22:33 +0100\r\nTo: <jeremy.la@outlook.fr>\r\nFrom: <jumailimap@gmail.com>(Ju Mail)\r\nMessage-ID: <d5252969-6b02-469a-a5d1-57b1305cc768@jumail.fr>\r\nSubject: Bonjour ça va?\r\n\r\nSalut je voulais prendre de tes nouvelles.\r\nÇa fait longtemps.\r\nBye.",0);
 	fputs(mail.date, stdout);

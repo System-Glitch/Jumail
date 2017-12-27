@@ -56,5 +56,6 @@ int ssl_see_mail(char * username, char * password, char * domain, char * mailbox
 StringArray *ssl_list(char * username, char * password, char * domain);
 Email parse_email(char * payload, int uid);
 void free_email(Email email);
+int ssl_move_mail(char * username, char * password, char * domain, char * mailbox_src, char * mailbox_dst, int uid);
 
 #endif /* SRC_MAILING_H_ */

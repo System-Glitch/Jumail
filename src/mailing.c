@@ -13,6 +13,8 @@ struct upload_status {
 	const char ** content;
 };
 
+static size_t write_to_null(void *contents, size_t size, size_t nmemb, void *userp) { return nmemb; }
+
 static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp)
 {
 	size_t realsize = size * nmemb;
@@ -622,7 +624,6 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 int ssl_mail_request(char * username, char * password, char * domain, char * mailbox, int uid, const char *request) {
 	CURL *curl;
 	CURLcode res = CURLE_OK;
-	struct MemoryStruct chunk;
 	int mailboxlen = 0, uidstrlen = 0, requestlen = 0;
 	char * address;
 	char * full_address;
@@ -660,14 +661,13 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 
 	sprintf(full_request, request, uid);
 
-	chunk.memory = malloc(1);
-	chunk.size = 0;
-
 	curl = curl_easy_init();
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
 		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_null); //Don't print the result to stdout
 
 		curl_easy_setopt(curl, CURLOPT_URL,full_address);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,full_request);
@@ -686,11 +686,11 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 			fputs("Request OK.\n", stdout);
 		}
 
-		free(chunk.memory);
 		/* Always cleanup */
 		curl_easy_cleanup(curl);
 	}
 	free(full_address);
+	free(full_request);
 
 	return (int)res;
 }
@@ -947,4 +947,97 @@ void free_email(Email email) {
 		free(email.subject);
 	if(email.to != NULL)
 		free(email.to);
+}
+
+int ssl_move_mail(char * username, char * password, char * domain, char * mailbox_src, char * mailbox_dst, int uid) {
+
+	CURL *curl;
+	CURLcode res = CURLE_OK;
+	int mailboxlen_src = 0, mailboxlen_dst = 0, uidstrlen = 0;
+	char * address;
+	char * full_address;
+	char * full_request;
+	char uidStr[12];
+
+	address = generate_address(domain, "imaps");
+	if(address == NULL) {
+		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		return -1;
+	}
+	if(mailbox_src == NULL) {
+		fprintf(stderr, "mailbox is not nullable.\n");
+		return -1;
+	}
+
+	sprintf(uidStr, "%d", uid);
+	uidstrlen = strlen(uidStr);
+	mailboxlen_src = strlen(mailbox_src);
+	mailboxlen_dst = strlen(mailbox_dst);
+
+	full_address = malloc(strlen(address)+mailboxlen_src+1);
+	if(full_address == NULL) {
+		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		return -1;
+	}
+
+	full_request = malloc(6+uidstrlen+mailboxlen_dst+1);
+	if(full_request == NULL) {
+		fprintf(stderr, "Error while creating IMAP request.\n");
+		return -1;
+	}
+	strcpy(full_address, address);
+	free(address);
+	strcat(full_address, mailbox_src);
+
+	strcpy(full_request, "COPY ");
+	strcat(full_request, uidStr);
+	strcat(full_request, " ");
+	strcat(full_request, mailbox_dst);
+
+
+	curl = curl_easy_init();
+	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
+		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
+		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_null); //Don't print the result to stdout
+
+		curl_easy_setopt(curl, CURLOPT_URL,full_address);
+		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,full_request);
+
+		enable_ssl(curl);
+
+		curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+		res = curl_easy_perform(curl);
+
+		/* Check for errors */
+		if(res != CURLE_OK)
+			fprintf(stderr, "curl_easy_perform() failed: %s\n",
+					curl_easy_strerror(res));
+		else {
+			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "EXPUNGE");
+
+			/* Perform the second custom request */
+			res = curl_easy_perform(curl);
+
+			/* Check for errors */
+			if(res != CURLE_OK)
+				fprintf(stderr, "curl_easy_perform() failed: %s\n",
+						curl_easy_strerror(res));
+
+			fputs("Mail moved OK.\n", stdout);
+		}
+
+		/* Always cleanup */
+		curl_easy_cleanup(curl);
+	}
+	free(full_address);
+	free(full_request);
+
+	if(res != CURLE_OK)
+		return (int)res;
+
+	return ssl_delete_mail(username, password, domain, mailbox_src, uid);
 }
