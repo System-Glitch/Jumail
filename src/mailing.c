@@ -542,7 +542,7 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
  * Example: "STORE %d +Flags \\Deleted"
  * Here, %d will be replaced by uid
  */
-int ssl_mail_request(char * username, char * password, char * domain, char * mailbox, int uid, const char *request) {
+int ssl_mail_request(char * username, char * password, char * domain, char * mailbox, char *message_id, const char *request) {
 	CURL *curl;
 	CURLcode res = CURLE_OK;
 	int mailboxlen = 0, uidstrlen = 0, requestlen = 0;
@@ -551,6 +551,7 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 	char * full_request;
 	char * mailbox_encoded;
 	char uidStr[12];
+	int uid;
 
 	address = generate_address(domain, "imaps");
 	if(address == NULL) {
@@ -567,6 +568,7 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 		fprintf(stderr, "Error on creating curl.\n");
 		return -1;
 	}
+
 	mailbox_encoded = url_encode(curl, mailbox);
 	if(mailbox_encoded == NULL) {
 		fprintf(stderr, "Error on URL encoding.\n");
@@ -574,18 +576,47 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 		return -1;
 	}
 
-	sprintf(uidStr, "%d", uid); //Convert uid to string in order to get the amount of digits
-
-	uidstrlen = strlen(uidStr);
 	mailboxlen = strlen(mailbox_encoded);
-	requestlen = strlen(request);
 	full_address = malloc(strlen(address)+mailboxlen+1);
 	if(full_address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		free(mailbox_encoded);
+		curl_easy_cleanup(curl);
+		return -1;
+	}
+	//Building full address
+	strcpy(full_address, address);
+	free(address);
+	strcat(full_address, mailbox_encoded);
+	free(mailbox_encoded);
+
+	curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
+	curl_easy_setopt(curl, CURLOPT_USERNAME, username);
+	curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_null); //Don't print the result to stdout
+
+	curl_easy_setopt(curl, CURLOPT_URL,full_address);
+
+	enable_ssl(curl);
+
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+	uid = ssl_search_by_id(curl, message_id);
+	if(uid == 0) {
+		fprintf(stderr, "No mail found with message ID %s.\n", message_id);
+		curl_easy_cleanup(curl);
+		return -1;
+	}
+	if(uid == -1) {
+		fprintf(stderr, "An error occured when searching for mail uid.\n");
 		curl_easy_cleanup(curl);
 		return -1;
 	}
 
+	requestlen = strlen(request);
+	sprintf(uidStr, "%d", uid); //Convert uid to string in order to get the amount of digits
+	uidstrlen = strlen(uidStr);
 	full_request = malloc(uidstrlen+requestlen+1);
 	if(full_request == NULL) {
 		fprintf(stderr, "Error while creating IMAP request.\n");
@@ -593,42 +624,23 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 		return -1;
 	}
 
-	//Building full address
-	strcpy(full_address, address);
-	free(address);
-	strcat(full_address, mailbox_encoded);
-	free(mailbox_encoded);
-
 	//Replacing format code with value
 	sprintf(full_request, request, uid);
 
-	if(curl) {
-		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
-		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
-		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,full_request);
 
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_null); //Don't print the result to stdout
+	res = curl_easy_perform(curl);
 
-		curl_easy_setopt(curl, CURLOPT_URL,full_address);
-		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,full_request);
-
-		enable_ssl(curl);
-
-		curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-
-		res = curl_easy_perform(curl);
-
-		/* Check for errors */
-		if(res != CURLE_OK)
-			fprintf(stderr, "curl_easy_perform() failed: %s\n",
-					curl_easy_strerror(res));
-		else {
-			fputs("Request OK.\n", stdout);
-		}
-
-		/* Always cleanup */
-		curl_easy_cleanup(curl);
+	/* Check for errors */
+	if(res != CURLE_OK)
+		fprintf(stderr, "curl_easy_perform() failed: %s\n",
+				curl_easy_strerror(res));
+	else {
+		fputs("Request OK.\n", stdout);
 	}
+
+	/* Always cleanup */
+	curl_easy_cleanup(curl);
 	free(full_address);
 	free(full_request);
 
@@ -638,15 +650,15 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 /**
  * Performs a STORE (IMAP) operation to flag an email as seen (1) or unseen (0).
  */
-int ssl_see_mail(char * username, char * password, char * domain, char * mailbox, int uid, char seen) {
-	return ssl_mail_request(username,password,domain,mailbox,uid, seen ? "STORE %d +Flags \\Seen" : "STORE %d -Flags \\Seen");
+int ssl_see_mail(char * username, char * password, char * domain, char * mailbox, char *message_id, char seen) {
+	return ssl_mail_request(username,password,domain,mailbox,message_id, seen ? "STORE %d +Flags \\Seen" : "STORE %d -Flags \\Seen");
 }
 
 /**
  * Performs a STORE (IMAP) operation to flag an email as deleted.
  */
-int ssl_delete_mail(char * username, char * password, char * domain, char * mailbox, int uid) {
-	return ssl_mail_request(username,password,domain,mailbox,uid,"STORE %d +Flags \\Deleted");
+int ssl_delete_mail(char * username, char * password, char * domain, char * mailbox, char *message_id) {
+	return ssl_mail_request(username,password,domain,mailbox,message_id,"STORE %d +Flags \\Deleted");
 }
 
 /**
@@ -654,11 +666,12 @@ int ssl_delete_mail(char * username, char * password, char * domain, char * mail
  */
 static Email init_email() {
 	Email mail;
-	mail.date = NULL;
-	mail.from = NULL;
-	mail.message = NULL;
-	mail.subject = NULL;
-	mail.to = NULL;
+	mail.date 		= NULL;
+	mail.from 		= NULL;
+	mail.message 	= NULL;
+	mail.subject 	= NULL;
+	mail.message_id = NULL;
+	mail.to 		= NULL;
 	return mail;
 }
 
@@ -695,11 +708,11 @@ static char * parse_header_line(StringArray * content, char * regexp) {
 /**
  * Parses a complete email payload (header + body) and returns the result into an Email struct
  */
-Email parse_email(char * payload, int uid) {
+Email parse_email(char * payload) {
 	Email mail = init_email();
 	StringArray content;
 	int len;
-	char *date = NULL, *from = NULL, *to = NULL, *message = NULL, *subject = NULL;
+	char *date = NULL, *from = NULL, *to = NULL, *message = NULL, *subject = NULL, *message_id = NULL;
 
 	content = split_mail(payload);
 
@@ -740,6 +753,14 @@ Email parse_email(char * payload, int uid) {
 		return mail;
 	}
 
+	//Parse message id
+	message_id = parse_header_line(&content, REGEX_MESSAGE_ID);
+	if(message_id == NULL) {
+		free_string_array(content);
+		fputs("Couldn't extract message ID.\n", stderr);
+		return mail;
+	}
+
 	//Simple copy of the message body
 	len = content.array[content.size-1][0] == '\0' ? 0 : strlen(content.array[content.size-1]); //Check if message is empty
 	message = malloc(len + 1);
@@ -760,7 +781,7 @@ Email parse_email(char * payload, int uid) {
 	mail.message = message;
 	mail.subject = subject;
 	mail.to = to;
-	mail.uid = uid;
+	mail.message_id = message_id;
 
 	free_string_array(content);
 	return mail;
@@ -780,22 +801,28 @@ void free_email(Email email) {
 		free(email.subject);
 	if(email.to != NULL)
 		free(email.to);
+	if(email.message_id != NULL)
+		free(email.message_id);
 }
 
 /**
  * Moves an email from one folder to another performing a COPY (IMAP) operation then flags the mail as deleted in the source folder
  */
-int ssl_move_mail(char * username, char * password, char * domain, char * mailbox_src, char * mailbox_dst, int uid) {
+int ssl_move_mail(char * username, char * password, char * domain, char * mailbox_src, char * mailbox_dst, char *message_id) {
+
+	const char* request = "STORE %d +Flags \\Deleted";
 
 	CURL *curl;
 	CURLcode res = CURLE_OK;
-	int mailboxlen_src = 0, mailboxlen_dst = 0, uidstrlen = 0;
+	int mailboxlen_src = 0, mailboxlen_dst = 0, uidstrlen = 0, requestlen = 0;
 	char * address;
 	char * full_address;
 	char * full_request;
+	char * full_request2;
 	char * mailbox_encoded_src;
 	char * mailbox_encoded_dst;
 	char uidStr[12];
+	int uid;
 
 	address = generate_address(domain, "imaps");
 	if(address == NULL) {
@@ -812,17 +839,56 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 		fprintf(stderr, "Error on creating curl.\n");
 		return -1;
 	}
+
 	mailbox_encoded_src = url_encode(curl, mailbox_src);
 	if(mailbox_encoded_src == NULL) {
 		fprintf(stderr, "Error on URL encoding.\n");
-		curl_easy_cleanup(curl);
 		return -1;
 	}
 	mailboxlen_src = strlen(mailbox_encoded_src);
 
+	full_address = malloc(strlen(address)+mailboxlen_src+1);
+	if(full_address == NULL) {
+		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		free(mailbox_encoded_src);
+		return -1;
+	}
+
+	//Building full address
+	strcpy(full_address, address);
+	free(address);
+	strcat(full_address, mailbox_encoded_src);
+
+	curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
+	curl_easy_setopt(curl, CURLOPT_USERNAME, username);
+	curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_null); //Don't print the result to stdout
+
+	curl_easy_setopt(curl, CURLOPT_URL,full_address);
+
+	enable_ssl(curl);
+
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+	uid = ssl_search_by_id(curl, message_id);
+	if(uid == 0) {
+		fprintf(stderr, "No mail found with message ID %s.\n", message_id);
+		free(full_address);
+		curl_easy_cleanup(curl);
+		return -1;
+	}
+	if(uid == -1) {
+		fprintf(stderr, "An error occured when searching for mail uid.\n");
+		free(full_address);
+		curl_easy_cleanup(curl);
+		return -1;
+	}
+
 	mailbox_encoded_dst = url_encode(curl, mailbox_dst);
 	if(mailbox_encoded_dst == NULL) {
 		fprintf(stderr, "Error on URL encoding.\n");
+		free(full_address);
 		curl_easy_cleanup(curl);
 		return -1;
 	}
@@ -831,22 +897,15 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 	sprintf(uidStr, "%d", uid); //Convert uid to string in order to get the amount of digits and to insert into the request string
 	uidstrlen = strlen(uidStr);
 
-	full_address = malloc(strlen(address)+mailboxlen_src+1);
-	if(full_address == NULL) {
-		fprintf(stderr, "Error while creating IMAP address from domain.\n");
-		return -1;
-	}
 
 	full_request = malloc(6+uidstrlen+mailboxlen_dst+1);
 	if(full_request == NULL) {
 		fprintf(stderr, "Error while creating IMAP request.\n");
+		free(full_address);
+		free(full_request);
+		curl_easy_cleanup(curl);
 		return -1;
 	}
-
-	//Building full address
-	strcpy(full_address, address);
-	free(address);
-	strcat(full_address, mailbox_encoded_src);
 
 	//Building request
 	//COPY uid mailbox_dst
@@ -858,48 +917,114 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 	free(mailbox_encoded_src);
 	free(mailbox_encoded_dst);
 
-	if(curl) {
-		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
-		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
-		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,full_request);
 
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_null); //Don't print the result to stdout
+	res = curl_easy_perform(curl);
 
-		curl_easy_setopt(curl, CURLOPT_URL,full_address);
-		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,full_request);
-
-		enable_ssl(curl);
-
-		curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-
-		res = curl_easy_perform(curl);
+	/* Check for errors */
+	if(res != CURLE_OK)
+		fprintf(stderr, "curl_easy_perform() failed: %s\n",
+				curl_easy_strerror(res));
+	else {
 
 		/* Check for errors */
-		if(res != CURLE_OK)
+		if(res != CURLE_OK) {
 			fprintf(stderr, "curl_easy_perform() failed: %s\n",
 					curl_easy_strerror(res));
-		else {
-			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "EXPUNGE");
+		} else {
+			free(full_request);
+			fputs("Mail moved OK.\n", stdout);
 
-			/* Perform the second custom request */
+			//Flag the original mail as deleted to avoid duplicates
+			requestlen = strlen(request);
+			sprintf(uidStr, "%d", uid); //Convert uid to string in order to get the amount of digits
+			uidstrlen = strlen(uidStr);
+
+			full_request2 = malloc(uidstrlen+requestlen+1);
+			if(full_request2 == NULL) {
+				fprintf(stderr, "Error while creating IMAP request.\n");
+				curl_easy_cleanup(curl);
+				return -1;
+			}
+
+			//Replacing format code with value
+			sprintf(full_request2, request, uid);
+
+			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,full_request2);
+			curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_null);
+
 			res = curl_easy_perform(curl);
 
 			/* Check for errors */
 			if(res != CURLE_OK)
 				fprintf(stderr, "curl_easy_perform() failed: %s\n",
 						curl_easy_strerror(res));
+			else {
+				fputs("Original mail flagged as deleted OK.\n", stdout);
 
-			fputs("Mail moved OK.\n", stdout);
+				curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "EXPUNGE"); //Tells the server to delete of mails flagged as deleted
+				res = curl_easy_perform(curl);
+			}
+
+			free(full_request2);
 		}
 
-		/* Always cleanup */
-		curl_easy_cleanup(curl);
 	}
+
+	/* Always cleanup */
+	curl_easy_cleanup(curl);
 	free(full_address);
 	free(full_request);
 
-	if(res != CURLE_OK)
-		return (int)res;
+	return (int)res;
+}
 
-	return ssl_delete_mail(username, password, domain, mailbox_src, uid); //Flags the original mail as deleted to avoid duplicates
+/**
+ * Searches an email by Message-ID and returns the UID if found
+ * Uses an already existing CURL connection
+ * Returns 0 if not found, -1 if an error occurred
+ */
+int ssl_search_by_id(CURL *curl, char *message_id) {
+	CURLcode res = CURLE_OK;
+	struct MemoryStruct chunk;
+	char *full_request;
+	int message_id_len = 0;
+	int uid = -1;
+
+	message_id_len = strlen(message_id);
+
+	full_request = malloc(25+message_id_len+1); //25 for "SEARCH HEADER Message-ID "
+	if(full_request == NULL) {
+		fprintf(stderr, "Error while creating IMAP SEARCH request.\n");
+		return -1;
+	}
+
+	strcpy(full_request, "SEARCH HEADER Message-ID ");
+	strcat(full_request, message_id);
+
+	chunk.memory = malloc(1); //Initial allocation. Will be reallocated in write_memory_callback() to fit the correct size.
+	chunk.size = 0;
+
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
+
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,  full_request);
+
+	/* Perform the custom request */
+	res = curl_easy_perform(curl);
+
+	if(res != CURLE_OK)
+		fprintf(stderr, "curl_easy_perform() failed: %s\n",
+				curl_easy_strerror(res));
+
+	else {
+		if(strlen(chunk.memory) > 9) { //Result is not "* SEARCH" meaning that a mail with the given message_id was found
+			uid = strtol(chunk.memory+9, NULL,10); //+9 to ignore "* SEARCH "
+			printf("%d\n", uid);
+		}
+	}
+
+	free(full_request);
+	free(chunk.memory);
+	return uid;
 }

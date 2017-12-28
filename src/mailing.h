@@ -19,6 +19,8 @@
 #define REGEX_TO 			"To: (.*?)"
 #define REGEX_FROM			"From: (.*?)"
 #define REGEX_SUBJECT		"Subject: (.*)"
+#define REGEX_MESSAGE_ID	"Message-ID: (.*)"
+
 
 struct ParsedSearch {
 	size_t size;
@@ -26,12 +28,12 @@ struct ParsedSearch {
 };
 
 typedef struct Email {
-	char * date;
-	char * to;
-	char * from;
-	char * subject;
-	char * message;
-	int uid;
+	char *date;
+	char *to;
+	char *from;
+	char *subject;
+	char *message;
+	char *message_id;
 } Email;
 
 /**
@@ -76,22 +78,22 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
  * Example: "STORE %d +Flags \\Deleted"
  * Here, %d will be replaced by uid
  */
-int ssl_mail_request(char * username, char * password, char * domain, char * mailbox, int uid, const char *request);
+int ssl_mail_request(char * username, char * password, char * domain, char * mailbox, char *message_id, const char *request);
 
 /**
  * Performs a STORE (IMAP) operation to flag an email as seen (1) or unseen (0).
  */
-int ssl_see_mail(char * username, char * password, char * domain, char * mailbox, int uid, char seen);
+int ssl_see_mail(char * username, char * password, char * domain, char * mailbox, char *message_id, char seen);
 
 /**
  * Performs a STORE (IMAP) operation to flag an email as deleted.
  */
-int ssl_delete_mail(char * username, char * password, char * domain, char * mailbox, int uid);
+int ssl_delete_mail(char * username, char * password, char * domain, char * mailbox, char *message_id);
 
 /**
  * Parses a complete email payload (header + body) and returns the result into an Email struct
  */
-Email parse_email(char * payload, int uid);
+Email parse_email(char * payload);
 
 /**
  * Safe free of an Email struct, ignoring NULL pointers
@@ -101,6 +103,13 @@ void free_email(Email email);
 /**
  * Moves an email from one folder to another performing a COPY (IMAP) operation then flags the mail as deleted in the source folder
  */
-int ssl_move_mail(char * username, char * password, char * domain, char * mailbox_src, char * mailbox_dst, int uid);
+int ssl_move_mail(char * username, char * password, char * domain, char * mailbox_src, char * mailbox_dst, char *message_id);
+
+/**
+ * Searches an email by Message-ID and returns the UID if found
+ * Uses an already existing CURL connection
+ * Returns -1 if not found, -2 if an error occurred
+ */
+int ssl_search_by_id(CURL *curl, char *message_id);
 
 #endif /* SRC_MAILING_H_ */
