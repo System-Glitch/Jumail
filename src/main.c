@@ -7,9 +7,7 @@
  */
 #include "MainWindow.h"
 #include "mailing.h"
-
-#include <stdlib.h>
-#include <time.h>
+#include "folders.h"
 
 int main(int argc, char** argv) {
 	//ssl_fetch("jumailimap@gmail.com", "azerty12", "imap.gmail.com", "[Gmail]/Messages envoy&AOk-s");

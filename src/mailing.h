@@ -1,5 +1,5 @@
 /**
- * 	mailing.c
+ * 	mailing.h
  *
  *  Author : Jérémy LAMBERT
  *  Date : 23/11/2017
@@ -13,19 +13,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include <regex.h>
 #include "utilities.h"
 
 #define REGEX_DATE 			"Date: (.*)"
 #define REGEX_TO 			"To: (.*?)"
 #define REGEX_FROM			"From: (.*?)"
 #define REGEX_SUBJECT		"Subject: (.*)"
-#define REGEX_FOLDER		"\\* LIST \\((.*?)\\) \"\\/\" \"(.*?)\""
-
-struct MemoryStruct {
-  char *memory;
-  size_t size;
-};
 
 struct ParsedSearch {
 	size_t size;
@@ -47,13 +40,11 @@ char ** get_mail(char ** header, char * message);
 void free_header(char ** header);
 void free_mail(char ** header);
 int send_mail_ssl(char * username, char * password, char * to, char * domain, const char ** mail);
-int examine_outbox_ssl(char * username, char * password);
 int ssl_fetch(char * username, char * password, char * domain, char * mailbox);
 int ssl_get_mail(char * username, char * password, char * domain, char * mailbox, int uid);
 int ssl_mail_request(char * username, char * password, char * domain, char * mailbox, int uid, const char *request);
 int ssl_delete_mail(char * username, char * password, char * domain, char * mailbox, int uid);
 int ssl_see_mail(char * username, char * password, char * domain, char * mailbox, int uid, char seen);
-StringArray *ssl_list(char * username, char * password, char * domain);
 Email parse_email(char * payload, int uid);
 void free_email(Email email);
 int ssl_move_mail(char * username, char * password, char * domain, char * mailbox_src, char * mailbox_dst, int uid);

@@ -6,55 +6,6 @@
  *  Description : Mailing utilities
  */
 #include "mailing.h"
-static StringArray *parse_list(CURL *curl, char * list);
-
-struct upload_status {
-	int lines_read;
-	const char ** content;
-};
-
-static size_t write_to_null(void *contents, size_t size, size_t nmemb, void *userp) { return nmemb; }
-
-static size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp)
-{
-	size_t realsize = size * nmemb;
-	struct MemoryStruct *mem = (struct MemoryStruct *)userp;
-
-	mem->memory = realloc(mem->memory, mem->size + realsize + 1);
-	if(mem->memory == NULL) {
-		/* out of memory! */
-		printf("not enough memory (realloc returned NULL)\n");
-		return 0;
-	}
-
-	memcpy(&(mem->memory[mem->size]), contents, realsize);
-	mem->size += realsize;
-	mem->memory[mem->size] = 0;
-
-	return realsize;
-}
-
-static size_t payload_source(void *ptr, size_t size, size_t nmemb, void *userp)
-{
-	struct upload_status *upload_ctx = (struct upload_status *)userp;
-	const char *data;
-
-	if((size == 0) || (nmemb == 0) || ((size*nmemb) < 1)) {
-		return 0;
-	}
-
-	data = upload_ctx->content[upload_ctx->lines_read];
-
-	if(data) {
-		size_t len = strlen(data);
-		memcpy(ptr, data, len);
-		upload_ctx->lines_read++;
-
-		return len;
-	}
-
-	return 0;
-}
 
 /**
  * Generates a date at the correct format to directly include in the mail header.
@@ -278,40 +229,6 @@ void free_mail(char ** mail) {
 	for(int i = 0 ; i < 7 ; i++)
 		free(mail[i]);
 	free(mail);
-}
-
-static void enable_ssl(CURL *curl) {
-#ifdef SKIP_PEER_VERIFICATION
-	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-#endif
-
-#ifdef SKIP_HOSTNAME_VERIFICATION
-	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-#endif
-	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
-}
-
-/**
- * Generates the URL to the domain for the given protocol. Returns null in case of error or invalid string given.
- * Don't forget to free it.
- */
-static char * generate_address(char * domain, char * protocol) {
-	char * address;
-	int domainlen, protocollen;
-
-	if(domain == NULL || protocol == NULL) return NULL;
-	domainlen = strlen(domain);
-	protocollen = strlen(protocol);
-
-	address = malloc(domainlen + protocollen +3); // +3 for "://", +2 for "/\0"
-	if(address == NULL) return NULL;
-
-	strcpy(address, protocol);
-	strcat(address, "://");
-	strcat(address, domain);
-	strcat(address, "/");
-
-	return address;
 }
 
 //SENDING A MAIL
@@ -728,54 +645,6 @@ int ssl_delete_mail(char * username, char * password, char * domain, char * mail
 	return ssl_mail_request(username,password,domain,mailbox,uid,"STORE %d +Flags \\Deleted");
 }
 
-StringArray *ssl_list(char * username, char * password, char * domain) {
-	CURL *curl;
-	CURLcode res = CURLE_OK;
-	StringArray *list = NULL;
-	struct MemoryStruct chunk;
-	char * address;
-
-	address = generate_address(domain, "imaps");
-	if(address == NULL) {
-		fprintf(stderr, "Error while creating IMAP address from domain.\n");
-		return NULL;
-	}
-
-	chunk.memory = malloc(1);
-	chunk.size = 0;
-
-	curl = curl_easy_init();
-	if(curl) {
-		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
-		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
-		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
-		curl_easy_setopt(curl, CURLOPT_URL,address);
-
-		enable_ssl(curl);
-
-		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
-		curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
-
-		res = curl_easy_perform(curl);
-
-		/* Check for errors */
-		if(res != CURLE_OK)
-			fprintf(stderr, "curl_easy_perform() failed: %s\n",
-					curl_easy_strerror(res));
-		else {
-			list = parse_list(curl, chunk.memory);
-		}
-
-		free(chunk.memory);
-		/* Always cleanup */
-		curl_easy_cleanup(curl);
-	}
-	free(address);
-
-	return list;
-}
-
 static Email init_email() {
 	Email mail;
 	mail.date = NULL;
@@ -784,88 +653,6 @@ static Email init_email() {
 	mail.subject = NULL;
 	mail.to = NULL;
 	return mail;
-}
-
-static int exec_regex(regex_t * regex, char* regexp, char * source, int max_groups, regmatch_t (*pmatch)[]) {
-	if (regcomp(regex, regexp, REG_EXTENDED)) {
-		fputs("Could not compile regular expression.\n", stderr);
-		return 0;
-	}
-
-	return regexec(regex, source, max_groups, *pmatch, 0) == 0;
-}
-
-static char * parse_list_line(char* line) {
-	regex_t regex;
-	regmatch_t pmatch[3];
-	int len;
-	char * dest = NULL;
-
-	if(exec_regex(&regex, REGEX_FOLDER, line, 3, &pmatch)) {
-		len = pmatch[2].rm_eo - pmatch[2].rm_so;
-		dest = malloc(len + 1);
-		if(dest == NULL) {
-			regfree(&regex);
-			return NULL;
-		}
-		strncpy(dest, line+pmatch[2].rm_so, len);
-		dest[len] = '\0';
-	}
-
-	regfree(&regex);
-	return dest;
-}
-
-static StringArray *parse_list(CURL *curl, char * list) {
-	char * tmp;
-	char * tmp2;
-	int j = 0;
-	int len;
-	StringArray *result;
-
-	result = malloc(sizeof(StringArray));
-	if(result == NULL) {
-		fputs("Error when allocating parsed list array.\n", stderr);
-		return NULL;
-	}
-
-	StringArray array = split_list(list);
-
-	result->size = array.size;
-	result->array = malloc(sizeof(char*)*result->size);
-	if(result->array == NULL) {
-		free_string_array(array);
-		fputs("Error when allocating parsed list array.\n", stderr);
-		return NULL;
-	}
-
-	for(int i = 0 ; i < array.size ; i++) {
-		tmp = parse_list_line(array.array[i]);
-		if(tmp == NULL) {
-			free_string_array(*result);
-			free_string_array(array);
-			fputs("Couldn't extract folder name.\n", stderr);
-			return NULL;
-		}
-
-		tmp2 = curl_easy_unescape(curl, tmp, 0, &len);
-		free(tmp);
-
-		result->array[j] = malloc(len+1);
-		if(result->array[j] == NULL) {
-			free_string_array(*result);
-			free_string_array(array);
-			fputs("Error when allocating decoded folder name.\n", stderr);
-			return NULL;
-		}
-		strcpy(result->array[j], tmp2);
-
-		curl_free(tmp2);
-		j++;
-	}
-
-	free_string_array(array);
-	return result;
 }
 
 static char * parse_header_line(StringArray * content, char * regexp) {

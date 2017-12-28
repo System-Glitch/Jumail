@@ -11,11 +11,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
+#include <regex.h>
+
+struct upload_status {
+	int lines_read;
+	const char ** content;
+};
 
 typedef struct StringArray {
 	size_t  size;
 	char ** array;
 } StringArray;
+
+struct MemoryStruct {
+  char *memory;
+  size_t size;
+};
 
 void free_string_array(StringArray arr);
 
@@ -47,5 +58,33 @@ int strcount(char * str, char c);
  * Don't forget to free it.
  */
 char * url_encode(CURL *curl, char * str);
+
+/**
+ * Used by CURL to not write request result into memory
+ */
+size_t write_to_null(void *contents, size_t size, size_t nmemb, void *userp);
+
+/**
+ * Used by CURL to write request result into memory
+ */
+size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp);
+
+size_t payload_source(void *ptr, size_t size, size_t nmemb, void *userp);
+
+/**
+ * Enables SSL on the given CURL connection
+ */
+void enable_ssl(CURL *curl);
+
+/**
+ * Executes the given regexp on the source and stores the result into the array pmatch
+ */
+int exec_regex(regex_t * regex, char* regexp, char * source, int max_groups, regmatch_t (*pmatch)[]);
+
+/**
+ * Generates the URL to the domain for the given protocol. Returns null in case of error or invalid string given.
+ * Don't forget to free it.
+ */
+char * generate_address(char * domain, char * protocol);
 
 #endif /* SRC_UTILITIES_H_ */
