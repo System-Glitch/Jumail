@@ -128,11 +128,94 @@ StringArray *ssl_list(char * username, char * password, char * domain) {
 	return list;
 }
 
+/**
+ * Performs a folder creation or folder deletion.
+ * action  = 1 -> CREATE
+ * action != 1 -> DELETE
+ */
+static int ssl_folder(char * username, char * password, char * domain, char * mailbox, int action) {
+	CURL *curl;
+	CURLcode res = CURLE_OK;
+	int mailboxlen = 0;
+	char * address;
+	char * full_request;
+	char * mailbox_encoded;
+
+	address = generate_address(domain, "imaps");
+	if(address == NULL) {
+		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		return -1;
+	}
+	if(mailbox == NULL) {
+		fprintf(stderr, "mailbox is not nullable.\n");
+		return -1;
+	}
+
+	curl = curl_easy_init();
+	if(!curl) {
+		fprintf(stderr, "Error on creating curl.\n");
+		return -1;
+	}
+	mailbox_encoded = url_encode(curl, mailbox);
+	if(mailbox_encoded == NULL) {
+		fprintf(stderr, "Error on URL encoding.\n");
+		curl_easy_cleanup(curl);
+		return -1;
+	}
+
+	mailboxlen = strlen(mailbox_encoded);
+
+	full_request = malloc(7+mailboxlen+2+1);
+	if(full_request == NULL) {
+		fprintf(stderr, "Error while creating IMAP request.\n");
+		curl_easy_cleanup(curl);
+		return -1;
+	}
+
+	strcpy(full_request, action ? "CREATE \"" : "DELETE \"");
+	strcat(full_request, mailbox_encoded);
+	strcat(full_request, "\"");
+	free(mailbox_encoded);
+
+	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
+		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
+		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_null); //Don't print the result to stdout
+
+		curl_easy_setopt(curl, CURLOPT_URL,address);
+		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,full_request);
+
+		enable_ssl(curl);
+
+		curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+		res = curl_easy_perform(curl);
+
+		/* Check for errors */
+		if(res != CURLE_OK)
+			fprintf(stderr, "curl_easy_perform() failed: %s\n",
+					curl_easy_strerror(res));
+		else {
+			fputs("Folder ", stdout);
+			fputs(action ? "created.\n" : "deleted.\n", stdout);
+		}
+
+		/* Always cleanup */
+		curl_easy_cleanup(curl);
+	}
+	free(address);
+	free(full_request);
+
+	return (int)res;
+}
+
 int ssl_create_folder(char * username, char * password, char * domain, char * mailbox) {
-	return 0;
+	return ssl_folder(username, password, domain, mailbox, 1);
 }
 
 int ssl_remove_folder(char * username, char * password, char * domain, char * mailbox) {
-	return 0;
+	return ssl_folder(username, password, domain, mailbox, 0);
 }
 
