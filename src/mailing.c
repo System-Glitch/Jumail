@@ -469,6 +469,10 @@ int ssl_fetch(char * username, char * password, char * domain, char * mailbox) {
 	}
 
 	curl = curl_easy_init();
+	if(!curl) {
+		fprintf(stderr, "Error on creating curl.\n");
+		return -1;
+	}
 	mailbox_encoded = url_encode(curl, mailbox);
 	if(mailbox_encoded == NULL) {
 		fprintf(stderr, "Error on URL encoding.\n");
@@ -552,9 +556,14 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 	uidstrlen = strlen(uidStr);
 
 	curl = curl_easy_init();
+	if(!curl) {
+		fprintf(stderr, "Error on creating curl.\n");
+		return -1;
+	}
 	mailbox_encoded = url_encode(curl, mailbox);
 	if(mailbox_encoded == NULL) {
 		fprintf(stderr, "Error on URL encoding.\n");
+		curl_easy_cleanup(curl);
 		return -1;
 	}
 	mailboxlen = strlen(mailbox_encoded);
@@ -562,6 +571,7 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 	full_address = malloc(strlen(address)+mailboxlen+uidstrlen+6+1);
 	if(full_address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		curl_easy_cleanup(curl);
 		return -1;
 	}
 	strcpy(full_address, address);
@@ -628,6 +638,7 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 	char * address;
 	char * full_address;
 	char * full_request;
+	char * mailbox_encoded;
 	char uidStr[12];
 
 	address = generate_address(domain, "imaps");
@@ -640,28 +651,42 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 		return -1;
 	}
 
+	curl = curl_easy_init();
+	if(!curl) {
+		fprintf(stderr, "Error on creating curl.\n");
+		return -1;
+	}
+	mailbox_encoded = url_encode(curl, mailbox);
+	if(mailbox_encoded == NULL) {
+		fprintf(stderr, "Error on URL encoding.\n");
+		curl_easy_cleanup(curl);
+		return -1;
+	}
+
 	sprintf(uidStr, "%d", uid);
 	uidstrlen = strlen(uidStr);
-	mailboxlen = strlen(mailbox);
+	mailboxlen = strlen(mailbox_encoded);
 	requestlen = strlen(request);
 	full_address = malloc(strlen(address)+mailboxlen+1);
 	if(full_address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		curl_easy_cleanup(curl);
 		return -1;
 	}
 
 	full_request = malloc(uidstrlen+requestlen+1);
 	if(full_request == NULL) {
 		fprintf(stderr, "Error while creating IMAP request.\n");
+		curl_easy_cleanup(curl);
 		return -1;
 	}
 	strcpy(full_address, address);
 	free(address);
-	strcat(full_address, mailbox);
+	strcat(full_address, mailbox_encoded);
+	free(mailbox_encoded);
 
 	sprintf(full_request, request, uid);
 
-	curl = curl_easy_init();
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
 		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
@@ -763,7 +788,7 @@ static Email init_email() {
 
 static int exec_regex(regex_t * regex, char* regexp, char * source, int max_groups, regmatch_t (*pmatch)[]) {
 	if (regcomp(regex, regexp, REG_EXTENDED)) {
-		fputs("Could not compile date regular expression.\n", stderr);
+		fputs("Could not compile regular expression.\n", stderr);
 		return 0;
 	}
 
@@ -957,6 +982,8 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 	char * address;
 	char * full_address;
 	char * full_request;
+	char * mailbox_encoded_src;
+	char * mailbox_encoded_dst;
 	char uidStr[12];
 
 	address = generate_address(domain, "imaps");
@@ -969,10 +996,29 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 		return -1;
 	}
 
+	curl = curl_easy_init();
+	if(!curl) {
+		fprintf(stderr, "Error on creating curl.\n");
+		return -1;
+	}
+	mailbox_encoded_src = url_encode(curl, mailbox_src);
+	if(mailbox_encoded_src == NULL) {
+		fprintf(stderr, "Error on URL encoding.\n");
+		curl_easy_cleanup(curl);
+		return -1;
+	}
+	mailboxlen_src = strlen(mailbox_encoded_src);
+
+	mailbox_encoded_dst = url_encode(curl, mailbox_dst);
+	if(mailbox_encoded_dst == NULL) {
+		fprintf(stderr, "Error on URL encoding.\n");
+		curl_easy_cleanup(curl);
+		return -1;
+	}
+	mailboxlen_dst = strlen(mailbox_encoded_dst);
+
 	sprintf(uidStr, "%d", uid);
 	uidstrlen = strlen(uidStr);
-	mailboxlen_src = strlen(mailbox_src);
-	mailboxlen_dst = strlen(mailbox_dst);
 
 	full_address = malloc(strlen(address)+mailboxlen_src+1);
 	if(full_address == NULL) {
@@ -987,15 +1033,16 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 	}
 	strcpy(full_address, address);
 	free(address);
-	strcat(full_address, mailbox_src);
+	strcat(full_address, mailbox_encoded_src);
 
 	strcpy(full_request, "COPY ");
 	strcat(full_request, uidStr);
 	strcat(full_request, " ");
-	strcat(full_request, mailbox_dst);
+	strcat(full_request, mailbox_encoded_dst);
 
+	free(mailbox_encoded_src);
+	free(mailbox_encoded_dst);
 
-	curl = curl_easy_init();
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
 		curl_easy_setopt(curl, CURLOPT_USERNAME, username);

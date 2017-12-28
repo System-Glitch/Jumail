@@ -20,7 +20,7 @@
 #define REGEX_TO 			"To: (.*?)"
 #define REGEX_FROM			"From: (.*?)"
 #define REGEX_SUBJECT		"Subject: (.*)"
-#define REGEX_FOLDER		"* LIST \\((.*?)\\) \"/\" \"(.*?)\""
+#define REGEX_FOLDER		"\\* LIST \\((.*?)\\) \"\\/\" \"(.*?)\""
 
 struct MemoryStruct {
   char *memory;
