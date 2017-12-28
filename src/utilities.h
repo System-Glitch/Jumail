@@ -69,6 +69,9 @@ size_t write_to_null(void *contents, size_t size, size_t nmemb, void *userp);
  */
 size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp);
 
+/**
+ * Used by CURL to read the data to be written into the connection
+ */
 size_t payload_source(void *ptr, size_t size, size_t nmemb, void *userp);
 
 /**

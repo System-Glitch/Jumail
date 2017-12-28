@@ -7,6 +7,9 @@
  */
 #include "folders.h"
 
+/**
+ * Parses a line returned from a LIST (IMAP) command using regex to get the folder name
+ */
 static char * parse_list_line(char* line) {
 	regex_t regex;
 	regmatch_t pmatch[3];
@@ -28,6 +31,10 @@ static char * parse_list_line(char* line) {
 	return dest;
 }
 
+/**
+ * Parses the whole result of a LIST (IMAP) command to get the folder names and returns the result into a StringArray.
+ * The returned StringArray MUST be freed using free_string_array()
+ */
 static StringArray *parse_list(CURL *curl, char * list) {
 	char * tmp;
 	char * tmp2;
@@ -41,7 +48,7 @@ static StringArray *parse_list(CURL *curl, char * list) {
 		return NULL;
 	}
 
-	StringArray array = split_list(list);
+	StringArray array = split_list(list); //Split the result by lines in order to process each line individually
 
 	result->size = array.size;
 	result->array = malloc(sizeof(char*)*result->size);
@@ -51,7 +58,7 @@ static StringArray *parse_list(CURL *curl, char * list) {
 		return NULL;
 	}
 
-	for(int i = 0 ; i < array.size ; i++) {
+	for(int i = 0 ; i < array.size ; i++) { //Individually process each line
 		tmp = parse_list_line(array.array[i]);
 		if(tmp == NULL) {
 			free_string_array(*result);
@@ -80,6 +87,9 @@ static StringArray *parse_list(CURL *curl, char * list) {
 	return result;
 }
 
+/**
+ * Performs a LIST (IMAP) operation, parses it and returns the existing folders inside a StringArray
+ */
 StringArray *ssl_list(char * username, char * password, char * domain) {
 	CURL *curl;
 	CURLcode res = CURLE_OK;
@@ -211,10 +221,16 @@ static int ssl_folder(char * username, char * password, char * domain, char * ma
 	return (int)res;
 }
 
+/**
+ * Performs a CREATE (IMAP) operation in order to create a new mailbox
+ */
 int ssl_create_folder(char * username, char * password, char * domain, char * mailbox) {
 	return ssl_folder(username, password, domain, mailbox, 1);
 }
 
+/**
+ * Performs a DELETE (IMAP) operation in order to delete an existing mailbox
+ */
 int ssl_remove_folder(char * username, char * password, char * domain, char * mailbox) {
 	return ssl_folder(username, password, domain, mailbox, 0);
 }

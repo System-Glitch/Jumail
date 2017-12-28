@@ -14,6 +14,10 @@ void free_string_array(StringArray arr) {
 			free(arr.array[i]);
 }
 
+/**
+ * Splits the given string according to the delimiter.
+ * Don't forget to free_string_array !
+ */
 StringArray strsplit(char * str , char delimiter) {
 	StringArray array;
 	int next_delimiter;
@@ -73,6 +77,10 @@ StringArray strsplit(char * str , char delimiter) {
 	return array;
 }
 
+/**
+ * Splits the given mail payload.
+ * Don't forget to free_string_array !
+ */
 StringArray split_mail(char * mail) {
 	StringArray array;
 	int next_delimiter;
@@ -139,6 +147,10 @@ StringArray split_mail(char * mail) {
 	return array;
 }
 
+/**
+ * Splits the given list payload.
+ * Don't forget to free_string_array !
+ */
 StringArray split_list(char * list) {
 	StringArray array;
 	int next_delimiter;
@@ -180,6 +192,9 @@ StringArray split_list(char * list) {
 	return array;
 }
 
+/**
+ * Counts the amount of the char c in the string str
+ */
 int strcount(char * str, char c) {
 	int i,count,len;
 
@@ -194,6 +209,10 @@ int strcount(char * str, char c) {
 	return count;
 }
 
+/**
+ * Splits the given string by slashes, URL encodes it, reassemble it and returns the result.
+ * Don't forget to free it.
+ */
 char * url_encode(CURL *curl, char * str) {
 	char * result = NULL;
 	char * tmp;
@@ -226,8 +245,14 @@ char * url_encode(CURL *curl, char * str) {
 	return result;
 }
 
+/**
+ * Used by CURL to not write request result into memory
+ */
 size_t write_to_null(void *contents, size_t size, size_t nmemb, void *userp) { return nmemb; }
 
+/**
+ * Used by CURL to write request result into memory
+ */
 size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *userp) {
 	size_t realsize = size * nmemb;
 	struct MemoryStruct *mem = (struct MemoryStruct *)userp;
@@ -246,6 +271,9 @@ size_t write_memory_callback(void *contents, size_t size, size_t nmemb, void *us
 	return realsize;
 }
 
+/**
+ * Used by CURL to read the data to be written into the connection
+ */
 size_t payload_source(void *ptr, size_t size, size_t nmemb, void *userp) {
 	struct upload_status *upload_ctx = (struct upload_status *)userp;
 	const char *data;
@@ -267,7 +295,9 @@ size_t payload_source(void *ptr, size_t size, size_t nmemb, void *userp) {
 	return 0;
 }
 
-
+/**
+ * Enables SSL on the given CURL connection
+ */
 void enable_ssl(CURL *curl) {
 	#ifdef SKIP_PEER_VERIFICATION
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
@@ -279,6 +309,9 @@ void enable_ssl(CURL *curl) {
 	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 }
 
+/**
+ * Executes the given regexp on the source and stores the result into the array pmatch
+ */
 int exec_regex(regex_t * regex, char* regexp, char * source, int max_groups, regmatch_t (*pmatch)[]) {
 	if (regcomp(regex, regexp, REG_EXTENDED)) {
 		fputs("Could not compile regular expression.\n", stderr);
@@ -288,6 +321,10 @@ int exec_regex(regex_t * regex, char* regexp, char * source, int max_groups, reg
 	return regexec(regex, source, max_groups, *pmatch, 0) == 0;
 }
 
+/**
+ * Generates the URL to the domain for the given protocol. Returns null in case of error or invalid string given.
+ * Don't forget to free it.
+ */
 char * generate_address(char * domain, char * protocol) {
 	char * address;
 	int domainlen, protocollen;

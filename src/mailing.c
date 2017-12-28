@@ -19,7 +19,7 @@ static char * get_date() {
 	time_t now = time(NULL);
 	struct tm *t = localtime(&now);
 
-	strftime(date, 79, "Date: %a, %d %m %Y %H:%M:%S %z\r\n", t); //Linux : "Date: %a, %d %h %Y %H:%M:%S %z\r\n"
+	strftime(date, 79, "Date: %a, %d %m %Y %H:%M:%S %z\r\n", t);
 	return date;
 }
 
@@ -231,32 +231,6 @@ void free_mail(char ** mail) {
 	free(mail);
 }
 
-//SENDING A MAIL
-/*
- 	char * id = generate_id();
-	if(id == NULL) {
-		fprintf(stderr, "An error occured while getting a new GUID. Check your internet connection.\n");
-		exit(1);
-	}
-	char** header = get_header("jumailimap@gmail.com", "jeremy.la@outlook.fr", "Ju Mail", "Test5", id);
-	if(header == NULL) {
-		fprintf(stderr, "An error occured while creating the email header.\n");
-		//Handle error
-		//e.g. free id and exit
-	}
-	free(id);
-	char ** mail = get_mail(header,"Yolo");
-	if(mail == NULL) {
-		fprintf(stderr, "An error occured while creating the email payload.\n");
-		//Handle error
-		//e.g. free header and exit
-	}
-
-	send_mail_ssl("jumailimap@gmail.com", "azerty12", "jeremy.la@outlook.fr", "smtp.gmail.com", (const char **)mail);
-	free_header(header);
-	free_mail(mail);
- */
-
 /**
  * Sends a mail generated with get_mail using SMTP.
  */
@@ -288,12 +262,12 @@ int send_mail_ssl(char * username, char * password, char * to, char * domain, co
 
 		enable_ssl(curl);
 
-		curl_easy_setopt(curl, CURLOPT_MAIL_FROM, username);
+		curl_easy_setopt(curl, CURLOPT_MAIL_FROM, username); //Set sender
 
 		recipients = curl_slist_append(recipients, to);
 		curl_easy_setopt(curl, CURLOPT_MAIL_RCPT, recipients);
 
-		curl_easy_setopt(curl, CURLOPT_READFUNCTION, payload_source);
+		curl_easy_setopt(curl, CURLOPT_READFUNCTION, payload_source); //Set the source
 		curl_easy_setopt(curl, CURLOPT_READDATA, &upload_ctx);
 		curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
 
@@ -318,7 +292,7 @@ int send_mail_ssl(char * username, char * password, char * to, char * domain, co
 }
 
 /**
- * Parses a String result of the FETCH operation (IMAP) into an integer array containing all the UIDs.
+ * Parses a String result of the SEARCH operation (IMAP) into an integer array containing all the UIDs.
  */
 static struct ParsedSearch parse_search(char * answer) {
 	struct ParsedSearch search;
@@ -332,7 +306,7 @@ static struct ParsedSearch parse_search(char * answer) {
 
 	size = strcount(answer, ' ') - 1;
 	len = strlen(answer);
-	len2 = len - 9;
+	len2 = len - 9; //Don't count unused characters for substring
 	i = 0;
 
 	if(size > 0) {
@@ -347,12 +321,12 @@ static struct ParsedSearch parse_search(char * answer) {
 		end = sub;
 		index = 0;
 		while(*end) {
-			int n = strtol(sub+index, &end, 10);
+			int n = strtol(sub+index, &end, 10); //Parse uid to int
 			result[i++] = n;
 			while (*end == ' ') {
 				end++;
 			}
-			if(*end == '\r' || *end == '\n') break;
+			if(*end == '\r' || *end == '\n') break; //Stop if delimiter is reached
 			index = end - sub;
 		}
 		free(sub);
@@ -364,7 +338,10 @@ static struct ParsedSearch parse_search(char * answer) {
 	return search;
 }
 
-int ssl_fetch(char * username, char * password, char * domain, char * mailbox) {
+/**
+ * Performs a SEARCH ?ALL (IMAP) operation in the given mailbox. This returns all the UIDs present in the mailbox.
+ */
+int ssl_search_all(char * username, char * password, char * domain, char * mailbox) {
 	CURL *curl;
 	CURLcode res = CURLE_OK;
 	struct MemoryStruct chunk;
@@ -393,21 +370,26 @@ int ssl_fetch(char * username, char * password, char * domain, char * mailbox) {
 	mailbox_encoded = url_encode(curl, mailbox);
 	if(mailbox_encoded == NULL) {
 		fprintf(stderr, "Error on URL encoding.\n");
+		curl_easy_cleanup(curl);
 		return -1;
 	}
 	mailboxlen = strlen(mailbox_encoded);
 	full_address = malloc(strlen(address)+mailboxlen+4+1);
 	if(full_address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		curl_easy_cleanup(curl);
 		return -1;
 	}
+
+	//Building full address
+	//imaps://domain/mailbox?ALL
 	strcpy(full_address, address);
 	free(address);
 	strcat(full_address, mailbox_encoded);
 	strcat(full_address, "?ALL");
 	free(mailbox_encoded);
 
-	chunk.memory = malloc(1);
+	chunk.memory = malloc(1); //Initial allocation. Will be reallocated in write_memory_callback() to fit the correct size.
 	chunk.size = 0;
 
 	if(curl) {
@@ -434,8 +416,9 @@ int ssl_fetch(char * username, char * password, char * domain, char * mailbox) {
 				fprintf(stderr, "Search is NULL\n");
 				return -1;
 			}
+			//TODO return ParsedSearch
 			for(int i = 0 ; i < search.size ; i++) {
-				ssl_get_mail(username,password,domain,mailbox,search.uids[i]); //TODO
+				ssl_get_mail(username,password,domain,mailbox,search.uids[i]);
 			}
 			free(search.uids);
 		}
@@ -449,6 +432,9 @@ int ssl_fetch(char * username, char * password, char * domain, char * mailbox) {
 	return (int)res;
 }
 
+/**
+ * Performs a FETCH (IMAP) operation to get an email.
+ */
 int ssl_get_mail(char * username, char * password, char * domain, char * mailbox, int uid) {
 	CURL *curl;
 	CURLcode res = CURLE_OK;
@@ -491,6 +477,9 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 		curl_easy_cleanup(curl);
 		return -1;
 	}
+
+	//Building full address
+	//imaps://domain/mailbox/;UID=uid
 	strcpy(full_address, address);
 	free(address);
 	strcat(full_address, mailbox_encoded);
@@ -498,7 +487,7 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 	strcat(full_address, uidStr);
 	free(mailbox_encoded);
 
-	chunk.memory = malloc(1);
+	chunk.memory = malloc(1); //Initial allocation. Will be reallocated in write_memory_callback() to fit the correct size.
 	chunk.size = 0;
 
 	if(curl) {
@@ -522,7 +511,7 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 			fprintf(stderr, "curl_easy_perform() failed: %s\n",
 					curl_easy_strerror(res));
 		else {
-			fputs("Chunk : ",stdout); //TODO
+			fputs("Chunk : ",stdout); //TODO return Email struct
 			fputs(chunk.memory, stdout);
 			fflush(stdout);
 			/*Email mail = parse_email(chunk.memory,uid);
@@ -548,6 +537,11 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 	return (int)res;
 }
 
+/**
+ * Performs a STORE operation (IMAP). The request is a formatted string.
+ * Example: "STORE %d +Flags \\Deleted"
+ * Here, %d will be replaced by uid
+ */
 int ssl_mail_request(char * username, char * password, char * domain, char * mailbox, int uid, const char *request) {
 	CURL *curl;
 	CURLcode res = CURLE_OK;
@@ -580,7 +574,8 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 		return -1;
 	}
 
-	sprintf(uidStr, "%d", uid);
+	sprintf(uidStr, "%d", uid); //Convert uid to string in order to get the amount of digits
+
 	uidstrlen = strlen(uidStr);
 	mailboxlen = strlen(mailbox_encoded);
 	requestlen = strlen(request);
@@ -597,11 +592,14 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 		curl_easy_cleanup(curl);
 		return -1;
 	}
+
+	//Building full address
 	strcpy(full_address, address);
 	free(address);
 	strcat(full_address, mailbox_encoded);
 	free(mailbox_encoded);
 
+	//Replacing format code with value
 	sprintf(full_request, request, uid);
 
 	if(curl) {
@@ -637,14 +635,23 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 	return (int)res;
 }
 
+/**
+ * Performs a STORE (IMAP) operation to flag an email as seen (1) or unseen (0).
+ */
 int ssl_see_mail(char * username, char * password, char * domain, char * mailbox, int uid, char seen) {
 	return ssl_mail_request(username,password,domain,mailbox,uid, seen ? "STORE %d +Flags \\Seen" : "STORE %d -Flags \\Seen");
 }
 
+/**
+ * Performs a STORE (IMAP) operation to flag an email as deleted.
+ */
 int ssl_delete_mail(char * username, char * password, char * domain, char * mailbox, int uid) {
 	return ssl_mail_request(username,password,domain,mailbox,uid,"STORE %d +Flags \\Deleted");
 }
 
+/**
+ * Creates an Email, sets every pointer to NULL and returns the result.
+ */
 static Email init_email() {
 	Email mail;
 	mail.date = NULL;
@@ -655,6 +662,10 @@ static Email init_email() {
 	return mail;
 }
 
+/**
+ * Gets a substring of a header line using regex
+ * Example: "From: email@address.io" returns "email@address.io"
+ */
 static char * parse_header_line(StringArray * content, char * regexp) {
 	regex_t regex;
 	regmatch_t pmatch[2];
@@ -665,7 +676,7 @@ static char * parse_header_line(StringArray * content, char * regexp) {
 	for(int i = 0 ; i < content->size-1 ; i++) {
 		line = content->array[i];
 
-		if(exec_regex(&regex, regexp, line, 2, &pmatch)) {
+		if(exec_regex(&regex, regexp, line, 2, &pmatch)) { //Use a regex to extract value
 			len = pmatch[1].rm_eo - pmatch[1].rm_so;
 			dest = malloc(len + 1);
 			if(dest == NULL) {
@@ -681,6 +692,9 @@ static char * parse_header_line(StringArray * content, char * regexp) {
 	return dest;
 }
 
+/**
+ * Parses a complete email payload (header + body) and returns the result into an Email struct
+ */
 Email parse_email(char * payload, int uid) {
 	Email mail = init_email();
 	StringArray content;
@@ -694,6 +708,7 @@ Email parse_email(char * payload, int uid) {
 		return mail;
 	}
 
+	//Parse date
 	date = parse_header_line(&content, REGEX_DATE);
 	if(date == NULL) {
 		free_string_array(content);
@@ -701,6 +716,7 @@ Email parse_email(char * payload, int uid) {
 		return mail;
 	}
 
+	//Parse TO
 	to = parse_header_line(&content, REGEX_TO);
 	if(to == NULL) {
 		free_string_array(content);
@@ -708,6 +724,7 @@ Email parse_email(char * payload, int uid) {
 		return mail;
 	}
 
+	//Parse sender
 	from = parse_header_line(&content, REGEX_FROM);
 	if(from == NULL) {
 		free_string_array(content);
@@ -715,6 +732,7 @@ Email parse_email(char * payload, int uid) {
 		return mail;
 	}
 
+	//Parse subject
 	subject = parse_header_line(&content, REGEX_SUBJECT);
 	if(subject == NULL) {
 		free_string_array(content);
@@ -748,6 +766,9 @@ Email parse_email(char * payload, int uid) {
 	return mail;
 }
 
+/**
+ * Safe free of an Email struct, ignoring NULL pointers
+ */
 void free_email(Email email) {
 	if(email.date != NULL)
 		free(email.date);
@@ -761,6 +782,9 @@ void free_email(Email email) {
 		free(email.to);
 }
 
+/**
+ * Moves an email from one folder to another performing a COPY (IMAP) operation then flags the mail as deleted in the source folder
+ */
 int ssl_move_mail(char * username, char * password, char * domain, char * mailbox_src, char * mailbox_dst, int uid) {
 
 	CURL *curl;
@@ -804,7 +828,7 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 	}
 	mailboxlen_dst = strlen(mailbox_encoded_dst);
 
-	sprintf(uidStr, "%d", uid);
+	sprintf(uidStr, "%d", uid); //Convert uid to string in order to get the amount of digits and to insert into the request string
 	uidstrlen = strlen(uidStr);
 
 	full_address = malloc(strlen(address)+mailboxlen_src+1);
@@ -818,10 +842,14 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 		fprintf(stderr, "Error while creating IMAP request.\n");
 		return -1;
 	}
+
+	//Building full address
 	strcpy(full_address, address);
 	free(address);
 	strcat(full_address, mailbox_encoded_src);
 
+	//Building request
+	//COPY uid mailbox_dst
 	strcpy(full_request, "COPY ");
 	strcat(full_request, uidStr);
 	strcat(full_request, " ");
@@ -873,5 +901,5 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 	if(res != CURLE_OK)
 		return (int)res;
 
-	return ssl_delete_mail(username, password, domain, mailbox_src, uid);
+	return ssl_delete_mail(username, password, domain, mailbox_src, uid); //Flags the original mail as deleted to avoid duplicates
 }
