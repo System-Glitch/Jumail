@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
 	}
 	free_string_array(*list);*/
 
-	ssl_move_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", "INBOX", "Test", "<8tA94c5sdm2AvdsW99Fv3A@notifications.google.com>");
+	//ssl_move_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", "INBOX", "Test", "<8tA94c5sdm2AvdsW99Fv3A@notifications.google.com>");
 	//ssl_remove_folder("jumailimap@gmail.com", "azerty12", "imap.gmail.com", "yolé y ouh");
 
 	/*Email mail = parse_email("Date: Sun, 26 Nov 2017 16:22:33 +0100\r\nTo: <jeremy.la@outlook.fr>\r\nFrom: <jumailimap@gmail.com>(Ju Mail)\r\nMessage-ID: <d5252969-6b02-469a-a5d1-57b1305cc768@jumail.fr>\r\nSubject: Bonjour ça va?\r\n\r\nSalut je voulais prendre de tes nouvelles.\r\nÇa fait longtemps.\r\nBye.",0);
@@ -34,28 +34,28 @@ int main(int argc, char** argv) {
 
 	//SENDING A MAIL
 
-	 	/*char * id = generate_id();
-		if(id == NULL) {
-			fprintf(stderr, "An error occured while getting a new GUID. Check your internet connection.\n");
-			exit(1);
-		}
-		char** header = get_header("jumailimap@gmail.com", "jeremy.la@outlook.fr", "Ju Mail", "Test 07", id);
-		if(header == NULL) {
-			fprintf(stderr, "An error occured while creating the email header.\n");
-			//Handle error
-			//e.g. free id and exit
-		}
-		free(id);
-		char ** mail = get_mail(header,"Contenu du message");
-		if(mail == NULL) {
-			fprintf(stderr, "An error occured while creating the email payload.\n");
-			//Handle error
-			//e.g. free header and exit
-		}
+	/*char * id = generate_id();
+	if(id == NULL) {
+		fprintf(stderr, "An error occured while getting a new GUID. Check your internet connection.\n");
+		exit(1);
+	}
+	char** header = get_header("jumailimap@gmail.com", "jumailimap@gmail.com", "Ju Mail", "Test reply multiple", "<2b5a344b-5826-4492-84c4-4b6d5bb5fc9c@jumail.fr>", NULL, id);
+	if(header == NULL) {
+		fprintf(stderr, "An error occured while creating the email header.\n");
+		//Handle error
+		//e.g. free id and exit
+	}
+	free(id);
+	char ** mail = get_mail(header,"Contenu du message test reply");
+	if(mail == NULL) {
+		fprintf(stderr, "An error occured while creating the email payload.\n");
+		//Handle error
+		//e.g. free header and exit
+	}
 
-		send_mail_ssl("jumailimap@gmail.com", "azerty12", "jeremy.la@outlook.fr", "smtp.gmail.com", (const char **)mail);
-		free_header(header);
-		free_mail(mail);*/
+	send_mail_ssl("jumailimap@gmail.com", "azerty12", "jumailimap@gmail.com", "smtp.gmail.com", (const char **)mail);
+	free_header(header);
+	free_mail(mail);*/
 
 
 	return 0;

@@ -151,10 +151,10 @@ static char * get_id(char * id) {
 	char * result;
 
 	if(id == NULL) return NULL;
-	idlen = strlen(id)+1;
+	idlen = strlen(id);
 	if(idlen <= 0) return NULL;
 
-	result = malloc(idlen+26); //+13 for "Message-ID: <", +13 for "\r\n"
+	result = malloc(idlen+26+1); //+13 for "Message-ID: <", +13 for "@jumail.fr>\r\n", +1 for '\0'
 	if(result == NULL) return NULL;
 
 	strcpy(result, "Message-ID: <");
@@ -164,16 +164,68 @@ static char * get_id(char * id) {
 }
 
 /**
- * Generates the full mail header. "name" is nullable. Returns NULL if an error occurred or some inputs are wrong.
+ * Generates  the "In-Reply-To" header line.
+ * Returns NULL in case of fail in memory allocation or if an invalid string was given.
+ */
+static char * get_in_reply_to(char * id) {
+	int idlen;
+	char * result;
+
+	if(id == NULL) return NULL;
+	idlen = strlen(id);
+	if(idlen <= 0) return NULL;
+
+	result = malloc(idlen+13+2+1); //+13 for "In-Reply-To: ", +2 for "\r\n", +12 for "References: " +1 for '\0'
+	if(result == NULL) return NULL;
+
+	strcpy(result, "In-Reply-To: ");
+	strcat(result, id);
+	strcat(result, "\r\n");
+	return result;
+}
+
+/**
+ * Generates  the "References" header line. See RFC 2822
+ * Returns NULL in case of fail in memory allocation or if an invalid string was given.
+ */
+static char * get_references(char *references, char *in_reply_to) {
+	int referenceslen, in_reply_to_len;
+	char * result;
+
+	if(in_reply_to == NULL) return NULL;
+	in_reply_to_len = strlen(in_reply_to);
+	if(in_reply_to_len <= 0) return NULL;
+
+	referenceslen = references != NULL ? strlen(references) : 0;
+	if(referenceslen > 0) referenceslen++; //Already have references, need to add space separator to add in_reply_to after
+
+	result = malloc(referenceslen+in_reply_to_len+13+2+1); //+13 for "In-Reply-To: ", +2 for "\r\n", +12 for "References: " +1 for '\0'
+	if(result == NULL) return NULL;
+
+	strcpy(result, "References: ");
+
+	if(references != NULL) {
+		strcat(result, references);
+		strcat(result, " ");
+	}
+	strcat(result,in_reply_to);
+	strcat(result, "\r\n");
+	return result;
+}
+
+/**
+ * Generates the full mail header. "name", "in_reply_to" and "references" are nullable. Returns NULL if an error occurred or some inputs are wrong.
  * Don't forget to free it.
  */
-char ** get_header(char * from, char * to, char * name, char * subject, char* id) {
+char ** get_header(char *from, char *to, char *name, char *subject, char *in_reply_to, char *references, char *id) {
 	char ** header;
 	char * fromline = get_from(from, name);
 	char * toline = get_to(to);
 	char * dateline = get_date();
 	char * idline = get_id(id);
 	char * subjectline = get_subject(subject);
+	char * in_reply_to_line = get_in_reply_to(in_reply_to);
+	char * references_line = get_references(references, in_reply_to);
 	char * separatorline;
 
 	if(fromline == NULL || toline == NULL || dateline == NULL ||
@@ -183,19 +235,23 @@ char ** get_header(char * from, char * to, char * name, char * subject, char* id
 	if(separatorline == NULL) return NULL;
 	strcpy(separatorline, "\r\n");
 
-	header = malloc(6*sizeof(char *));
+	header = malloc(8*sizeof(char *));
 	header[0] = dateline;
 	header[1] = toline;
 	header[2] = fromline;
 	header[3] = idline;
 	header[4] = subjectline;
-	header[5] = separatorline;
+	header[5] = in_reply_to_line;
+	header[6] = references_line;
+	header[7] = separatorline;
+
 	return header;
 }
 
 void free_header(char ** header) {
-	for(int i = 0 ; i < 6 ; i++)
-		free(header[i]);
+	for(int i = 0 ; i < 8 ; i++)
+		if(header[i] != NULL)
+			free(header[i]);
 	free(header);
 }
 
@@ -232,7 +288,7 @@ void free_mail(char ** mail) {
 }
 
 /**
- * Sends a mail generated with get_mail using SMTP.
+ * Sends a mail generated with get_mail using SMTP. "mail" is the full email payload, built with get_mai() and get_header()
  */
 int send_mail_ssl(char * username, char * password, char * to, char * domain, const char ** mail) {
 	CURL *curl;
@@ -672,6 +728,8 @@ static Email init_email() {
 	mail.subject 	= NULL;
 	mail.message_id = NULL;
 	mail.to 		= NULL;
+	mail.in_reply_to= NULL;
+	mail.references = NULL;
 	return mail;
 }
 
@@ -712,7 +770,10 @@ Email parse_email(char * payload) {
 	Email mail = init_email();
 	StringArray content;
 	int len;
-	char *date = NULL, *from = NULL, *to = NULL, *message = NULL, *subject = NULL, *message_id = NULL;
+	char 	*date = NULL, *from = NULL,
+			*to = NULL, *message = NULL,
+			*subject = NULL, *message_id = NULL,
+			*in_reply_to = NULL, *references = NULL;
 
 	content = split_mail(payload);
 
@@ -761,6 +822,14 @@ Email parse_email(char * payload) {
 		return mail;
 	}
 
+	//Parse in-reply-to
+	in_reply_to = parse_header_line(&content, REGEX_IN_REPLY_TO);
+	//Don't check for NULL because this header is not present in every mail
+	//Same for references
+
+	//Parse references
+	references = parse_header_line(&content, REGEX_REFERENCES);
+
 	//Simple copy of the message body
 	len = content.array[content.size-1][0] == '\0' ? 0 : strlen(content.array[content.size-1]); //Check if message is empty
 	message = malloc(len + 1);
@@ -776,12 +845,14 @@ Email parse_email(char * payload) {
 		message[0] = '\0';
 
 	//Fill the struct
-	mail.date = date;
-	mail.from = from;
-	mail.message = message;
-	mail.subject = subject;
-	mail.to = to;
-	mail.message_id = message_id;
+	mail.date 			= date;
+	mail.from 			= from;
+	mail.message 		= message;
+	mail.subject 		= subject;
+	mail.to 			= to;
+	mail.message_id 	= message_id;
+	mail.in_reply_to	= in_reply_to;
+	mail.references	= references;
 
 	free_string_array(content);
 	return mail;
@@ -803,6 +874,10 @@ void free_email(Email email) {
 		free(email.to);
 	if(email.message_id != NULL)
 		free(email.message_id);
+	if(email.in_reply_to != NULL)
+		free(email.in_reply_to);
+	if(email.references != NULL)
+		free(email.references);
 }
 
 /**

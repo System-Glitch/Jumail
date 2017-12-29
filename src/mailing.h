@@ -20,7 +20,8 @@
 #define REGEX_FROM			"From: (.*?)"
 #define REGEX_SUBJECT		"Subject: (.*)"
 #define REGEX_MESSAGE_ID	"Message-ID: (.*)"
-
+#define REGEX_IN_REPLY_TO	"In-Reply-To: (.*)"
+#define REGEX_REFERENCES	"References: (.*)"
 
 struct ParsedSearch {
 	size_t size;
@@ -34,6 +35,8 @@ typedef struct Email {
 	char *subject;
 	char *message;
 	char *message_id;
+	char *in_reply_to;
+	char *references;
 } Email;
 
 /**
@@ -43,10 +46,10 @@ typedef struct Email {
 char * generate_id();
 
 /**
- * Generates the full mail header. "name" is nullable. Returns NULL if an error occurred or some inputs are wrong.
+ * Generates the full mail header. "name", "in_reply_to" and "references" are nullable. Returns NULL if an error occurred or some inputs are wrong.
  * Don't forget to free it.
  */
-char ** get_header(char * from, char * to, char * name, char * subject, char* id);
+char ** get_header(char *from, char *to, char *name, char *subject, char *in_reply_to, char *references, char *id);
 
 /**
  * Generates the whole message payload. Returns NULL if an error occurred or if invalid parameters are given.
@@ -59,7 +62,7 @@ void free_header(char ** header);
 void free_mail(char ** header);
 
 /**
- * Sends a mail generated with get_mail using SMTP.
+ * Sends a mail generated with get_mail using SMTP. "mail" is the full email payload, built with get_mai() and get_header()
  */
 int send_mail_ssl(char * username, char * password, char * to, char * domain, const char ** mail);
 
