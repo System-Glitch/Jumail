@@ -215,6 +215,7 @@ static char * get_references(char *references, char *in_reply_to) {
 
 /**
  * Generates the full mail header. "name", "in_reply_to" and "references" are nullable. Returns NULL if an error occurred or some inputs are wrong.
+ * In case of a reply, if the parent mail doesn't have a References header, pass the value of the In-Reply-To header in the "references" field. See RFC 2822
  * Don't forget to free it.
  */
 char ** get_header(char *from, char *to, char *name, char *subject, char *in_reply_to, char *references, char *id) {
