@@ -87,7 +87,8 @@ void linkedlist_pop(linkedlist_t * list) {
  * Returns the value of the node at the given index
  */
 void *linkedlist_get(linkedlist_t * list, int index) {
-	return linkedlist_get_node(list,index)->val;
+	node_t *node = linkedlist_get_node(list,index);
+	return node != NULL ? node->val : NULL;
 }
 
 /**
