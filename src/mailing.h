@@ -111,7 +111,7 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 /**
  * Searches an email by Message-ID and returns the UID if found
  * Uses an already existing CURL connection
- * Returns -1 if not found, -2 if an error occurred
+ * Returns 0 if not found, -1 if an error occurred
  */
 int ssl_search_by_id(CURL *curl, char *message_id);
 
