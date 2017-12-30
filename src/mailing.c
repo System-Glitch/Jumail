@@ -500,6 +500,7 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 	char * address;
 	char * mailbox_encoded;
 	char * full_address;
+	char * full_request;
 	char uidStr[12];
 
 	address = generate_address(domain, "imaps");
@@ -535,6 +536,13 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 		return -1;
 	}
 
+	full_request = malloc(6+8+uidstrlen+1); //6 for "FETCH ", +8 for " (FLAGS)"
+	if(full_request == NULL) {
+		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		curl_easy_cleanup(curl);
+		return -1;
+	}
+
 	//Building full address
 	//imaps://domain/mailbox/;UID=uid
 	strcpy(full_address, address);
@@ -542,6 +550,13 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 	strcat(full_address, mailbox_encoded);
 	strcat(full_address, "/;UID=");
 	strcat(full_address, uidStr);
+
+
+	//Building request
+	strcpy(full_request,"FETCH ");
+	strcat(full_request, uidStr);
+	strcat(full_request, " (FLAGS)");
+
 	free(mailbox_encoded);
 
 	chunk.memory = malloc(1); //Initial allocation. Will be reallocated in write_memory_callback() to fit the correct size.
@@ -571,6 +586,25 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 			fputs("Chunk : ",stdout); //TODO return Email struct
 			fputs(chunk.memory, stdout);
 			fflush(stdout);
+
+			free(chunk.memory);
+			chunk.memory = malloc(1); //Initial allocation. Will be reallocated in write_memory_callback() to fit the correct size.
+			chunk.size = 0;
+
+			//Get flags
+			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,full_request);
+
+			res = curl_easy_perform(curl);
+
+			/* Check for errors */
+			if(res != CURLE_OK)
+				fprintf(stderr, "curl_easy_perform() failed: %s\n",
+						curl_easy_strerror(res));
+			else {
+				fputs("Chunk flags : ",stdout);
+				fputs(chunk.memory, stdout);
+				fflush(stdout); //TODO parse flags
+			}
 			/*Email mail = parse_email(chunk.memory,uid);
 			fputs(mail.date, stdout);
 			fputs("\n", stdout);
@@ -585,10 +619,10 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 			free_email(mail);*/
 		}
 
-		free(chunk.memory);
 		/* Always cleanup */
 		curl_easy_cleanup(curl);
 	}
+	free(full_request);
 	free(full_address);
 
 	return (int)res;

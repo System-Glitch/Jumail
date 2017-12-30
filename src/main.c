@@ -11,7 +11,7 @@
 #include "libs/muttx/utf7.h"
 
 int main(int argc, char** argv) {
-	ssl_search_all("jumailimap@gmail.com", "azerty12", "imap.gmail.com", "[Gmail]/Messages envoyés");
+	ssl_search_all("jumailimap@gmail.com", "azerty12", "imap.gmail.com", "INBOX");
 	/*StringArray *list = ssl_list("jumailimap@gmail.com", "azerty12", "imap.gmail.com");
 	for(int i = 0 ; i < list->size ; i++) {
 		fputs(list->array[i], stdout);
