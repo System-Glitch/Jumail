@@ -474,7 +474,7 @@ int ssl_search_all(char * username, char * password, char * domain, char * mailb
 				return -1;
 			}
 			//TODO return ParsedSearch
-			for(int i = 0 ; i < search.size ; i++) {
+			for(size_t i = 0 ; i < search.size ; i++) {
 				ssl_get_mail(username,password,domain,mailbox,search.uids[i]);
 			}
 			free(search.uids);
@@ -745,7 +745,7 @@ static char * parse_header_line(StringArray * content, char * regexp) {
 	char * dest = NULL;
 	char * line;
 
-	for(int i = 0 ; i < content->size-1 ; i++) {
+	for(size_t i = 0 ; i < content->size-1 ; i++) {
 		line = content->array[i];
 
 		if(exec_regex(&regex, regexp, line, 2, &pmatch)) { //Use a regex to extract value
@@ -778,7 +778,7 @@ Email parse_email(char * payload) {
 
 	content = split_mail(payload);
 
-	if(content.size < 0) {
+	if(content.size <= 0) {
 		fputs("Could not split mail payload.\n", stderr);
 		return mail;
 	}
