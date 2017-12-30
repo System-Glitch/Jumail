@@ -12,6 +12,7 @@
 #include <string.h>
 #include <curl/curl.h>
 #include <regex.h>
+#include "libs/muttx/utf7.h"
 
 struct upload_status {
 	int lines_read;

@@ -8,9 +8,10 @@
 #include "MainWindow.h"
 #include "mailing.h"
 #include "folders.h"
+#include "libs/muttx/utf7.h"
 
 int main(int argc, char** argv) {
-	//ssl_search_all("jumailimap@gmail.com", "azerty12", "imap.gmail.com", "INBOX");
+	ssl_search_all("jumailimap@gmail.com", "azerty12", "imap.gmail.com", "[Gmail]/Messages envoyés");
 	/*StringArray *list = ssl_list("jumailimap@gmail.com", "azerty12", "imap.gmail.com");
 	for(int i = 0 ; i < list->size ; i++) {
 		fputs(list->array[i], stdout);
@@ -56,6 +57,21 @@ int main(int argc, char** argv) {
 	send_mail_ssl("jumailimap@gmail.com", "azerty12", "jumailimap@gmail.com", "smtp.gmail.com", (const char **)mail);
 	free_header(header);
 	free_mail(mail);*/
+
+	/*char *str = malloc(10);
+	char *str_encoded;
+	strcpy(str, "yolé y ouh");
+
+	fputs(str, stdout);
+	fputs("\n", stdout);
+
+	utf8_to_utf7(str, strlen(str), &str_encoded, 0);
+
+	fputs(str_encoded, stdout);
+	fputs("\n", stdout);
+
+	free(str_encoded);
+	free(str);*/
 
 
 	return 0;

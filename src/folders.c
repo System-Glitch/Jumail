@@ -6,6 +6,7 @@
  *  Description : Mailboxes and folders utilities
  */
 #include "folders.h"
+#include "libs/muttx/utf7.h"
 
 /**
  * Parses a line returned from a LIST (IMAP) command using regex to get the folder name
@@ -36,8 +37,9 @@ static char * parse_list_line(char* line) {
  * The returned StringArray MUST be freed using free_string_array()
  */
 static StringArray *parse_list(CURL *curl, char * list) {
-	char * tmp;
-	char * tmp2;
+	char * tmp; //Raw list line
+	char * tmp2; //Unescaped line
+	char * tmp3; //UTF-7 decoded
 	int j = 0;
 	int len;
 	StringArray *result;
@@ -70,6 +72,9 @@ static StringArray *parse_list(CURL *curl, char * list) {
 		tmp2 = curl_easy_unescape(curl, tmp, 0, &len);
 		free(tmp);
 
+		utf7_to_utf8(tmp2, strlen(tmp2), &tmp3, 0); //Decode special chars
+		curl_free(tmp2);
+
 		result->array[j] = malloc(len+1);
 		if(result->array[j] == NULL) {
 			free_string_array(*result);
@@ -77,9 +82,9 @@ static StringArray *parse_list(CURL *curl, char * list) {
 			fputs("Error when allocating decoded folder name.\n", stderr);
 			return NULL;
 		}
-		strcpy(result->array[j], tmp2);
+		strcpy(result->array[j], tmp3);
 
-		curl_free(tmp2);
+		free(tmp3);
 		j++;
 	}
 

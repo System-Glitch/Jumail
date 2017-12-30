@@ -215,7 +215,8 @@ int strcount(char * str, char c) {
  */
 char * url_encode(CURL *curl, char * str) {
 	char * result = NULL;
-	char * tmp;
+	char * tmp; //UTF-7 encoded text
+	char * tmp2; //Escaped text
 	int sum = 0;
 
 	result = malloc(strlen(str));
@@ -227,19 +228,24 @@ char * url_encode(CURL *curl, char * str) {
 	StringArray arr = strsplit(str, '/');
 
 	for(int i = 0 ; i < arr.size ; i++) {
-		tmp = curl_easy_escape(curl, arr.array[i], 0);
-		sum += strlen(tmp)+1;
+
+		//Important to utf-7 encode BEFORE escaping or URL escaped characters will be UTF-7 encoded too
+		utf8_to_utf7(arr.array[i], strlen(arr.array[i]), &tmp, 0);
+		tmp2 = curl_easy_escape(curl, tmp, 0);
+		free(tmp);
+
+		sum += strlen(tmp2)+1;
 
 		result = realloc(result, sum+1);
 		if(result == NULL)
 			return result;
 
-		strcat(result,tmp);
+		strcat(result,tmp2);
 
 		if(i != arr.size-1)
 			strcat(result,"/");
 
-		curl_free(tmp);
+		curl_free(tmp2);
 	}
 
 	return result;
