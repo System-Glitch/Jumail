@@ -60,7 +60,7 @@ static StringArray *parse_list(CURL *curl, char * list) {
 		return NULL;
 	}
 
-	for(int i = 0 ; i < array.size ; i++) { //Individually process each line
+	for(size_t i = 0 ; i < array.size ; i++) { //Individually process each line
 		tmp = parse_list_line(array.array[i]);
 		if(tmp == NULL) {
 			free_string_array(*result);

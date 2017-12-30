@@ -10,7 +10,7 @@
 
 void free_string_array(StringArray arr) {
 	if(arr.array != NULL)
-		for(int i  = 0 ; i < arr.size ; i++)
+		for(size_t i  = 0 ; i < arr.size ; i++)
 			free(arr.array[i]);
 }
 
@@ -227,7 +227,7 @@ char * url_encode(CURL *curl, char * str) {
 
 	StringArray arr = strsplit(str, '/');
 
-	for(int i = 0 ; i < arr.size ; i++) {
+	for(size_t i = 0 ; i < arr.size ; i++) {
 
 		//Important to utf-7 encode BEFORE escaping or URL escaped characters will be UTF-7 encoded too
 		utf8_to_utf7(arr.array[i], strlen(arr.array[i]), &tmp, 0);
