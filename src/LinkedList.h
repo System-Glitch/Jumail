@@ -25,9 +25,9 @@ typedef struct linkedlist {
 } linkedlist_t;
 
 /**
- * Creates an empty linkedlist_t. head is set to NULL and length to 0.
+ * Creates an empty linkedlist_t. head is set to NULL and length to 0. Returns NULL of the allocation failed.
  */
-linkedlist_t linkedlist_init();
+linkedlist_t *linkedlist_init();
 
 /**
  * Adds a value at the end of the given list.

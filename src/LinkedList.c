@@ -4,10 +4,11 @@
 /**
  * Creates an empty linkedlist_t. head is set to NULL and length to 0.
  */
-linkedlist_t linkedlist_init() {
-	linkedlist_t list;
-	list.length = 0;
-	list.head = NULL;
+linkedlist_t *linkedlist_init() {
+	linkedlist_t *list = malloc(sizeof(linkedlist_t));
+	if(list == NULL) return NULL;
+	list->length = 0;
+	list->head = NULL;
 	return list;
 }
 
@@ -140,4 +141,5 @@ void linkedlist_free(linkedlist_t * list) {
 			free (current->val);
 		free (current);
 	}
+	free(list);
 }
