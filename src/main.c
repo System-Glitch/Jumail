@@ -11,13 +11,18 @@
 #include "libs/muttx/utf7.h"
 
 int main(int argc, char** argv) {
-	ssl_search_all("jumailimap@gmail.com", "azerty12", "imap.gmail.com", "INBOX");
+	struct ParsedSearch *search = ssl_search_all("jumailimap@gmail.com", "azerty12", "imap.gmail.com", "INBOX");
+	for(size_t i = 0 ; i < search->size ; i++) {
+		printf("%d\n",search->uids[i]);
+	}
+	free_parsed_search(search);
 	/*StringArray *list = ssl_list("jumailimap@gmail.com", "azerty12", "imap.gmail.com");
 	for(int i = 0 ; i < list->size ; i++) {
 		fputs(list->array[i], stdout);
 		fputs("\n", stdout);
 	}
-	free_string_array(*list);*/
+	free_string_array(*list);
+	free(list);*/
 
 	//ssl_move_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", "INBOX", "Test", "<8tA94c5sdm2AvdsW99Fv3A@notifications.google.com>");
 	//ssl_remove_folder("jumailimap@gmail.com", "azerty12", "imap.gmail.com", "yolé y ouh");

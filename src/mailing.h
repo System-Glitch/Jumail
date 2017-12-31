@@ -22,6 +22,7 @@
 #define REGEX_MESSAGE_ID	"Message-ID: (.*)"
 #define REGEX_IN_REPLY_TO	"In-Reply-To: (.*)"
 #define REGEX_REFERENCES	"References: (.*)"
+#define REGEX_FLAGS			"\\* (.*?) FETCH \\(FLAGS \\((.*?)\\)\\)"
 
 struct ParsedSearch {
 	size_t size;
@@ -29,14 +30,15 @@ struct ParsedSearch {
 };
 
 typedef struct Email {
-	char *date;
-	char *to;
-	char *from;
-	char *subject;
-	char *message;
-	char *message_id;
-	char *in_reply_to;
-	char *references;
+	char 		*date;
+	char 		*to;
+	char 		*from;
+	char 		*subject;
+	char 		*message;
+	char 		*message_id;
+	char 		*in_reply_to;
+	char 		*references;
+	StringArray *flags;
 } Email;
 
 /**
@@ -69,12 +71,13 @@ int send_mail_ssl(char * username, char * password, char * to, char * domain, co
 /**
  * Performs a SEARCH ?ALL (IMAP) operation in the given mailbox. This returns all the UIDs present in the mailbox.
  */
-int ssl_search_all(char * username, char * password, char * domain, char * mailbox);
+struct ParsedSearch *ssl_search_all(char * username, char * password, char * domain, char * mailbox);
 
 /**
- * Performs a FETCH (IMAP) operation to get an email.
+ * Performs a FETCH (IMAP) operation to get an email. Returns NULL if an error occurred
+ * Don't forget to free it with free_email()
  */
-int ssl_get_mail(char * username, char * password, char * domain, char * mailbox, int uid);
+Email *ssl_get_mail(char * username, char * password, char * domain, char * mailbox, int uid);
 
 /**
  * Performs a STORE operation (IMAP). The request is a formatted string.
@@ -96,12 +99,12 @@ int ssl_delete_mail(char * username, char * password, char * domain, char * mail
 /**
  * Parses a complete email payload (header + body) and returns the result into an Email struct
  */
-Email parse_email(char * payload);
+Email *parse_email(char * payload);
 
 /**
  * Safe free of an Email struct, ignoring NULL pointers
  */
-void free_email(Email email);
+void free_email(Email *email);
 
 /**
  * Moves an email from one folder to another performing a COPY (IMAP) operation then flags the mail as deleted in the source folder
@@ -114,5 +117,10 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
  * Returns 0 if not found, -1 if an error occurred
  */
 int ssl_search_by_id(CURL *curl, char *message_id);
+
+/**
+ * Safe free of a ParsedSearch struct, ignoring NULL pointers
+ */
+void free_parsed_search(struct ParsedSearch *search);
 
 #endif /* SRC_MAILING_H_ */

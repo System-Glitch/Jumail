@@ -351,15 +351,21 @@ int send_mail_ssl(char * username, char * password, char * to, char * domain, co
 /**
  * Parses a String result of the SEARCH operation (IMAP) into an integer array containing all the UIDs.
  */
-static struct ParsedSearch parse_search(char * answer) {
-	struct ParsedSearch search;
+static struct ParsedSearch *parse_search(char * answer) {
+	struct ParsedSearch *search;
 	char * sub;
 	char * end;
 	int * result = NULL;
 	int size, len, len2, i, index;
 
-	search.uids = NULL;
-	search.size = 0;
+	search = malloc(sizeof(struct ParsedSearch));
+	if(search == NULL) {
+		fprintf(stderr, "Error while allocating for ParsedSearch.\n");
+		return NULL;
+	}
+
+	search->uids = NULL;
+	search->size = 0;
 
 	size = strcount(answer, ' ') - 1;
 	len = strlen(answer);
@@ -389,20 +395,95 @@ static struct ParsedSearch parse_search(char * answer) {
 		free(sub);
 	}
 
-	search.uids = result;
-	search.size = size;
+	search->uids = result;
+	search->size = size;
 
 	return search;
+}
+
+
+/**
+ * Parses a line returned from a FETCH (FLAGS) (IMAP) command using regex to get the only the flags name
+ */
+static char * parse_flags_line(char* line) {
+	regex_t regex;
+	regmatch_t pmatch[3];
+	int len;
+	char * dest = NULL;
+
+	if(exec_regex(&regex, REGEX_FLAGS, line, 3, &pmatch)) {
+		len = pmatch[2].rm_eo - pmatch[2].rm_so;
+		dest = malloc(len + 1);
+		if(dest == NULL) {
+			regfree(&regex);
+			return NULL;
+		}
+		strncpy(dest, line+pmatch[2].rm_so, len);
+		dest[len] = '\0';
+	}
+
+	regfree(&regex);
+	return dest;
+}
+
+/**
+ * Parses a string result of the FETCH (FLAGS) operation (IMAP) into a string array containing all the flags
+ */
+static StringArray *parse_flags(char * answer) {
+	StringArray *flags;
+	char *tmp;
+	int len = 0;
+
+	flags = malloc(sizeof(StringArray));
+	if(flags == NULL) {
+		fputs("Error when allocating parsed flags array.\n", stderr);
+		return NULL;
+	}
+
+	//Extract only the flags using regex
+	tmp = parse_flags_line(answer);
+	if(tmp == NULL) {
+		fputs("Error when extracting flags.\n", stderr);
+		free(flags);
+		return NULL;
+	}
+
+	StringArray array = strsplit(tmp, ' ');
+	free(tmp);
+
+	flags->size = array.size;
+	flags->array = malloc(sizeof(char*)*flags->size);
+	if(flags->array == NULL) {
+		free_string_array(array);
+		fputs("Error when allocating parsed list array.\n", stderr);
+		return NULL;
+	}
+
+	for(size_t i = 0 ; i < array.size ; i++) { //Individually process each line
+		len = strlen(array.array[i]);
+		flags->array[i] = malloc(len+1);
+		if(flags->array[i] == NULL) {
+			free_string_array(*flags);
+			free_string_array(array);
+			fputs("Error when allocating decoded folder name.\n", stderr);
+			return NULL;
+		}
+		strcpy(flags->array[i], array.array[i]);
+	}
+
+	free_string_array(array);
+	return flags;
+
 }
 
 /**
  * Performs a SEARCH ?ALL (IMAP) operation in the given mailbox. This returns all the UIDs present in the mailbox.
  */
-int ssl_search_all(char * username, char * password, char * domain, char * mailbox) {
+struct ParsedSearch *ssl_search_all(char * username, char * password, char * domain, char * mailbox) {
 	CURL *curl;
 	CURLcode res = CURLE_OK;
 	struct MemoryStruct chunk;
-	struct ParsedSearch search;
+	struct ParsedSearch *search = NULL;
 	int mailboxlen = 0;
 	char * address;
 	char * full_address;
@@ -411,31 +492,36 @@ int ssl_search_all(char * username, char * password, char * domain, char * mailb
 	address = generate_address(domain, "imaps");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
-		return -1;
+		return NULL;
 	}
 
 	if(mailbox == NULL) {
 		fprintf(stderr, "mailbox is not nullable.\n");
-		return -1;
+		free(address);
+		return NULL;
 	}
 
 	curl = curl_easy_init();
 	if(!curl) {
 		fprintf(stderr, "Error on creating curl.\n");
-		return -1;
+		free(address);
+		return NULL;
 	}
 	mailbox_encoded = url_encode(curl, mailbox);
 	if(mailbox_encoded == NULL) {
 		fprintf(stderr, "Error on URL encoding.\n");
 		curl_easy_cleanup(curl);
-		return -1;
+		free(address);
+		return NULL;
 	}
 	mailboxlen = strlen(mailbox_encoded);
 	full_address = malloc(strlen(address)+mailboxlen+4+1);
 	if(full_address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
 		curl_easy_cleanup(curl);
-		return -1;
+		free(address);
+		free(mailbox_encoded);
+		return NULL;
 	}
 
 	//Building full address
@@ -469,15 +555,11 @@ int ssl_search_all(char * username, char * password, char * domain, char * mailb
 					curl_easy_strerror(res));
 		else {
 			search = parse_search(chunk.memory);
-			if(search.uids == NULL) {
+			if(search == NULL || search->uids == NULL) {
 				fprintf(stderr, "Search is NULL\n");
-				return -1;
+				free(full_address);
+				return NULL;
 			}
-			//TODO return ParsedSearch
-			for(size_t i = 0 ; i < search.size ; i++) {
-				ssl_get_mail(username,password,domain,mailbox,search.uids[i]);
-			}
-			free(search.uids);
 		}
 
 		free(chunk.memory);
@@ -486,13 +568,15 @@ int ssl_search_all(char * username, char * password, char * domain, char * mailb
 	}
 	free(full_address);
 
-	return (int)res;
+	return search;
 }
 
 /**
- * Performs a FETCH (IMAP) operation to get an email.
+ * Performs a FETCH (IMAP) operation to get an email. Returns NULL if an error occurred
+ * Don't forget to free it with free_email()
  */
-int ssl_get_mail(char * username, char * password, char * domain, char * mailbox, int uid) {
+Email *ssl_get_mail(char * username, char * password, char * domain, char * mailbox, int uid) {
+	Email *mail = NULL;
 	CURL *curl;
 	CURLcode res = CURLE_OK;
 	struct MemoryStruct chunk;
@@ -506,11 +590,11 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 	address = generate_address(domain, "imaps");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
-		return -1;
+		return NULL;
 	}
 	if(mailbox == NULL) {
 		fprintf(stderr, "mailbox is not nullable.\n");
-		return -1;
+		return NULL;
 	}
 
 	sprintf(uidStr, "%d", uid);
@@ -519,13 +603,13 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 	curl = curl_easy_init();
 	if(!curl) {
 		fprintf(stderr, "Error on creating curl.\n");
-		return -1;
+		return NULL;
 	}
 	mailbox_encoded = url_encode(curl, mailbox);
 	if(mailbox_encoded == NULL) {
 		fprintf(stderr, "Error on URL encoding.\n");
 		curl_easy_cleanup(curl);
-		return -1;
+		return NULL;
 	}
 	mailboxlen = strlen(mailbox_encoded);
 
@@ -533,14 +617,14 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 	if(full_address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
 		curl_easy_cleanup(curl);
-		return -1;
+		return NULL;
 	}
 
 	full_request = malloc(6+8+uidstrlen+1); //6 for "FETCH ", +8 for " (FLAGS)"
 	if(full_request == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
 		curl_easy_cleanup(curl);
-		return -1;
+		return NULL;
 	}
 
 	//Building full address
@@ -583,9 +667,8 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 			fprintf(stderr, "curl_easy_perform() failed: %s\n",
 					curl_easy_strerror(res));
 		else {
-			fputs("Chunk : ",stdout); //TODO return Email struct
-			fputs(chunk.memory, stdout);
-			fflush(stdout);
+
+			mail = parse_email(chunk.memory);
 
 			free(chunk.memory);
 			chunk.memory = malloc(1); //Initial allocation. Will be reallocated in write_memory_callback() to fit the correct size.
@@ -601,22 +684,8 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 				fprintf(stderr, "curl_easy_perform() failed: %s\n",
 						curl_easy_strerror(res));
 			else {
-				fputs("Chunk flags : ",stdout);
-				fputs(chunk.memory, stdout);
-				fflush(stdout); //TODO parse flags
+				mail->flags = parse_flags(chunk.memory);
 			}
-			/*Email mail = parse_email(chunk.memory,uid);
-			fputs(mail.date, stdout);
-			fputs("\n", stdout);
-			fputs(mail.from, stdout);
-			fputs("\n", stdout);
-			fputs(mail.to, stdout);
-			fputs("\n", stdout);
-			fputs(mail.subject, stdout);
-			fputs("\n", stdout);
-			fputs(mail.message, stdout);
-			printf("\n%d\n", mail.uid);
-			free_email(mail);*/
 		}
 
 		/* Always cleanup */
@@ -625,7 +694,7 @@ int ssl_get_mail(char * username, char * password, char * domain, char * mailbox
 	free(full_request);
 	free(full_address);
 
-	return (int)res;
+	return mail;
 }
 
 /**
@@ -755,16 +824,17 @@ int ssl_delete_mail(char * username, char * password, char * domain, char * mail
 /**
  * Creates an Email, sets every pointer to NULL and returns the result.
  */
-static Email init_email() {
-	Email mail;
-	mail.date 		= NULL;
-	mail.from 		= NULL;
-	mail.message 	= NULL;
-	mail.subject 	= NULL;
-	mail.message_id = NULL;
-	mail.to 		= NULL;
-	mail.in_reply_to= NULL;
-	mail.references = NULL;
+static Email *init_email() {
+	Email *mail = malloc(sizeof(Email));
+	if(mail == NULL) return NULL;
+	mail->date 		 = NULL;
+	mail->from 		 = NULL;
+	mail->message 	 = NULL;
+	mail->subject 	 = NULL;
+	mail->message_id = NULL;
+	mail->to 		 = NULL;
+	mail->in_reply_to= NULL;
+	mail->references = NULL;
 	return mail;
 }
 
@@ -801,8 +871,8 @@ static char * parse_header_line(StringArray * content, char * regexp) {
 /**
  * Parses a complete email payload (header + body) and returns the result into an Email struct
  */
-Email parse_email(char * payload) {
-	Email mail = init_email();
+Email *parse_email(char * payload) {
+	Email *mail = init_email();
 	StringArray content;
 	int len;
 	char 	*date = NULL, *from = NULL,
@@ -820,6 +890,7 @@ Email parse_email(char * payload) {
 	//Parse date
 	date = parse_header_line(&content, REGEX_DATE);
 	if(date == NULL) {
+		free_email(mail);
 		free_string_array(content);
 		fputs("Couldn't extract date.\n", stderr);
 		return mail;
@@ -828,6 +899,7 @@ Email parse_email(char * payload) {
 	//Parse TO
 	to = parse_header_line(&content, REGEX_TO);
 	if(to == NULL) {
+		free_email(mail);
 		free_string_array(content);
 		fputs("Couldn't extract TO.\n", stderr);
 		return mail;
@@ -836,6 +908,7 @@ Email parse_email(char * payload) {
 	//Parse sender
 	from = parse_header_line(&content, REGEX_FROM);
 	if(from == NULL) {
+		free_email(mail);
 		free_string_array(content);
 		fputs("Couldn't extract FROM.\n", stderr);
 		return mail;
@@ -844,6 +917,7 @@ Email parse_email(char * payload) {
 	//Parse subject
 	subject = parse_header_line(&content, REGEX_SUBJECT);
 	if(subject == NULL) {
+		free_email(mail);
 		free_string_array(content);
 		fputs("Couldn't extract subject.\n", stderr);
 		return mail;
@@ -852,6 +926,7 @@ Email parse_email(char * payload) {
 	//Parse message id
 	message_id = parse_header_line(&content, REGEX_MESSAGE_ID);
 	if(message_id == NULL) {
+		free_email(mail);
 		free_string_array(content);
 		fputs("Couldn't extract message ID.\n", stderr);
 		return mail;
@@ -869,6 +944,7 @@ Email parse_email(char * payload) {
 	len = content.array[content.size-1][0] == '\0' ? 0 : strlen(content.array[content.size-1]); //Check if message is empty
 	message = malloc(len + 1);
 	if(message == NULL) {
+		free_email(mail);
 		free_string_array(content);
 		fputs("Error while allocating for message.\n", stderr);
 		return mail;
@@ -880,14 +956,14 @@ Email parse_email(char * payload) {
 		message[0] = '\0';
 
 	//Fill the struct
-	mail.date 			= date;
-	mail.from 			= from;
-	mail.message 		= message;
-	mail.subject 		= subject;
-	mail.to 			= to;
-	mail.message_id 	= message_id;
-	mail.in_reply_to	= in_reply_to;
-	mail.references	= references;
+	mail->date 			= date;
+	mail->from 			= from;
+	mail->message 		= message;
+	mail->subject 		= subject;
+	mail->to 			= to;
+	mail->message_id 	= message_id;
+	mail->in_reply_to	= in_reply_to;
+	mail->references	= references;
 
 	free_string_array(content);
 	return mail;
@@ -896,23 +972,29 @@ Email parse_email(char * payload) {
 /**
  * Safe free of an Email struct, ignoring NULL pointers
  */
-void free_email(Email email) {
-	if(email.date != NULL)
-		free(email.date);
-	if(email.from != NULL)
-		free(email.from);
-	if(email.message != NULL)
-		free(email.message);
-	if(email.subject != NULL)
-		free(email.subject);
-	if(email.to != NULL)
-		free(email.to);
-	if(email.message_id != NULL)
-		free(email.message_id);
-	if(email.in_reply_to != NULL)
-		free(email.in_reply_to);
-	if(email.references != NULL)
-		free(email.references);
+void free_email(Email *email) {
+	if(email == NULL) return;
+	if(email->date != NULL)
+		free(email->date);
+	if(email->from != NULL)
+		free(email->from);
+	if(email->message != NULL)
+		free(email->message);
+	if(email->subject != NULL)
+		free(email->subject);
+	if(email->to != NULL)
+		free(email->to);
+	if(email->message_id != NULL)
+		free(email->message_id);
+	if(email->in_reply_to != NULL)
+		free(email->in_reply_to);
+	if(email->references != NULL)
+		free(email->references);
+	if(email->flags != NULL) {
+		free_string_array(*email->flags);
+		free(email->flags);
+	}
+	free(email);
 }
 
 /**
@@ -1137,4 +1219,11 @@ int ssl_search_by_id(CURL *curl, char *message_id) {
 	free(full_request);
 	free(chunk.memory);
 	return uid;
+}
+
+void free_parsed_search(struct ParsedSearch *search) {
+	if(search == NULL) return;
+	if(search->uids != NULL)
+		free(search->uids);
+	free(search);
 }
