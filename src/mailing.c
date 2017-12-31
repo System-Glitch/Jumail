@@ -262,29 +262,38 @@ void free_header(char ** header) {
  */
 char ** get_mail(char ** header, char * message) {
 	char ** mail;
+	int j = 0;
 
 	if(header == NULL || message == NULL) return NULL;
 
-	mail = malloc(8*sizeof(char *));
+	mail = malloc(10*sizeof(char *));
 	if(mail == NULL) return NULL;
 
-	for(int i = 0 ; i < 6 ; i++) { //Copy the header
-		mail[i] = malloc(strlen(header[i])+1);
-		if(mail[i] == NULL) return NULL;
-		strcpy(mail[i], header[i]);
+	for(int i = 0 ; i < 8 ; i++) { //Copy the header
+		if(header[i] == NULL) continue;
+		mail[j] = malloc(strlen(header[i])+1);
+		if(mail[j] == NULL) return NULL;
+		strcpy(mail[j], header[i]);
+		j++;
 	}
-	mail[6] = malloc(strlen(message)+1);
-	if(mail[6] == NULL) return NULL;
-	strcpy(mail[6], message); //Copy the message
+	mail[j] = malloc(strlen(message)+1);
+	if(mail[j] == NULL) return NULL;
+	strcpy(mail[j], message); //Copy the message
 
-	mail[7] = NULL; //End Delimiter
+	j++;
+
+	mail[j] = NULL; //End Delimiter
+
+	for(int i = j ; i < 10 ; i++) {
+		mail[i] = NULL; //Set all empty lines to NULL so no segfault when freeing
+	}
 
 	return mail;
 }
 
 void free_mail(char ** mail) {
-	for(int i = 0 ; i < 7 ; i++)
-		free(mail[i]);
+	for(int i = 0 ; i < 10 ; i++)
+			free(mail[i]);
 	free(mail);
 }
 
@@ -343,6 +352,7 @@ int send_mail_ssl(char * username, char * password, char * to, char * domain, co
 		/* Always cleanup */
 		curl_easy_cleanup(curl);
 		free(address);
+
 	}
 
 	return (int)res;
