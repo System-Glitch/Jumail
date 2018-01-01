@@ -8,7 +8,15 @@
 #ifndef MAINWINDOW_H_
 #define MAINWINDOW_H_
 
+#include <stdio.h>
+#include <stdlib.h>
 #include<gtk/gtk.h>
+
+typedef struct
+{
+	GtkBuilder *builder;
+	gpointer user_data;
+} SGlobalData;
 
 /**
  * Starts the program. Returns the frame exit code.
