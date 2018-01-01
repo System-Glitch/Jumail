@@ -39,6 +39,7 @@ typedef struct Email {
 	char 		*in_reply_to;
 	char 		*references;
 	StringArray *flags;
+	char		*raw;
 } Email;
 
 /**

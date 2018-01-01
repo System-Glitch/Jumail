@@ -8,7 +8,6 @@
 #include "MainWindow.h"
 #include "mailing.h"
 #include "folders.h"
-#include "libs/muttx/utf7.h"
 
 int main(int argc, char** argv) {
 
@@ -33,6 +32,8 @@ int main(int argc, char** argv) {
 
 	printf("Message: \n%s\n", mail->message);
 
+	printf("\nRAW:\n%s\n",mail->raw);
+
 	free_email(mail); //Always free*/
 
 	/*struct ParsedSearch *search = ssl_search_all("jumailimap@gmail.com", "azerty12", "imap.gmail.com", "INBOX");
@@ -53,7 +54,7 @@ int main(int argc, char** argv) {
 
 	//SENDING A MAIL
 
-	char * id = generate_id(); //Must generate a unique Message-ID for our mail
+	/*char * id = generate_id(); //Must generate a unique Message-ID for our mail
 	if(id == NULL) {
 		fprintf(stderr, "An error occured while getting a new GUID. Check your internet connection.\n");
 		exit(1);
@@ -74,22 +75,7 @@ int main(int argc, char** argv) {
 
 	send_mail_ssl("jumailimap@gmail.com", "azerty12", "jumailimap@gmail.com", "smtp.gmail.com", (const char **)mail);
 	free_header(header); //The header is a two dimensional array. It must be freed using this function
-	free_mail(mail); //Always free
-
-	/*char *str = malloc(10);
-	char *str_encoded;
-	strcpy(str, "yolé y ouh");
-
-	fputs(str, stdout);
-	fputs("\n", stdout);
-
-	utf8_to_utf7(str, strlen(str), &str_encoded, 0);
-
-	fputs(str_encoded, stdout);
-	fputs("\n", stdout);
-
-	free(str_encoded);
-	free(str);*/
+	free_mail(mail); //Always free*/
 
 
 	return 0;

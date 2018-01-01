@@ -845,6 +845,7 @@ static Email *init_email() {
 	mail->to 		 = NULL;
 	mail->in_reply_to= NULL;
 	mail->references = NULL;
+	mail->raw		 = NULL;
 	return mail;
 }
 
@@ -888,7 +889,8 @@ Email *parse_email(char * payload) {
 	char 	*date = NULL, *from = NULL,
 			*to = NULL, *message = NULL,
 			*subject = NULL, *message_id = NULL,
-			*in_reply_to = NULL, *references = NULL;
+			*in_reply_to = NULL, *references = NULL,
+			*raw = NULL;
 
 	content = split_mail(payload);
 
@@ -905,6 +907,7 @@ Email *parse_email(char * payload) {
 		fputs("Couldn't extract date.\n", stderr);
 		return mail;
 	}
+	mail->date = date;
 
 	//Parse TO
 	to = parse_header_line(&content, REGEX_TO);
@@ -914,6 +917,7 @@ Email *parse_email(char * payload) {
 		fputs("Couldn't extract TO.\n", stderr);
 		return mail;
 	}
+	mail->to = to;
 
 	//Parse sender
 	from = parse_header_line(&content, REGEX_FROM);
@@ -923,6 +927,7 @@ Email *parse_email(char * payload) {
 		fputs("Couldn't extract FROM.\n", stderr);
 		return mail;
 	}
+	mail->from = from;
 
 	//Parse subject
 	subject = parse_header_line(&content, REGEX_SUBJECT);
@@ -932,6 +937,7 @@ Email *parse_email(char * payload) {
 		fputs("Couldn't extract subject.\n", stderr);
 		return mail;
 	}
+	mail->subject = subject;
 
 	//Parse message id
 	message_id = parse_header_line(&content, REGEX_MESSAGE_ID);
@@ -941,14 +947,17 @@ Email *parse_email(char * payload) {
 		fputs("Couldn't extract message ID.\n", stderr);
 		return mail;
 	}
+	mail->message_id = message_id;
 
 	//Parse in-reply-to
 	in_reply_to = parse_header_line(&content, REGEX_IN_REPLY_TO);
+	mail->in_reply_to = in_reply_to;
 	//Don't check for NULL because this header is not present in every mail
 	//Same for references
 
 	//Parse references
 	references = parse_header_line(&content, REGEX_REFERENCES);
+	mail->references = references;
 
 	//Simple copy of the message body
 	len = content.array[content.size-1][0] == '\0' ? 0 : strlen(content.array[content.size-1]); //Check if message is empty
@@ -964,16 +973,18 @@ Email *parse_email(char * payload) {
 		strcpy(message,content.array[content.size-1]);
 	else
 		message[0] = '\0';
+	mail->message = message;
 
-	//Fill the struct
-	mail->date 			= date;
-	mail->from 			= from;
-	mail->message 		= message;
-	mail->subject 		= subject;
-	mail->to 			= to;
-	mail->message_id 	= message_id;
-	mail->in_reply_to	= in_reply_to;
-	mail->references	= references;
+	//Copy the raw message
+	raw = malloc(strlen(payload)+1);
+	if(raw == NULL) {
+		free_email(mail);
+		free_string_array(content);
+		fputs("Error while allocating for raw message.\n", stderr);
+		return mail;
+	}
+	strcpy(raw,payload);
+	mail->raw = raw;
 
 	free_string_array(content);
 	return mail;
@@ -1004,6 +1015,8 @@ void free_email(Email *email) {
 		free_string_array(*email->flags);
 		free(email->flags);
 	}
+	if(email->raw != NULL)
+		free(email->raw);
 	free(email);
 }
 
