@@ -99,7 +99,7 @@ int ssl_see_mail(char * username, char * password, char * domain, char * mailbox
 int ssl_delete_mail(char * username, char * password, char * domain, char * mailbox, char *message_id);
 
 /**
- * Parses a complete email payload (header + body) and returns the result into an Email struct
+ * Parses a complete email payload (header + body) and returns the result into an Email struct. Returns NULL if an error occurred
  */
 Email *parse_email(char * payload);
 

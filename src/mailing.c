@@ -293,7 +293,7 @@ char ** get_mail(char ** header, char * message) {
 
 void free_mail(char ** mail) {
 	for(int i = 0 ; i < 10 ; i++)
-			free(mail[i]);
+		free(mail[i]);
 	free(mail);
 }
 
@@ -679,23 +679,27 @@ Email *ssl_get_mail(char * username, char * password, char * domain, char * mail
 		else {
 
 			mail = parse_email(chunk.memory);
+			if(mail == NULL) {
+				fputs("Error, invalid mail payload.\n", stderr);
+			} else {
+				chunk.memory = malloc(1); //Initial allocation. Will be reallocated in write_memory_callback() to fit the correct size.
+				chunk.size = 0;
+
+				//Get flags
+				curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,full_request);
+
+				res = curl_easy_perform(curl);
+
+				/* Check for errors */
+				if(res != CURLE_OK)
+					fprintf(stderr, "curl_easy_perform() failed: %s\n",
+							curl_easy_strerror(res));
+				else {
+					mail->flags = parse_flags(chunk.memory);
+				}
+			}
 
 			free(chunk.memory);
-			chunk.memory = malloc(1); //Initial allocation. Will be reallocated in write_memory_callback() to fit the correct size.
-			chunk.size = 0;
-
-			//Get flags
-			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,full_request);
-
-			res = curl_easy_perform(curl);
-
-			/* Check for errors */
-			if(res != CURLE_OK)
-				fprintf(stderr, "curl_easy_perform() failed: %s\n",
-						curl_easy_strerror(res));
-			else {
-				mail->flags = parse_flags(chunk.memory);
-			}
 		}
 
 		/* Always cleanup */
@@ -880,7 +884,7 @@ static char * parse_header_line(StringArray * content, char * regexp) {
 }
 
 /**
- * Parses a complete email payload (header + body) and returns the result into an Email struct
+ * Parses a complete email payload (header + body) and returns the result into an Email struct. Returns NULL if an error occurred
  */
 Email *parse_email(char * payload) {
 	Email *mail = init_email();
@@ -896,7 +900,7 @@ Email *parse_email(char * payload) {
 
 	if(content.size <= 0) {
 		fputs("Could not split mail payload.\n", stderr);
-		return mail;
+		return NULL;
 	}
 
 	//Parse date
@@ -905,7 +909,7 @@ Email *parse_email(char * payload) {
 		free_email(mail);
 		free_string_array(content);
 		fputs("Couldn't extract date.\n", stderr);
-		return mail;
+		return NULL;
 	}
 	mail->date = date;
 
@@ -915,7 +919,7 @@ Email *parse_email(char * payload) {
 		free_email(mail);
 		free_string_array(content);
 		fputs("Couldn't extract TO.\n", stderr);
-		return mail;
+		return NULL;
 	}
 	mail->to = to;
 
@@ -925,7 +929,7 @@ Email *parse_email(char * payload) {
 		free_email(mail);
 		free_string_array(content);
 		fputs("Couldn't extract FROM.\n", stderr);
-		return mail;
+		return NULL;
 	}
 	mail->from = from;
 
@@ -935,7 +939,7 @@ Email *parse_email(char * payload) {
 		free_email(mail);
 		free_string_array(content);
 		fputs("Couldn't extract subject.\n", stderr);
-		return mail;
+		return NULL;
 	}
 	mail->subject = subject;
 
@@ -945,7 +949,7 @@ Email *parse_email(char * payload) {
 		free_email(mail);
 		free_string_array(content);
 		fputs("Couldn't extract message ID.\n", stderr);
-		return mail;
+		return NULL;
 	}
 	mail->message_id = message_id;
 
@@ -966,7 +970,7 @@ Email *parse_email(char * payload) {
 		free_email(mail);
 		free_string_array(content);
 		fputs("Error while allocating for message.\n", stderr);
-		return mail;
+		return NULL;
 	}
 
 	if(len > 0)
@@ -981,7 +985,7 @@ Email *parse_email(char * payload) {
 		free_email(mail);
 		free_string_array(content);
 		fputs("Error while allocating for raw message.\n", stderr);
-		return mail;
+		return NULL;
 	}
 	strcpy(raw,payload);
 	mail->raw = raw;
