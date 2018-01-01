@@ -6,7 +6,12 @@
  *  Description : Creates and manage the main window
  */
 #include "MainWindow.h"
+#include "profils.h"
 
+
+void callback_quit(GtkMenuItem *menuitem, gpointer user_data) {
+	gtk_main_quit();
+}
 
 void callback_about (GtkMenuItem *menuitem, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
@@ -54,10 +59,23 @@ static void main_window_activate(GtkApplication* app, gpointer user_data) {
 	gtk_main();
 }
 
+static void init_app() {
+	fputs("Loading profiles...\n", stdout);
+	loadAllProfile(); //Loading profiles
+}
+
+static void cleanup() {
+	fputs("Shutting down...\n", stdout);
+	fputs("Cleaning profiles...\n", stdout);
+	freeListProfile();
+}
+
 int main_window_start(int argc, char** argv) {
 
 	GtkApplication *app;
 	int status;
+
+	init_app();
 
 	gtk_init(&argc, &argv);
 
@@ -65,6 +83,8 @@ int main_window_start(int argc, char** argv) {
 	g_signal_connect (app, "activate", G_CALLBACK (main_window_activate), NULL);
 	status = g_application_run (G_APPLICATION (app), argc, argv);
 	g_object_unref (app);
+
+	cleanup();
 
 	return status;
 }
