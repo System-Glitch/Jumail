@@ -41,3 +41,25 @@ void open_mail_window(Email *mail, SGlobalData *data) {
 	gtk_widget_hide(window);
 	gtk_widget_show_all (window);
 }
+
+/**
+ * Clears the mail window and close it
+ */
+void mail_window_clear(SGlobalData *data) {
+	GtkWidget *window = NULL;
+	GtkWidget *content = NULL;
+
+
+	window =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailWindow"));
+	gtk_window_set_title(GTK_WINDOW(window), "Subject");
+	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailContent"));
+	fill_text_view(GTK_TEXT_VIEW(content), "");
+	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailFrom"));
+	fill_text_view(GTK_TEXT_VIEW(content), "");
+	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailTo"));
+	fill_text_view(GTK_TEXT_VIEW(content), "");
+	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailDate"));
+	fill_text_view(GTK_TEXT_VIEW(content), "");
+	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailSubject"));
+	fill_text_view(GTK_TEXT_VIEW(content), "");
+}

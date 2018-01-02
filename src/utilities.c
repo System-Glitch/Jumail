@@ -219,7 +219,7 @@ char * url_encode(CURL *curl, char * str) {
 	char * tmp2; //Escaped text
 	int sum = 0;
 
-	result = malloc(strlen(str));
+	result = malloc(strlen(str)+1);
 	if(result == NULL)
 		return result;
 
@@ -312,7 +312,7 @@ void enable_ssl(CURL *curl) {
 	#ifdef SKIP_HOSTNAME_VERIFICATION
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 	#endif
-	//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 }
 
 /**

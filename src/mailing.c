@@ -419,6 +419,8 @@ static struct ParsedSearch *parse_search(char * answer) {
 			index = end - sub;
 		}
 		free(sub);
+	} else {
+		result = malloc(1);
 	}
 
 	search->uids = result;
@@ -540,6 +542,7 @@ struct ParsedSearch *ssl_search_all(char * username, char * password, char * dom
 		free(address);
 		return NULL;
 	}
+
 	mailboxlen = strlen(mailbox_encoded);
 	full_address = malloc(strlen(address)+mailboxlen+4+1);
 	if(full_address == NULL) {
@@ -923,6 +926,7 @@ Email *parse_email(char * payload) {
 	date = parse_header_line(&content, REGEX_DATE);
 	if(date == NULL) {
 		free_email(mail);
+		free(mail);
 		free_string_array(content);
 		fputs("Couldn't extract date.\n", stderr);
 		return NULL;
@@ -933,6 +937,7 @@ Email *parse_email(char * payload) {
 	to = parse_header_line(&content, REGEX_TO);
 	if(to == NULL) {
 		free_email(mail);
+		free(mail);
 		free_string_array(content);
 		fputs("Couldn't extract TO.\n", stderr);
 		return NULL;
@@ -943,6 +948,7 @@ Email *parse_email(char * payload) {
 	from = parse_header_line(&content, REGEX_FROM);
 	if(from == NULL) {
 		free_email(mail);
+		free(mail);
 		free_string_array(content);
 		fputs("Couldn't extract FROM.\n", stderr);
 		return NULL;
@@ -953,6 +959,7 @@ Email *parse_email(char * payload) {
 	subject = parse_header_line(&content, REGEX_SUBJECT);
 	if(subject == NULL) {
 		free_email(mail);
+		free(mail);
 		free_string_array(content);
 		fputs("Couldn't extract subject.\n", stderr);
 		return NULL;
@@ -963,6 +970,7 @@ Email *parse_email(char * payload) {
 	message_id = parse_header_line(&content, REGEX_MESSAGE_ID);
 	if(message_id == NULL) {
 		free_email(mail);
+		free(mail);
 		free_string_array(content);
 		fputs("Couldn't extract message ID.\n", stderr);
 		return NULL;
@@ -984,6 +992,7 @@ Email *parse_email(char * payload) {
 	message = malloc(len + 1);
 	if(message == NULL) {
 		free_email(mail);
+		free(mail);
 		free_string_array(content);
 		fputs("Error while allocating for message.\n", stderr);
 		return NULL;
@@ -999,6 +1008,7 @@ Email *parse_email(char * payload) {
 	raw = malloc(strlen(payload)+1);
 	if(raw == NULL) {
 		free_email(mail);
+		free(mail);
 		free_string_array(content);
 		fputs("Error while allocating for raw message.\n", stderr);
 		return NULL;
@@ -1037,7 +1047,6 @@ void free_email(Email *email) {
 	}
 	if(email->raw != NULL)
 		free(email->raw);
-	free(email);
 }
 
 /**

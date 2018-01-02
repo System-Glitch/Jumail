@@ -16,4 +16,9 @@
  */
 void open_mail_window(Email *mail, SGlobalData *data);
 
+/**
+ * Clears the mail window and close it
+ */
+void mail_window_clear(SGlobalData *data);
+
 #endif /* SRC_GUI_MAILWINDOW_H_ */

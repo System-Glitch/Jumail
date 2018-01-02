@@ -10,6 +10,7 @@
 #include "../mailing.h"
 #include "callbacks.h"
 #include "TreeBrowsing.h"
+#include "MailWindow.h"
 
 /**
  * Empty and load the tree store with the available folders. Safely checks if a profile is selected or not.
@@ -76,8 +77,13 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 
 	printf("Getting folder content : %s\n", folder);
 
+	mail_window_clear(data);
 	free_list_loaded_mails();
 	loaded_mails = linkedlist_init();
+	if(loaded_mails == NULL) {
+		window_show_error("Mémoire insuffisante.", data);
+		return 0;
+	}
 
 	tree_view = GTK_TREE_VIEW (gtk_builder_get_object (data->builder, "TreeViewFolderList"));
 	if(tree_view == NULL) {
