@@ -35,6 +35,7 @@ static void main_window_activate(GtkApplication* app, gpointer user_data) {
 	}
 
 	main_window = GTK_WIDGET(gtk_builder_get_object (data.builder, "MainWindow"));
+	gtk_widget_set_size_request (main_window, 800, 600);
 
 	g_signal_connect (app, "activate", G_CALLBACK (main_window_activate), NULL);
 	g_signal_connect (G_OBJECT (main_window), "destroy", (GCallback)gtk_main_quit, NULL);

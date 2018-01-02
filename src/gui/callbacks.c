@@ -6,9 +6,10 @@
  *  Description : Holds all the callbacks for the GUI
  */
 #include <stdio.h>
-#include <gtk/gtk.h>
 #include "callbacks.h"
+#include "../mailing.h"
 #include "TreeBrowsing.h"
+#include "MailWindow.h"
 
 /**
  * Displays a modal error dialog.
@@ -46,6 +47,17 @@ void callback_browsing_select(GtkTreeView *tree_view, GtkTreePath *path, GtkTree
 	GtkTreeModel *model = gtk_tree_view_get_model (tree_view);
 	gtk_tree_model_get_iter(model, &iter, path);
 	gtk_tree_model_get (model, &iter, 0, &string, -1);
-	g_print ("Selected folder: %s\n", string);
 	browsing_refresh_folder(string, data);
+}
+
+void callback_show_mail(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data) {
+	Email *mail;
+	SGlobalData *data = (SGlobalData*) user_data;
+	int *i = gtk_tree_path_get_indices ( path );
+
+	mail = linkedlist_get(loaded_mails, *i);
+	if(mail != NULL) {
+		open_mail_window(mail, data);
+	}
+
 }

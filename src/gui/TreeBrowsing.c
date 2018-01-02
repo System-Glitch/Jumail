@@ -69,7 +69,7 @@ int tree_browsing_refresh(SGlobalData *data) {
  */
 int browsing_refresh_folder(char * folder, SGlobalData *data) {
 	GtkTreeIter iter;
-	GtkTreeStore *model;
+	GtkListStore *model;
 	GtkTreeView *tree_view;
 	GtkTreeViewColumn *column;
 	GtkCellRenderer *renderer;
@@ -77,6 +77,7 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 	printf("Getting folder content : %s\n", folder);
 
 	free_list_loaded_mails();
+	loaded_mails = linkedlist_init();
 
 	tree_view = GTK_TREE_VIEW (gtk_builder_get_object (data->builder, "TreeViewFolderList"));
 	if(tree_view == NULL) {
@@ -84,10 +85,10 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 		return 0;
 	}
 
-	model = GTK_TREE_STORE(gtk_tree_view_get_model(tree_view));
+	model = GTK_LIST_STORE(gtk_tree_view_get_model(tree_view));
 	if(model == NULL) {
 
-		model = gtk_tree_store_new (4, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
+		model = gtk_list_store_new (4, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
 		gtk_tree_view_set_model (tree_view, GTK_TREE_MODEL (model));
 
 		renderer = gtk_cell_renderer_text_new ();
@@ -97,13 +98,13 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 		column = gtk_tree_view_column_new_with_attributes ("De", renderer, "text", 1, NULL);
 		gtk_tree_view_append_column (tree_view, column);
 
-		column = gtk_tree_view_column_new_with_attributes ("Par", renderer, "text", 2, NULL);
+		column = gtk_tree_view_column_new_with_attributes ("Pour", renderer, "text", 2, NULL);
 		gtk_tree_view_append_column (tree_view, column);
 
 		column = gtk_tree_view_column_new_with_attributes ("Date", renderer, "text", 3, NULL);
 		gtk_tree_view_append_column (tree_view, column);
 	} else {
-		gtk_tree_store_clear(model);
+		gtk_list_store_clear(model);
 	}
 
 	if(folder != NULL) {
@@ -115,10 +116,11 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 		for(size_t i = 0 ; i < search->size ; i++) {
 			Email *mail = ssl_get_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", folder, search->uids[i]);
 
-			gtk_tree_store_append(model, &iter, NULL);
-			gtk_tree_store_set (model, &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, -1);
+			gtk_list_store_append(model, &iter);
+			gtk_list_store_set (model, &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, -1);
+			iter.user_data = (gpointer)mail;
 
-			free_email(mail); //Always free
+			linkedlist_add(loaded_mails, mail);
 		}
 		free_parsed_search(search); //Always free
 	}

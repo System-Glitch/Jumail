@@ -9,6 +9,8 @@
 #ifndef SRC_CALLBACKS_H_
 #define SRC_CALLBACKS_H_
 
+#include <gtk/gtk.h>
+
 typedef struct
 {
 	GtkBuilder *builder;
@@ -23,5 +25,6 @@ void window_show_error(const char * message, SGlobalData *data);
 void callback_quit(GtkMenuItem *menuitem, gpointer user_data);
 void callback_about (GtkMenuItem *menuitem, gpointer user_data);
 void callback_browsing_select(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data);
+void callback_show_mail(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */
