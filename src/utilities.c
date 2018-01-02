@@ -312,7 +312,7 @@ void enable_ssl(CURL *curl) {
 	#ifdef SKIP_HOSTNAME_VERIFICATION
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 	#endif
-	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+	//curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 }
 
 /**
@@ -339,7 +339,7 @@ char * generate_address(char * domain, char * protocol) {
 	domainlen = strlen(domain);
 	protocollen = strlen(protocol);
 
-	address = malloc(domainlen + protocollen +3); // +3 for "://", +2 for "/\0"
+	address = malloc(domainlen + protocollen + 3 + 2); // +3 for "://", +2 for "/\0"
 	if(address == NULL) return NULL;
 
 	strcpy(address, protocol);

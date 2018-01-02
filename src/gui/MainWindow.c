@@ -6,22 +6,9 @@
  *  Description : Creates and manage the main window
  */
 #include "MainWindow.h"
-#include "profils.h"
-
-
-void callback_quit(GtkMenuItem *menuitem, gpointer user_data) {
-	gtk_main_quit();
-}
-
-void callback_about (GtkMenuItem *menuitem, gpointer user_data) {
-	SGlobalData *data = (SGlobalData*) user_data;
-	GtkWidget *dialog = NULL;
-
-	dialog =  GTK_WIDGET (gtk_builder_get_object (data->builder, "AboutDialog"));
-	gtk_dialog_run (GTK_DIALOG (dialog));
-
-	gtk_widget_hide (dialog);
-}
+#include "TreeBrowsing.h"
+#include "../mailing.h"
+#include "../profils.h"
 
 /**
  * Initializes the main window
@@ -37,7 +24,6 @@ static void main_window_activate(GtkApplication* app, gpointer user_data) {
 
 
 	filename =  g_build_filename ("resources/MainWindow.glade", NULL);
-
 
 	gtk_builder_add_from_file (data.builder, filename, &error);
 	g_free (filename);
@@ -56,33 +42,43 @@ static void main_window_activate(GtkApplication* app, gpointer user_data) {
 
 	gtk_widget_show_all (main_window);
 
+	tree_browsing_refresh(&data); //Fill the browser
+	browsing_refresh_folder(NULL, &data);
 	gtk_main();
 }
 
-static void init_app() {
+static int init_app(int *argc, char*** argv) {
+	GtkApplication *app;
+	int status;
+
 	fputs("Loading profiles...\n", stdout);
 	loadAllProfile(); //Loading profiles
+
+	//Loading GUI
+	fputs("Loading GUI...\n", stdout);
+	gtk_init(argc, argv);
+
+	app = gtk_application_new ("fr.sysgli.jumail", G_APPLICATION_FLAGS_NONE);
+	g_signal_connect (app, "activate", G_CALLBACK (main_window_activate), NULL);
+	status = g_application_run (G_APPLICATION (app), *argc, *argv);
+	g_object_unref (app);
+
+	return status;
 }
 
 static void cleanup() {
 	fputs("Shutting down...\n", stdout);
 	fputs("Cleaning profiles...\n", stdout);
 	freeListProfile();
+	fputs("Cleaning loaded mails...\n", stdout);
+	free_list_loaded_mails();
 }
 
 int main_window_start(int argc, char** argv) {
 
-	GtkApplication *app;
 	int status;
 
-	init_app();
-
-	gtk_init(&argc, &argv);
-
-	app = gtk_application_new ("fr.sysgli.jumail", G_APPLICATION_FLAGS_NONE);
-	g_signal_connect (app, "activate", G_CALLBACK (main_window_activate), NULL);
-	status = g_application_run (G_APPLICATION (app), argc, argv);
-	g_object_unref (app);
+	status = init_app(&argc, &argv);
 
 	cleanup();
 

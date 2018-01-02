@@ -6,6 +6,7 @@
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Jumail</property>
     <property name="window_position">center</property>
+    <property name="gravity">center</property>
     <property name="has_resize_grip">True</property>
     <child>
       <object class="GtkBox" id="box1">
@@ -31,6 +32,7 @@
                         <property name="label">gtk-preferences</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
+                        <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
                       </object>
                     </child>
@@ -91,9 +93,48 @@
             <property name="can_focus">True</property>
             <property name="shadow_type">in</property>
             <child>
-              <object class="GtkTextView" id="TextView">
+              <object class="GtkViewport" id="ViewPort">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkPaned" id="PanedContainer">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="position">150</property>
+                    <child>
+                      <object class="GtkTreeView" id="TreeViewBrowsing">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="rules_hint">True</property>
+                        <property name="search_column">0</property>
+                        <property name="enable_tree_lines">True</property>
+                        <signal name="row-activated" handler="callback_browsing_select" swapped="no"/>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection" id="treeview-selection4"/>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="resize">True</property>
+                        <property name="shrink">False</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkTreeView" id="TreeViewFolderList">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="search_column">0</property>
+                        <signal name="row-activated" handler="callback_show_mail" swapped="no"/>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection" id="treeview-selection2"/>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="resize">True</property>
+                        <property name="shrink">False</property>
+                      </packing>
+                    </child>
+                  </object>
+                </child>
               </object>
             </child>
           </object>

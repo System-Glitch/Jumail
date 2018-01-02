@@ -7,6 +7,22 @@
  */
 #include "mailing.h"
 
+linkedlist_t *loaded_mails = NULL;
+
+void free_list_loaded_mails() {
+	if(loaded_mails == NULL)
+		return;
+
+	if(loaded_mails->length){
+		node_t * current = loaded_mails->head;
+		while(current != NULL){
+			free_email(current->val);
+			current = current->next;
+		}
+	}
+	linkedlist_free(loaded_mails);
+}
+
 /**
  * Generates a date at the correct format to directly include in the mail header.
  * Returns NULL in case of fail in memory allocation.

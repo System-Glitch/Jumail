@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "utilities.h"
+#include "LinkedList.h"
 
 #define REGEX_DATE 			"Date: (.*)"
 #define REGEX_TO 			"To: (.*?)"
@@ -23,6 +24,8 @@
 #define REGEX_IN_REPLY_TO	"In-Reply-To: (.*)"
 #define REGEX_REFERENCES	"References: (.*)"
 #define REGEX_FLAGS			"\\* (.*?) FETCH \\(FLAGS \\((.*?)\\)\\)"
+
+extern linkedlist_t * loaded_mails;
 
 struct ParsedSearch {
 	size_t size;
@@ -41,6 +44,8 @@ typedef struct Email {
 	StringArray *flags;
 	char		*raw;
 } Email;
+
+void free_list_loaded_mails();
 
 /**
  * Generates a GUID using an online service.

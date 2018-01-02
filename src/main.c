@@ -5,7 +5,7 @@
  *  Date : 19/11/2017
  *  Description : The main file
  */
-#include "MainWindow.h"
+#include "gui/MainWindow.h"
 #include "mailing.h"
 #include "folders.h"
 

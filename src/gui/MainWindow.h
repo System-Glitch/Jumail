@@ -10,13 +10,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include<gtk/gtk.h>
-
-typedef struct
-{
-	GtkBuilder *builder;
-	gpointer user_data;
-} SGlobalData;
+#include <gtk/gtk.h>
+#include "callbacks.h"
 
 /**
  * Starts the program. Returns the frame exit code.
