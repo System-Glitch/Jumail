@@ -20,7 +20,8 @@ typedef struct
 enum Action {
 	NONE,
 	DELETE_FOLDER,
-	CREATE_FOLDER
+	CREATE_FOLDER,
+	DELETE_MAIL
 };
 
 /**
@@ -53,5 +54,7 @@ void callback_folder_create_entry_changed(GtkEditable *editable, gpointer user_d
 void callback_compose_mail(GtkMenuItem *menuitem, gpointer user_data);
 void callback_compose_mail_to_entry_changed(GtkEditable *editable, gpointer user_data);
 void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data);
+void callback_mail_delete(GtkMenuItem *menuitem, gpointer user_data);
+void callback_list_folder_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */

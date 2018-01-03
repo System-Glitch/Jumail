@@ -218,9 +218,11 @@ void callback_browsing_delete (GtkMenuItem *menuitem, gpointer user_data) {
 void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
 	GtkTreeStore *tree_store;
+	GtkListStore *list_store;
 	GtkWidget *tree_view;
 	gchar *string;
 	GtkTreeIter iter;
+	Email *mail;
 
 	if(response_id == -8) { //YES
 
@@ -239,6 +241,25 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 			break;
 		case CREATE_FOLDER:
 			window_show_error("Une erreur est survenue.\nAction invalide pour cette fonction.", data);
+			break;
+		case DELETE_MAIL:
+			tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderList"));
+			tree_browsing_get_selected_row(data, &string, &iter);
+			int i = list_folder_get_selected_row(data, &iter);
+			if(i >= 0) {
+
+				mail = linkedlist_get(loaded_mails, i);
+				if(ssl_delete_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", string ,mail->message_id) != 0) { //TODO profile
+					window_show_error("Impossible de supprimer le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data);
+				} else {
+					//Remove mail from GUI
+					list_store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view)));
+					gtk_list_store_remove (list_store, &iter);
+				}
+			} else {
+				window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data);
+			}
+
 			break;
 		case NONE:
 			window_show_error("Une erreur est survenue.\nAction non définie.", data);
@@ -335,4 +356,41 @@ void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data) {
 		window_show_error("Erreur lors de l'envoi du message.\nVérifiez les paramètres de votre profil.", data);
 	}
 
+}
+
+void callback_list_folder_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
+	gchar *string;
+	GtkTreeIter iter;
+	GtkWidget *menu;
+
+	menu = GTK_WIDGET(gtk_builder_get_object (data->builder, "ContextMenuMails"));
+
+
+	if (event->type == GDK_BUTTON_PRESS  &&  event->button == 3) {
+
+		GtkTreeSelection *selection;
+
+		selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
+
+		if (gtk_tree_selection_count_selected_rows(selection)  <= 1) {
+			GtkTreePath *path;
+
+			/* Get tree path for row that was clicked */
+			if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(tree_view),	(gint) event->x, (gint) event->y, &path, NULL, NULL, NULL)) {
+				gtk_tree_model_get_iter(model, &iter, path);
+				gtk_tree_model_get (model, &iter, 0, &string, -1);
+
+				//Don't show popup menu if no mail is selected
+				gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, (event != NULL) ? event->button : 0,	gdk_event_get_time((GdkEvent*)event));
+			}
+		}
+	}
+}
+
+void callback_mail_delete(GtkMenuItem *menuitem, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	action = DELETE_MAIL;
+	show_confirm_dialog("Êtes-vous sûr de vouloir supprimer ce message?\nCette action est irréversible.", data);
 }

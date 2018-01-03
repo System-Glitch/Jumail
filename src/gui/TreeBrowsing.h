@@ -26,4 +26,9 @@ int tree_browsing_refresh(SGlobalData *data);
  */
 int browsing_refresh_folder(char * folder, SGlobalData *data);
 
+/**
+ * Returns the index of the selected row in the folder content view. Returns -1 if nothing is selected
+ */
+int list_folder_get_selected_row(SGlobalData *data, GtkTreeIter *iter);
+
 #endif /* SRC_GUI_TREEBROWSING_H_ */

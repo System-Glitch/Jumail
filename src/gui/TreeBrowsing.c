@@ -34,6 +34,27 @@ void tree_browsing_get_selected_row(SGlobalData *data, gchar **string, GtkTreeIt
 }
 
 /**
+ * Returns the index of the selected row in the folder content view. Returns -1 if nothing is selected
+ */
+int list_folder_get_selected_row(SGlobalData *data, GtkTreeIter *iter) {
+	GtkTreeView *tree_view;
+	GtkTreeSelection * tsel;
+	GtkTreeModel * tm ;
+	GtkTreePath * path ;
+	int * i ;
+
+	tree_view = GTK_TREE_VIEW(gtk_builder_get_object (data->builder, "TreeViewFolderList"));
+
+	tsel = gtk_tree_view_get_selection (tree_view);
+	if ( gtk_tree_selection_get_selected ( tsel , &tm , iter ) ) {
+		path = gtk_tree_model_get_path ( tm , iter ) ;
+		i = gtk_tree_path_get_indices ( path ) ;
+		return *i;
+	}
+	return -1;
+}
+
+/**
  * Empty and load the tree store with the available folders. Safely checks if a profile is selected or not.
  * Return 1 if success, 0 on failure. Triggers an error dialog.
  */
@@ -140,9 +161,14 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 			window_show_error("Impossible de charger le contenu du dossier.\nVérifiez votre connexion internet et les paramètres de votre profil.", data);
 			return 1;
 		}
-		for(size_t i = search->size-1 ; i > 0; i--) {
+
+		for(int i = search->size-1 ; i >= 0; i--) {
 			Email *mail = ssl_get_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", folder, search->uids[i]);
 
+			if(mail == NULL) {
+				window_show_error("Une erreur est survenue lors de la récupération des messages.", data);
+				break;
+			}
 			gtk_list_store_append(model, &iter);
 			gtk_list_store_set (model, &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, -1);
 			iter.user_data = (gpointer)mail;

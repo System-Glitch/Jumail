@@ -787,8 +787,6 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 	curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 	curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
 
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_null); //Don't print the result to stdout
-
 	curl_easy_setopt(curl, CURLOPT_URL,full_address);
 
 	enable_ssl(curl);
@@ -820,6 +818,7 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 	//Replacing format code with value
 	sprintf(full_request, request, uid);
 
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_null); //Don't print the result to stdout
 	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,full_request);
 
 	res = curl_easy_perform(curl);
@@ -1161,6 +1160,7 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 	free(mailbox_encoded_src);
 	free(mailbox_encoded_dst);
 
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_null); //Don't print the result to stdout
 	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,full_request);
 
 	res = curl_easy_perform(curl);
@@ -1264,7 +1264,6 @@ int ssl_search_by_id(CURL *curl, char *message_id) {
 	else {
 		if(strlen(chunk.memory) > 9) { //Result is not "* SEARCH" meaning that a mail with the given message_id was found
 			uid = strtol(chunk.memory+9, NULL,10); //+9 to ignore "* SEARCH "
-			printf("%d\n", uid);
 		}
 	}
 
