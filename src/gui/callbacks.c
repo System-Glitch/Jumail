@@ -255,6 +255,9 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 					//Remove mail from GUI
 					list_store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view)));
 					gtk_list_store_remove (list_store, &iter);
+
+					free_email(mail);
+					linkedlist_remove_index(loaded_mails, i);
 				}
 			} else {
 				window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data);
@@ -393,4 +396,34 @@ void callback_mail_delete(GtkMenuItem *menuitem, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
 	action = DELETE_MAIL;
 	show_confirm_dialog("Êtes-vous sûr de vouloir supprimer ce message?\nCette action est irréversible.", data);
+}
+
+static void mail_set_seen(SGlobalData* data, gboolean seen) {
+	Email *mail;
+	GtkTreeIter iter;
+	gchar *string;
+
+	tree_browsing_get_selected_row(data, &string, &iter);
+	int i = list_folder_get_selected_row(data, &iter);
+	if(i >= 0) {
+
+		mail = linkedlist_get(loaded_mails, i);
+		if(ssl_see_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", string, mail->message_id, seen) != 0) { //TODO profile
+			window_show_error("Impossible de changer le status du message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data);
+		} else {
+			//TODO Update line appearance
+		}
+	} else {
+		window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data);
+	}
+}
+
+void callback_mail_seen(GtkMenuItem *menuitem, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	mail_set_seen(data, 1);
+}
+
+void callback_mail_unseen(GtkMenuItem *menuitem, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	mail_set_seen(data, 0);
 }

@@ -90,7 +90,7 @@ int tree_browsing_refresh(SGlobalData *data) {
 		gtk_tree_view_set_model (tree_view, GTK_TREE_MODEL (model));
 
 		renderer = gtk_cell_renderer_text_new ();
-		column = gtk_tree_view_column_new_with_attributes ("Navigation", renderer, "text", 0, NULL);
+		column = gtk_tree_view_column_new_with_attributes ("Navigation", renderer, "text", 0 , NULL);
 		gtk_tree_view_append_column (tree_view, column);
 	} else {
 		gtk_tree_store_clear(model);
@@ -136,20 +136,20 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 	model = GTK_LIST_STORE(gtk_tree_view_get_model(tree_view));
 	if(model == NULL) {
 
-		model = gtk_list_store_new (4, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
+		model = gtk_list_store_new (6, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_INT, G_TYPE_BOOLEAN);
 		gtk_tree_view_set_model (tree_view, GTK_TREE_MODEL (model));
 
 		renderer = gtk_cell_renderer_text_new ();
-		column = gtk_tree_view_column_new_with_attributes ("Sujet", renderer, "text", 0, NULL);
+		column = gtk_tree_view_column_new_with_attributes ("Sujet", renderer, "text", 0 , "weight", 4, "weight-set", 5, NULL);
 		gtk_tree_view_append_column (tree_view, column);
 
-		column = gtk_tree_view_column_new_with_attributes ("De", renderer, "text", 1, NULL);
+		column = gtk_tree_view_column_new_with_attributes ("De", renderer, "text", 1, "weight", 4, "weight-set", 5, NULL);
 		gtk_tree_view_append_column (tree_view, column);
 
-		column = gtk_tree_view_column_new_with_attributes ("Pour", renderer, "text", 2, NULL);
+		column = gtk_tree_view_column_new_with_attributes ("Pour", renderer, "text", 2, "weight", 4, "weight-set", 5, NULL);
 		gtk_tree_view_append_column (tree_view, column);
 
-		column = gtk_tree_view_column_new_with_attributes ("Date", renderer, "text", 3, NULL);
+		column = gtk_tree_view_column_new_with_attributes ("Date", renderer, "text", 3, "weight", 4, "weight-set", 5, NULL);
 		gtk_tree_view_append_column (tree_view, column);
 	} else {
 		gtk_list_store_clear(model);
@@ -170,7 +170,11 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 				break;
 			}
 			gtk_list_store_append(model, &iter);
-			gtk_list_store_set (model, &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, -1);
+
+			if(!string_array_contains(mail->flags, "\\Seen"))
+				gtk_list_store_set (model, &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, 4, PANGO_WEIGHT_BOLD, 5, TRUE, -1);
+			else
+				gtk_list_store_set (model, &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, -1);
 			iter.user_data = (gpointer)mail;
 
 			linkedlist_add(loaded_mails, mail);

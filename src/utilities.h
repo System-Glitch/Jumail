@@ -91,4 +91,9 @@ int exec_regex(regex_t * regex, char* regexp, char * source, int max_groups, reg
  */
 char * generate_address(char * domain, char * protocol);
 
+/**
+ * Iterates through the given StringArray and checks if it contains the string str
+ */
+int string_array_contains(StringArray *array, const char *str);
+
 #endif /* SRC_UTILITIES_H_ */

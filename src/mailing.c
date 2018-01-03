@@ -868,6 +868,7 @@ static Email *init_email() {
 	mail->in_reply_to= NULL;
 	mail->references = NULL;
 	mail->raw		 = NULL;
+	mail->flags		 = NULL;
 	return mail;
 }
 

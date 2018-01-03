@@ -349,3 +349,14 @@ char * generate_address(char * domain, char * protocol) {
 
 	return address;
 }
+
+/**
+ * Iterates through the given StringArray and checks if it contains the string str
+ */
+int string_array_contains(StringArray *array, const char *str) {
+	for(size_t i = 0 ; i < array->size ; i++) {
+		if(!strcmp(array->array[i], str))
+			return 1;
+	}
+	return 0;
+}

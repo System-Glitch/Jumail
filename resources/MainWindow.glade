@@ -7,11 +7,6 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-cancel</property>
   </object>
-  <object class="GtkImage" id="ImageCheck">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-apply</property>
-  </object>
   <object class="GtkImage" id="ImageCompose">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -505,9 +500,46 @@ Helder SALVADOR</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-remove</property>
   </object>
+  <object class="GtkImage" id="ImageFolderRemove2">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-floppy</property>
+    <property name="icon_size">5</property>
+  </object>
   <object class="GtkMenu" id="ContextMenuMails">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <child>
+      <object class="GtkMenuItem" id="MenuMailsSeen">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Marquer comme lu</property>
+        <signal name="activate" handler="callback_mail_seen" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkMenuItem" id="MenuMailUnseen">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Marquer comme non lu</property>
+        <signal name="activate" handler="callback_mail_unseen" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="MenuMailsArchive">
+        <property name="label" translatable="yes">Archiver...</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="image">ImageFolderRemove2</property>
+        <property name="use_stock">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="separatormenuitem4">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
     <child>
       <object class="GtkImageMenuItem" id="MenuMailsRemove">
         <property name="label" translatable="yes">Supprimer</property>

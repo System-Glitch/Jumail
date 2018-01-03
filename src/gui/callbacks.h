@@ -56,5 +56,7 @@ void callback_compose_mail_to_entry_changed(GtkEditable *editable, gpointer user
 void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data);
 void callback_mail_delete(GtkMenuItem *menuitem, gpointer user_data);
 void callback_list_folder_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data);
+void callback_mail_seen(GtkMenuItem *menuitem, gpointer user_data);
+void callback_mail_unseen(GtkMenuItem *menuitem, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */
