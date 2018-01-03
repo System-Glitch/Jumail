@@ -11,6 +11,11 @@
 #include "../folders.h"
 
 /**
+ * Gets the selected row in the browsing tree and puts the reference to the value of the row in "string"
+ */
+void tree_browsing_get_selected_row(SGlobalData *data, gchar **string, GtkTreeIter *iter);
+
+/**
  * Empty and load the tree store with the available folders. Safely checks if a profile is selected or not.
  * Return 1 if success, 0 on failure. Triggers an error dialog.
  */

@@ -13,6 +13,27 @@
 #include "MailWindow.h"
 
 /**
+ * Gets the selected row in the browsing tree and puts the reference to the value of the row in "string"
+ */
+void tree_browsing_get_selected_row(SGlobalData *data, gchar **string, GtkTreeIter *iter) {
+	GtkTreeModel *model;
+	GtkWidget *tree_view;
+	GtkTreeSelection *selection;
+
+	tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewBrowsing"));
+	model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
+	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
+
+	if (gtk_tree_selection_count_selected_rows(selection)  <= 1) {
+
+		/* Get selected row */
+		gtk_tree_selection_get_selected (selection, &model, iter);
+		gtk_tree_model_get (model, iter, 0, string, -1);
+
+	}
+}
+
+/**
  * Empty and load the tree store with the available folders. Safely checks if a profile is selected or not.
  * Return 1 if success, 0 on failure. Triggers an error dialog.
  */
