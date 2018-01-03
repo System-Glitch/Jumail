@@ -24,7 +24,7 @@ void tree_browsing_get_selected_row(SGlobalData *data, gchar **string, GtkTreeIt
 	model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
 	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
 
-	if (gtk_tree_selection_count_selected_rows(selection)  <= 1) {
+	if (gtk_tree_selection_count_selected_rows(selection)  == 1) {
 
 		/* Get selected row */
 		gtk_tree_selection_get_selected (selection, &model, iter);

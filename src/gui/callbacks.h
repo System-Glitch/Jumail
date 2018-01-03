@@ -41,5 +41,9 @@ void callback_browsing_context_menu(GtkWidget *tree_view, GdkEventButton *event,
 void callback_browsing_refresh (GtkMenuItem *menuitem, gpointer user_data);
 void callback_browsing_delete (GtkMenuItem *menuitem, gpointer user_data);
 void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer user_data);
+void callback_browsing_create(GtkMenuItem *menuitem, gpointer user_data);
+void callback_create_folder_confirm(GtkButton *widget, gpointer user_data);
+void callback_create_folder_cancel(GtkButton *widget, gpointer user_data);
+void callback_folder_create_entry_changed(GtkEditable *editable, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */
