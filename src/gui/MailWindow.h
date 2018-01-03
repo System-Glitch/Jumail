@@ -21,4 +21,9 @@ void open_mail_window(Email *mail, SGlobalData *data);
  */
 void mail_window_clear(SGlobalData *data);
 
+/**
+ * Opens the mail composing window
+ */
+void open_compose_mail_window(SGlobalData *data);
+
 #endif /* SRC_GUI_MAILWINDOW_H_ */

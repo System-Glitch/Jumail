@@ -13,6 +13,10 @@ static void fill_text_view(GtkTextView *text_view, char *string) {
 	gtk_text_buffer_set_text(buffer, string, -1);
 }
 
+static void fill_text_entry(GtkEntry *text_entry, char *string) {
+	gtk_entry_set_text(text_entry, string);
+}
+
 
 /**
  * Opens a mail window showing the given mail
@@ -62,4 +66,32 @@ void mail_window_clear(SGlobalData *data) {
 	fill_text_view(GTK_TEXT_VIEW(content), "");
 	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailSubject"));
 	fill_text_view(GTK_TEXT_VIEW(content), "");
+}
+
+/**
+ * Opens the mail composing window
+ */
+void open_compose_mail_window(SGlobalData *data) {
+	GtkWidget *window = NULL;
+	GtkWidget *content = NULL;
+	GtkWidget *button;
+
+	button = GTK_WIDGET(gtk_builder_get_object (data->builder, "MailComposeSend"));
+	window =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailComposeWindow"));
+
+	if(!gtk_widget_get_visible (window)) {
+		gtk_window_set_title(GTK_WINDOW(window), "Écrire");
+		gtk_widget_set_size_request (window, 800, 600);
+		g_signal_connect (window, "delete_event", G_CALLBACK (gtk_widget_hide), NULL);
+
+		content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailComposeTo"));
+		fill_text_entry(GTK_ENTRY(content), "");
+		content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailComposeSubject"));
+		fill_text_entry(GTK_ENTRY(content), "");
+		content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailComposeContent"));
+		fill_text_view(GTK_TEXT_VIEW(content), "");
+
+		gtk_widget_set_sensitive(button, 0);
+		gtk_widget_show_all (window);
+	}
 }

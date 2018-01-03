@@ -33,6 +33,11 @@ void show_confirm_dialog(const char * message, SGlobalData *data);
  */
 void window_show_error(const char * message, SGlobalData *data);
 
+/**
+ * Displays a modal success dialog.
+ */
+void window_show_info(const char * message, SGlobalData *data);
+
 void callback_quit(GtkMenuItem *menuitem, gpointer user_data);
 void callback_about (GtkMenuItem *menuitem, gpointer user_data);
 void callback_browsing_select(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data);
@@ -45,5 +50,8 @@ void callback_browsing_create(GtkMenuItem *menuitem, gpointer user_data);
 void callback_create_folder_confirm(GtkButton *widget, gpointer user_data);
 void callback_create_folder_cancel(GtkButton *widget, gpointer user_data);
 void callback_folder_create_entry_changed(GtkEditable *editable, gpointer user_data);
+void callback_compose_mail(GtkMenuItem *menuitem, gpointer user_data);
+void callback_compose_mail_to_entry_changed(GtkEditable *editable, gpointer user_data);
+void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */

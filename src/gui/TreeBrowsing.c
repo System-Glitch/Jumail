@@ -140,7 +140,7 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 			window_show_error("Impossible de charger le contenu du dossier.\nVérifiez votre connexion internet et les paramètres de votre profil.", data);
 			return 1;
 		}
-		for(size_t i = 0 ; i < search->size ; i++) {
+		for(size_t i = search->size-1 ; i > 0; i--) {
 			Email *mail = ssl_get_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", folder, search->uids[i]);
 
 			gtk_list_store_append(model, &iter);
