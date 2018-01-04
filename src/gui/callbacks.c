@@ -273,12 +273,20 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 
 void callback_show_mail(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data) {
 	Email *mail;
+	GtkTreeIter iter;
+	GtkTreeModel *model;
 	SGlobalData *data = (SGlobalData*) user_data;
 	int *i = gtk_tree_path_get_indices ( path );
 
+	model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
+
+	list_folder_get_selected_row(data, &iter);
 	mail = linkedlist_get(loaded_mails, *i);
 	if(mail != NULL) {
 		open_mail_window(mail, data);
+
+		gtk_list_store_set (GTK_LIST_STORE(model), &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, 4, PANGO_WEIGHT_NORMAL, 5, TRUE, -1);
+
 	}
 
 }
@@ -400,8 +408,13 @@ void callback_mail_delete(GtkMenuItem *menuitem, gpointer user_data) {
 
 static void mail_set_seen(SGlobalData* data, gboolean seen) {
 	Email *mail;
+	GtkTreeModel *model;
+	GtkWidget *tree_view;
 	GtkTreeIter iter;
 	gchar *string;
+
+	tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderList"));
+	model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
 
 	tree_browsing_get_selected_row(data, &string, &iter);
 	int i = list_folder_get_selected_row(data, &iter);
@@ -411,7 +424,11 @@ static void mail_set_seen(SGlobalData* data, gboolean seen) {
 		if(ssl_see_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", string, mail->message_id, seen) != 0) { //TODO profile
 			window_show_error("Impossible de changer le status du message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data);
 		} else {
-			//TODO Update line appearance
+			if(!seen) {
+				gtk_list_store_set (GTK_LIST_STORE(model), &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, 4, PANGO_WEIGHT_BOLD, 5, TRUE, -1);
+			} else {
+				gtk_list_store_set (GTK_LIST_STORE(model), &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, 4, PANGO_WEIGHT_NORMAL, 5, TRUE, -1);
+			}
 		}
 	} else {
 		window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data);
