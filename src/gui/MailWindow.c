@@ -74,6 +74,9 @@ void mail_window_clear(SGlobalData *data) {
 
 	gtk_widget_hide(window);
 	data->selected_mail_index = -1;
+
+	window =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailRawWindow"));
+	gtk_widget_hide(window);
 }
 
 /**
@@ -328,4 +331,17 @@ void callback_mail_compose_window_close(GtkWidget *widget, GdkEvent *event, gpoi
 		free(data->response_reference);
 	data->response_reference = NULL;
 	gtk_widget_hide(widget);
+}
+
+void callback_mail_view_see_raw(GtkButton *widget, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	GtkWidget *window = NULL;
+	GtkWidget *content = NULL;
+
+	window =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailRawWindow"));
+	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailRawContent"));
+	fill_text_view(GTK_TEXT_VIEW(content), data->current_email->raw);
+	gtk_window_set_title(GTK_WINDOW(window), "Contenu original");
+
+	gtk_widget_show_all(window);
 }

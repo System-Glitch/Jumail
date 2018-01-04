@@ -75,5 +75,6 @@ void callback_mail_window_close(GtkWidget *widget, GdkEvent *event, gpointer use
 void callback_mail_view_delete_email(GtkButton *widget, gpointer user_data);
 void callback_mail_view_response(GtkButton *widget, gpointer user_data);
 void callback_mail_compose_window_close(GtkWidget *widget, GdkEvent *event, gpointer user_data);
+void callback_mail_view_see_raw(GtkButton *widget, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */
