@@ -554,6 +554,7 @@ Helder SALVADOR</property>
   <object class="GtkWindow" id="MailWindow">
     <property name="can_focus">False</property>
     <property name="window_position">center</property>
+    <signal name="delete-event" handler="callback_mail_window_close" swapped="no"/>
     <child>
       <object class="GtkBox" id="box2">
         <property name="visible">True</property>
@@ -582,6 +583,7 @@ Helder SALVADOR</property>
                 <property name="row_spacing">3</property>
                 <property name="column_spacing">10</property>
                 <property name="row_homogeneous">True</property>
+                <signal name="delete-event" handler="callback_mail_window_close" swapped="no"/>
                 <child>
                   <object class="GtkTextView" id="MailFrom">
                     <property name="visible">True</property>

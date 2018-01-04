@@ -6,6 +6,7 @@
  *  Description : Handler for the mail window
  */
 #include "MailWindow.h"
+#include "TreeBrowsing.h"
 
 static void fill_text_view(GtkTextView *text_view, char *string) {
 	GtkTextBuffer *buffer;
@@ -21,29 +22,40 @@ static void fill_text_entry(GtkEntry *text_entry, char *string) {
 /**
  * Opens a mail window showing the given mail
  */
-void open_mail_window(Email *mail, SGlobalData *data) {
+int open_mail_window(Email *mail, char* mailbox, SGlobalData *data) {
 	GtkWidget *window = NULL;
 	GtkWidget *content = NULL;
+	int uid;
 
+	//TODO profile
+	uid = ssl_search_by_id_with_new_connection("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mailbox, mail->message_id);
+	if(uid == -1) {
+		window_show_error("Impossible de charger le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data);
+		return 0;
+	} else if(uid == 0) {
+		window_show_error("Une erreur est survenue.\nAucun message trouvé pour cet identifiant.", data);
+		return 0;
+	}
+	data->current_email = ssl_get_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mailbox, uid);
 
-	window =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailWindow"));
+	window = GTK_WIDGET (gtk_builder_get_object (data->builder, "MailWindow"));
 	gtk_window_set_title(GTK_WINDOW(window), mail->subject);
 	gtk_widget_set_size_request (window, 800, 600);
-	g_signal_connect (window, "delete_event", G_CALLBACK (gtk_widget_hide), NULL);
 
 	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailContent"));
-	fill_text_view(GTK_TEXT_VIEW(content), mail->message);
+	fill_text_view(GTK_TEXT_VIEW(content), data->current_email->message);
 	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailFrom"));
-	fill_text_view(GTK_TEXT_VIEW(content), mail->from);
+	fill_text_view(GTK_TEXT_VIEW(content), data->current_email->from);
 	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailTo"));
-	fill_text_view(GTK_TEXT_VIEW(content), mail->to);
+	fill_text_view(GTK_TEXT_VIEW(content), data->current_email->to);
 	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailDate"));
-	fill_text_view(GTK_TEXT_VIEW(content), mail->date);
+	fill_text_view(GTK_TEXT_VIEW(content), data->current_email->date);
 	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailSubject"));
-	fill_text_view(GTK_TEXT_VIEW(content), mail->subject);
+	fill_text_view(GTK_TEXT_VIEW(content), data->current_email->subject);
 
 	gtk_widget_hide(window);
 	gtk_widget_show_all (window);
+	return 1;
 }
 
 /**
@@ -51,21 +63,16 @@ void open_mail_window(Email *mail, SGlobalData *data) {
  */
 void mail_window_clear(SGlobalData *data) {
 	GtkWidget *window = NULL;
-	GtkWidget *content = NULL;
-
 
 	window =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailWindow"));
 	gtk_window_set_title(GTK_WINDOW(window), "Subject");
-	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailContent"));
-	fill_text_view(GTK_TEXT_VIEW(content), "");
-	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailFrom"));
-	fill_text_view(GTK_TEXT_VIEW(content), "");
-	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailTo"));
-	fill_text_view(GTK_TEXT_VIEW(content), "");
-	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailDate"));
-	fill_text_view(GTK_TEXT_VIEW(content), "");
-	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailSubject"));
-	fill_text_view(GTK_TEXT_VIEW(content), "");
+
+	free_email(data->current_email);
+	if(data->current_email != NULL)
+		free(data->current_email);
+	data->current_email = NULL;
+
+	gtk_widget_hide(window);
 }
 
 /**
@@ -96,22 +103,30 @@ void open_compose_mail_window(SGlobalData *data) {
 	}
 }
 
+void callback_mail_window_close(GtkWidget *widget, GdkEvent *event, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	mail_window_clear(data);
+}
+
 void callback_show_mail(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data) {
 	Email *mail;
 	GtkTreeIter iter;
 	GtkTreeModel *model;
 	SGlobalData *data = (SGlobalData*) user_data;
+	char *folder;
 	int *i = gtk_tree_path_get_indices ( path );
 
 	model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
 
-	list_folder_get_selected_row(data, &iter);
 	mail = linkedlist_get(loaded_mails, *i);
 	if(mail != NULL) {
-		open_mail_window(mail, data);
+		tree_browsing_get_selected_row(data, &folder, &iter);
 
-		gtk_list_store_set (GTK_LIST_STORE(model), &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, 4, PANGO_WEIGHT_NORMAL, 5, TRUE, -1);
+		if(open_mail_window(mail, folder ,data)) {
+			list_folder_get_selected_row(data, &iter);
+			gtk_list_store_set (GTK_LIST_STORE(model), &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, 4, PANGO_WEIGHT_NORMAL, 5, TRUE, -1);
 
+		}
 	}
 
 }

@@ -433,13 +433,13 @@ static struct ParsedSearch *parse_search(char * answer) {
 /**
  * Parses a line returned from a FETCH (FLAGS) (IMAP) command using regex to get the only the flags name
  */
-static char * parse_flags_line(char* line) {
+static char * parse_flags_line(char* line, char *regexp) {
 	regex_t regex;
 	regmatch_t pmatch[3];
 	int len;
 	char * dest = NULL;
 
-	if(exec_regex(&regex, REGEX_FLAGS, line, 3, &pmatch)) {
+	if(exec_regex(&regex, regexp, line, 3, &pmatch)) {
 		len = pmatch[2].rm_eo - pmatch[2].rm_so;
 		dest = malloc(len + 1);
 		if(dest == NULL) {
@@ -457,7 +457,7 @@ static char * parse_flags_line(char* line) {
 /**
  * Parses a string result of the FETCH (FLAGS) operation (IMAP) into a string array containing all the flags
  */
-static StringArray *parse_flags(char * answer) {
+static StringArray *parse_flags(char * answer, char *regexp) {
 	StringArray *flags;
 	char *tmp;
 	int len = 0;
@@ -469,7 +469,7 @@ static StringArray *parse_flags(char * answer) {
 	}
 
 	//Extract only the flags using regex
-	tmp = parse_flags_line(answer);
+	tmp = parse_flags_line(answer, regexp);
 	if(tmp == NULL) {
 		fputs("Error when extracting flags.\n", stderr);
 		free(flags);
@@ -714,7 +714,7 @@ Email *ssl_get_mail(char * username, char * password, char * domain, char * mail
 					fprintf(stderr, "curl_easy_perform() failed: %s\n",
 							curl_easy_strerror(res));
 				else {
-					mail->flags = parse_flags(chunk.memory);
+					mail->flags = parse_flags(chunk.memory, REGEX_FLAGS);
 				}
 			}
 
@@ -895,6 +895,7 @@ static char * parse_header_line(StringArray * content, char * regexp) {
 			}
 			strncpy(dest, line+pmatch[1].rm_so, len);
 			dest[len] = '\0';
+			break;
 		}
 	}
 
@@ -914,6 +915,11 @@ Email *parse_email(char * payload) {
 			*subject = NULL, *message_id = NULL,
 			*in_reply_to = NULL, *references = NULL,
 			*raw = NULL;
+
+	if(mail == NULL) {
+		fputs("Could not allocate for new Email.\n", stderr);
+		return NULL;
+	}
 
 	content = split_mail(payload);
 
@@ -1226,6 +1232,70 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 
 /**
  * Searches an email by Message-ID and returns the UID if found
+ * Creates an new CURL connection
+ * Returns 0 if not found, -1 if an error occurred
+ */
+int ssl_search_by_id_with_new_connection(char * username, char * password, char * domain, char * mailbox, char *message_id) {
+	CURL *curl;
+	int mailboxlen = 0;
+	char * address;
+	char * full_address;
+	char * mailbox_encoded;
+	int result = -1;
+
+	address = generate_address(domain, "imaps");
+	if(address == NULL) {
+		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		return -1;
+	}
+	if(mailbox == NULL) {
+		fprintf(stderr, "mailbox is not nullable.\n");
+		return -1;
+	}
+
+	curl = curl_easy_init();
+	if(!curl) {
+		fprintf(stderr, "Error on creating curl.\n");
+		return -1;
+	}
+
+	mailbox_encoded = url_encode(curl, mailbox);
+	if(mailbox_encoded == NULL) {
+		fprintf(stderr, "Error on URL encoding.\n");
+		curl_easy_cleanup(curl);
+		return -1;
+	}
+
+	mailboxlen = strlen(mailbox_encoded);
+	full_address = malloc(strlen(address)+mailboxlen+1);
+	if(full_address == NULL) {
+		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		free(mailbox_encoded);
+		curl_easy_cleanup(curl);
+		return -1;
+	}
+	//Building full address
+	strcpy(full_address, address);
+	free(address);
+	strcat(full_address, mailbox_encoded);
+	free(mailbox_encoded);
+
+	curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
+	curl_easy_setopt(curl, CURLOPT_USERNAME, username);
+	curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+
+	enable_ssl(curl);
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+	curl_easy_setopt(curl, CURLOPT_URL,full_address);
+
+	result = ssl_search_by_id(curl, message_id);
+
+	free(full_address);
+	return result;
+}
+
+/**
+ * Searches an email by Message-ID and returns the UID if found
  * Uses an already existing CURL connection
  * Returns 0 if not found, -1 if an error occurred
  */
@@ -1278,4 +1348,200 @@ void free_parsed_search(struct ParsedSearch *search) {
 	if(search->uids != NULL)
 		free(search->uids);
 	free(search);
+}
+
+/**
+ * Loads the email necessary headers into the LinkedList loaded_mails. Return 1 if success, 0 otherwise.
+ */
+int ssl_load_mail_headers(char * username, char * password, char * domain, char * mailbox, struct ParsedSearch *search) {
+	Email *mail = NULL;
+	CURL *curl;
+	CURLcode res = CURLE_OK;
+	struct MemoryStruct headers;
+	struct MemoryStruct chunk;
+	int mailboxlen = 0, uidstrlen = 0;
+	char * address;
+	char * mailbox_encoded;
+	char * full_address;
+	char * full_request;
+	char uidStr[12];
+
+	address = generate_address(domain, "imaps");
+	if(address == NULL) {
+		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		return 0;
+	}
+	if(mailbox == NULL) {
+		fprintf(stderr, "mailbox is not nullable.\n");
+		return 0;
+	}
+
+	curl = curl_easy_init();
+	if(!curl) {
+		fprintf(stderr, "Error on creating curl.\n");
+		return 0;
+	}
+	mailbox_encoded = url_encode(curl, mailbox);
+	if(mailbox_encoded == NULL) {
+		fprintf(stderr, "Error on URL encoding.\n");
+		curl_easy_cleanup(curl);
+		return 0;
+	}
+	mailboxlen = strlen(mailbox_encoded);
+
+	full_address = malloc(strlen(address)+mailboxlen+1);
+	if(full_address == NULL) {
+		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		curl_easy_cleanup(curl);
+		return 0;
+	}
+
+	//Building full address
+	//imaps://domain/mailbox/
+	strcpy(full_address, address);
+	free(address);
+	strcat(full_address, mailbox_encoded);
+	free(mailbox_encoded);
+
+	curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
+	curl_easy_setopt(curl, CURLOPT_USERNAME, username);
+	curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+
+	curl_easy_setopt(curl, CURLOPT_URL,full_address);
+
+	enable_ssl(curl);
+
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
+	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, write_memory_callback);
+
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+	curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void *)&headers);
+	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+
+	for(int i = search->size-1 ; i >= 0; i--) {
+
+		sprintf(uidStr, "%d", search->uids[i]);
+		uidstrlen = strlen(uidStr);
+		//Request : FETCH uid (FLAGS BODY.PEEK[HEADER.FIELDS (SUBJECT DATE FROM TO MESSAGE-ID)])
+		full_request = malloc(6+67+uidstrlen+1); //6 for "FETCH ", +67 for " (FLAGS BODY.PEEK[HEADER.FIELDS (SUBJECT DATE FROM TO MESSAGE-ID)])"
+		if(full_request == NULL) {
+			fprintf(stderr, "Error while creating IMAP request from domain.\n");
+			curl_easy_cleanup(curl);
+			return 0;
+		}
+		//Building request
+		strcpy(full_request,"FETCH ");
+		strcat(full_request, uidStr);
+		strcat(full_request, " (FLAGS BODY.PEEK[HEADER.FIELDS (SUBJECT DATE FROM TO MESSAGE-ID)])");
+
+
+		headers.memory = malloc(1); //Initial allocation. Will be reallocated in write_memory_callback() to fit the correct size.
+		headers.size = 0;
+		chunk.memory = malloc(1);
+		chunk.size = 0;
+
+		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,  full_request);
+		res = curl_easy_perform(curl);
+
+		/* Check for errors */
+		if(res != CURLE_OK)
+			fprintf(stderr, "curl_easy_perform() failed: %s\n",
+					curl_easy_strerror(res));
+		else {
+			mail = parse_email_headers(headers.memory, chunk.memory);
+			if(mail == NULL) {
+				fputs("Error, invalid mail headers payload.\n", stderr);
+			} else {
+				linkedlist_add(loaded_mails, mail);
+			}
+
+			free(chunk.memory);
+			free(headers.memory);
+		}
+
+		/* Always cleanup */
+
+		free(full_request);
+	}
+
+	curl_easy_cleanup(curl);
+	free(full_address);
+	return 1;
+}
+
+Email *parse_email_headers(char *payload, char *chunk) {
+	Email *mail = init_email();
+	StringArray content;
+
+	if(mail == NULL) {
+		fputs("Could not allocate for new Email.\n", stderr);
+		return NULL;
+	}
+
+	content = split_mail(payload);
+
+	if(content.size <= 0) {
+		fputs("Could not split mail headers payload.\n", stderr);
+		return NULL;
+	} else if(content.size < 6) {
+		fputs("Invalid mail headers payload.\n", stderr);
+		return NULL;
+	}
+
+	//Parse flags
+	mail->flags = parse_flags(chunk, REGEX_FLAGS_HEADERS);
+	if(mail->flags == NULL) {
+		fputs("Couldn't extract flags.\n", stderr);
+		free_email(mail);
+		free(mail);
+		return NULL;
+	}
+
+	//Parse FROM
+	mail->from = parse_header_line(&content, REGEX_FROM);
+	if(mail->from == NULL) {
+		fputs("Couldn't extract FROM.\n", stderr);
+		free_email(mail);
+		free(mail);
+		return NULL;
+	}
+
+	//Parse TO
+	mail->to = parse_header_line(&content, REGEX_TO);
+	if(mail->to == NULL) {
+		fputs("Couldn't extract TO.\n", stderr);
+		free_email(mail);
+		free(mail);
+		return NULL;
+	}
+
+	//Parse SUBJECT
+	mail->subject = parse_header_line(&content, REGEX_SUBJECT);
+	if(mail->subject == NULL) {
+		fputs("Couldn't extract SUBJECT.\n", stderr);
+		free_email(mail);
+		free(mail);
+		return NULL;
+	}
+
+	//Parse DATE
+	mail->date = parse_header_line(&content, REGEX_DATE);
+	if(mail->date == NULL) {
+		fputs("Couldn't extract DATE.\n", stderr);
+		free_email(mail);
+		free(mail);
+		return NULL;
+	}
+
+	//Parse Message-ID
+	mail->message_id = parse_header_line(&content, REGEX_MESSAGE_ID);
+	if(mail->message_id == NULL) {
+		fputs("Couldn't extract Message-ID.\n", stderr);
+		free_email(mail);
+		free(mail);
+		return NULL;
+	}
+
+	free_string_array(content);
+	return mail;
 }

@@ -114,6 +114,8 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 	GtkTreeView *tree_view;
 	GtkTreeViewColumn *column;
 	GtkCellRenderer *renderer;
+	Email *mail;
+	node_t *current;
 
 	printf("Getting folder content : %s\n", folder);
 
@@ -149,9 +151,9 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 
 		column = gtk_tree_view_column_new_with_attributes ("Date", renderer, "text", 3, "weight", 4, "weight-set", 5, NULL);
 		gtk_tree_view_append_column (tree_view, column);
-	} else {
-		gtk_list_store_clear(model);
 	}
+
+	gtk_list_store_clear(model);
 
 	if(folder != NULL) {
 		struct ParsedSearch *search = ssl_search_all("jumailimap@gmail.com", "azerty12", "imap.gmail.com", folder);
@@ -160,22 +162,25 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 			return 1;
 		}
 
-		for(int i = search->size-1 ; i >= 0; i--) {
-			Email *mail = ssl_get_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", folder, search->uids[i]);
+		if(ssl_load_mail_headers("jumailimap@gmail.com", "azerty12", "imap.gmail.com", folder, search)) {
+			current = loaded_mails->head;
+			while(current != NULL) {
+				mail = current->val;
+				if(mail == NULL) {
+					window_show_error("Une erreur est survenue lors de la récupération des messages.", data);
+					break;
+				}
+				gtk_list_store_append(model, &iter);
 
-			if(mail == NULL) {
-				window_show_error("Une erreur est survenue lors de la récupération des messages.", data);
-				break;
+				if(!string_array_contains(mail->flags, "\\Seen"))
+					gtk_list_store_set (model, &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, 4, PANGO_WEIGHT_BOLD, 5, TRUE, -1);
+				else
+					gtk_list_store_set (model, &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, -1);
+				iter.user_data = (gpointer)mail;
+				current = current->next;
 			}
-			gtk_list_store_append(model, &iter);
-
-			if(!string_array_contains(mail->flags, "\\Seen"))
-				gtk_list_store_set (model, &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, 4, PANGO_WEIGHT_BOLD, 5, TRUE, -1);
-			else
-				gtk_list_store_set (model, &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, -1);
-			iter.user_data = (gpointer)mail;
-
-			linkedlist_add(loaded_mails, mail);
+		} else {
+			window_show_error("Une erreur est survenue lors de la récupération des messages.", data);
 		}
 		free_parsed_search(search); //Always free
 	}

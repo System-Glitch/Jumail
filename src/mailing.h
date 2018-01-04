@@ -24,6 +24,7 @@
 #define REGEX_IN_REPLY_TO	"In-Reply-To: (.*)"
 #define REGEX_REFERENCES	"References: (.*)"
 #define REGEX_FLAGS			"\\* (.*?) FETCH \\(FLAGS \\((.*?)\\)\\)"
+#define REGEX_FLAGS_HEADERS	"\\* (.*?) FETCH \\(FLAGS \\((.*?)\\) "
 
 extern linkedlist_t * loaded_mails;
 
@@ -126,8 +127,25 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 int ssl_search_by_id(CURL *curl, char *message_id);
 
 /**
+ * Searches an email by Message-ID and returns the UID if found
+ * Creates an new CURL connection
+ * Returns 0 if not found, -1 if an error occurred
+ */
+int ssl_search_by_id_with_new_connection(char * username, char * password, char * domain, char * mailbox, char *message_id);
+
+/**
  * Safe free of a ParsedSearch struct, ignoring NULL pointers
  */
 void free_parsed_search(struct ParsedSearch *search);
+
+/**
+ * Loads the email necessary headers into the LinkedList loaded_mails. Return 1 if success, 0 otherwise.
+ */
+int ssl_load_mail_headers(char * username, char * password, char * domain, char * mailbox, struct ParsedSearch *search);
+
+/**
+ * Parses the response for request "FETCH uid (FLAGS BODY[HEADER.FIELDS (SUBJECT DATE FROM TO MESSAGE-ID)])"
+ */
+Email *parse_email_headers(char *payload, char *chunk);
 
 #endif /* SRC_MAILING_H_ */

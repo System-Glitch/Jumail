@@ -10,6 +10,7 @@
 #define SRC_CALLBACKS_H_
 
 #include <gtk/gtk.h>
+#include "../mailing.h"
 
 typedef struct
 {
@@ -61,5 +62,6 @@ void callback_mail_delete(GtkMenuItem *menuitem, gpointer user_data);
 void callback_list_folder_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data);
 void callback_mail_seen(GtkMenuItem *menuitem, gpointer user_data);
 void callback_mail_unseen(GtkMenuItem *menuitem, gpointer user_data);
+void callback_mail_window_close(GtkWidget *widget, GdkEvent *event, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */

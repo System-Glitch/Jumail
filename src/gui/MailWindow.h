@@ -14,7 +14,7 @@
 /**
  * Opens a mail window showing the given mail
  */
-void open_mail_window(Email *mail, SGlobalData *data);
+int open_mail_window(Email *mail, char* mailbox, SGlobalData *data);
 
 /**
  * Clears the mail window and close it
