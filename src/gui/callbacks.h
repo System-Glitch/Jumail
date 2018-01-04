@@ -15,6 +15,7 @@ typedef struct
 {
 	GtkBuilder *builder;
 	gpointer user_data;
+	Email *current_email;
 } SGlobalData;
 
 enum Action {
@@ -23,6 +24,8 @@ enum Action {
 	CREATE_FOLDER,
 	DELETE_MAIL
 };
+
+extern enum Action action;
 
 /**
  * Displays a modal confirm dialog and calls callback_confirm_response

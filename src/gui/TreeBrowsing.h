@@ -9,6 +9,7 @@
 #define SRC_GUI_TREEBROWSING_H_
 
 #include "../folders.h"
+#include "../mailing.h"
 
 /**
  * Gets the selected row in the browsing tree and puts the reference to the value of the row in "string"

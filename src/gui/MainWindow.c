@@ -20,7 +20,7 @@ static void main_window_activate(GtkApplication* app, gpointer user_data) {
 	SGlobalData data;
 
 	data.builder = gtk_builder_new();
-	data.user_data = "Test\n";
+	data.current_email = NULL;
 
 
 	filename =  g_build_filename ("resources/MainWindow.glade", NULL);
