@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include "utilities.h"
 
-#define REGEX_FOLDER		"\\* LIST \\((.*?)\\) \"\\/\" \"(.*?)\""
+#define REGEX_FOLDER		"\\* LIST \\((.*?)\\) \"\\/\" \"?([^\"]*)\"?"
 
 /**
  * Performs a LIST (IMAP) operation, parses it and returns the existing folders inside a StringArray
