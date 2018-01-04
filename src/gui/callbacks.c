@@ -54,8 +54,14 @@ void window_show_info(const char * message, SGlobalData *data) {
 }
 
 void callback_quit(GtkMenuItem *menuitem, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+
 	fputs("Closing GUI...\n", stdout);
 	gtk_main_quit();
+	fputs("Cleaning current mail...", stdout);
+	free_email(data->current_email);
+	if(data->current_email != NULL)
+		free(data->current_email);
 }
 
 

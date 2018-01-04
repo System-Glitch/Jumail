@@ -44,6 +44,7 @@ typedef struct Email {
 	char 		*references;
 	StringArray *flags;
 	char		*raw;
+	char		*mailbox;
 } Email;
 
 void free_list_loaded_mails();
@@ -146,6 +147,6 @@ int ssl_load_mail_headers(char * username, char * password, char * domain, char 
 /**
  * Parses the response for request "FETCH uid (FLAGS BODY[HEADER.FIELDS (SUBJECT DATE FROM TO MESSAGE-ID)])"
  */
-Email *parse_email_headers(char *payload, char *chunk);
+Email *parse_email_headers(char *payload, char *chunk, char *mailbox);
 
 #endif /* SRC_MAILING_H_ */

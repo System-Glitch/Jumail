@@ -141,15 +141,19 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 
 		renderer = gtk_cell_renderer_text_new ();
 		column = gtk_tree_view_column_new_with_attributes ("Sujet", renderer, "text", 0 , "weight", 4, "weight-set", 5, NULL);
+		gtk_tree_view_column_set_resizable (column, TRUE);
 		gtk_tree_view_append_column (tree_view, column);
 
 		column = gtk_tree_view_column_new_with_attributes ("De", renderer, "text", 1, "weight", 4, "weight-set", 5, NULL);
+		gtk_tree_view_column_set_resizable (column, TRUE);
 		gtk_tree_view_append_column (tree_view, column);
 
 		column = gtk_tree_view_column_new_with_attributes ("Pour", renderer, "text", 2, "weight", 4, "weight-set", 5, NULL);
+		gtk_tree_view_column_set_resizable (column, TRUE);
 		gtk_tree_view_append_column (tree_view, column);
 
 		column = gtk_tree_view_column_new_with_attributes ("Date", renderer, "text", 3, "weight", 4, "weight-set", 5, NULL);
+		gtk_tree_view_column_set_resizable (column, TRUE);
 		gtk_tree_view_append_column (tree_view, column);
 	}
 
@@ -222,6 +226,7 @@ void callback_list_folder_context_menu(GtkWidget *tree_view, GdkEventButton *eve
 void callback_mail_delete(GtkMenuItem *menuitem, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
 	action = DELETE_MAIL;
+	mail_window_clear(data);
 	show_confirm_dialog("Êtes-vous sûr de vouloir supprimer ce message?\nCette action est irréversible.", data);
 }
 
@@ -342,6 +347,7 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 			}
 			break;
 		case CREATE_FOLDER:
+		case MOVE_MAIL:
 			window_show_error("Une erreur est survenue.\nAction invalide pour cette fonction.", data);
 			break;
 		case DELETE_MAIL:
@@ -461,4 +467,130 @@ void callback_create_folder_cancel(GtkButton *widget, gpointer user_data) {
 	gtk_entry_set_text (GTK_ENTRY(entry), ""); //Clear text entry
 
 	gtk_widget_hide(dialog);
+}
+
+static gboolean fill_folder_pick_view(GtkTreeModel *model, GtkTreePath  *path, GtkTreeIter *iter, gpointer user_data) {
+	GtkTreeStore *model_pick;
+	GtkTreeView *view;
+	GtkTreeIter iter_pick;
+	SGlobalData *data = (SGlobalData*) user_data;
+	gchar *string;
+
+	view = GTK_TREE_VIEW(gtk_builder_get_object (data->builder, "TreeViewFolderPick"));
+	model_pick = GTK_TREE_STORE(gtk_tree_view_get_model(view));
+
+	gtk_tree_model_get (model, iter, 0, &string, -1);
+	gtk_tree_store_append(model_pick, &iter_pick, NULL);
+	gtk_tree_store_set (model_pick, &iter_pick, 0, string, -1);
+
+	return FALSE;
+}
+
+void show_folder_select_dialog(SGlobalData *data) {
+	GtkWidget *dialog;
+	GtkTreeStore *model;
+	GtkTreeStore *model_browsing;
+	GtkTreeView *view;
+	GtkTreeView *view_browsing;
+	GtkTreeViewColumn *column;
+	GtkCellRenderer *renderer;
+
+	dialog = GTK_WIDGET(gtk_builder_get_object (data->builder, "SelectFolderDialog"));
+	view = GTK_TREE_VIEW(gtk_builder_get_object (data->builder, "TreeViewFolderPick"));
+	view_browsing = GTK_TREE_VIEW(gtk_builder_get_object (data->builder, "TreeViewBrowsing"));
+
+	model = GTK_TREE_STORE(gtk_tree_view_get_model(view));
+	model_browsing = GTK_TREE_STORE(gtk_tree_view_get_model(view_browsing));
+	if(model == NULL) {
+
+		model = gtk_tree_store_new (1, G_TYPE_STRING);
+		gtk_tree_view_set_model (view, GTK_TREE_MODEL (model));
+
+		renderer = gtk_cell_renderer_text_new ();
+		column = gtk_tree_view_column_new_with_attributes ("Nom du dossier", renderer, "text", 0 , NULL);
+		gtk_tree_view_append_column (view, column);
+	}
+
+	gtk_tree_store_clear(model);
+
+	gtk_tree_model_foreach(GTK_TREE_MODEL(model_browsing), fill_folder_pick_view, data);
+
+	gtk_widget_show_all (dialog);
+}
+
+void callback_mail_move_confirm(GtkButton *widget, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	GtkTreeModel *model;
+	GtkListStore *list_store;
+	GtkWidget *tree_view;
+	GtkWidget *tree_view_mails;
+	GtkTreeSelection *selection;
+	gchar *folder_dst;
+	GtkTreeIter iter;
+	GtkWidget *dialog;
+	int index = -1;
+	int status = -1;
+	Email *mail;
+
+	index = list_folder_get_selected_row(data, &iter);
+	if(index == -1) {
+		window_show_error("Une erreur est survenue.\nAucun message n'est sélectionné.", data);
+		return;
+	}
+
+	dialog = GTK_WIDGET(gtk_builder_get_object (data->builder, "SelectFolderDialog"));
+	tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderPick"));
+	tree_view_mails = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderList"));
+	model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
+	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
+
+	if (gtk_tree_selection_count_selected_rows(selection)  == 1) {
+
+		/* Get selected row for destination folder */
+		gtk_tree_selection_get_selected (selection, &model, &iter);
+		gtk_tree_model_get (model, &iter, 0, &folder_dst, -1);
+
+		int i = list_folder_get_selected_row(data, &iter); //Get selected mail
+		if(i >= 0) {
+
+			mail = linkedlist_get(loaded_mails, i);
+
+			status = ssl_move_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mail->mailbox, folder_dst, mail->message_id); //TODO profile
+
+			if(status) {
+				window_show_error("Impossible de déplacer le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data);
+			} else {
+				//Remove mail from GUI
+				list_store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view_mails)));
+				gtk_list_store_remove (list_store, &iter);
+
+				free_email(mail);
+				linkedlist_remove_index(loaded_mails, i);
+				gtk_widget_hide(dialog);
+				window_show_info("Le message a été déplacé.", data);
+			}
+		} else {
+			gtk_widget_hide(dialog);
+			window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data);
+		}
+
+	} else {
+		gtk_widget_hide(dialog);
+		window_show_error("Une erreur est survenue.\nAucun dossier n'est sélectionné.", data);
+	}
+}
+
+void callback_move_mail_cancel(GtkButton *widget, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	GtkWidget *dialog;
+	dialog = GTK_WIDGET(gtk_builder_get_object (data->builder, "SelectFolderDialog"));
+	gtk_widget_hide(dialog);
+}
+
+void callback_mail_move(GtkMenuItem *menuitem, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	action = MOVE_MAIL;
+
+	mail_window_clear(data);
+	show_folder_select_dialog(data);
 }

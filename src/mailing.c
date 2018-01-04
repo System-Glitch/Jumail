@@ -716,6 +716,21 @@ Email *ssl_get_mail(char * username, char * password, char * domain, char * mail
 				else {
 					mail->flags = parse_flags(chunk.memory, REGEX_FLAGS);
 				}
+
+				mail->mailbox = malloc(strlen(mailbox)+1);
+				if(mail->mailbox == NULL) {
+					fputs("Couldn't allocate for mailbox copy.\n", stderr);
+					free(chunk.memory);
+					curl_easy_cleanup(curl);
+					free(full_request);
+					free(full_address);
+					free_email(mail);
+					free(mail);
+					return NULL;
+				} else {
+					strcpy(mail->mailbox, mailbox);
+				}
+
 			}
 
 			free(chunk.memory);
@@ -869,6 +884,7 @@ static Email *init_email() {
 	mail->references = NULL;
 	mail->raw		 = NULL;
 	mail->flags		 = NULL;
+	mail->mailbox	 = NULL;
 	return mail;
 }
 
@@ -1053,6 +1069,8 @@ void free_email(Email *email) {
 	}
 	if(email->raw != NULL)
 		free(email->raw);
+	if(email->mailbox != NULL)
+		free(email->mailbox);
 }
 
 /**
@@ -1183,7 +1201,6 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 			fprintf(stderr, "curl_easy_perform() failed: %s\n",
 					curl_easy_strerror(res));
 		} else {
-			free(full_request);
 			fputs("Mail moved OK.\n", stdout);
 
 			//Flag the original mail as deleted to avoid duplicates
@@ -1195,6 +1212,8 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 			if(full_request2 == NULL) {
 				fprintf(stderr, "Error while creating IMAP request.\n");
 				curl_easy_cleanup(curl);
+				free(full_request);
+				free(full_address);
 				return -1;
 			}
 
@@ -1448,7 +1467,7 @@ int ssl_load_mail_headers(char * username, char * password, char * domain, char 
 			fprintf(stderr, "curl_easy_perform() failed: %s\n",
 					curl_easy_strerror(res));
 		else {
-			mail = parse_email_headers(headers.memory, chunk.memory);
+			mail = parse_email_headers(headers.memory, chunk.memory, mailbox);
 			if(mail == NULL) {
 				fputs("Error, invalid mail headers payload.\n", stderr);
 			} else {
@@ -1469,7 +1488,7 @@ int ssl_load_mail_headers(char * username, char * password, char * domain, char 
 	return 1;
 }
 
-Email *parse_email_headers(char *payload, char *chunk) {
+Email *parse_email_headers(char *payload, char *chunk, char *mailbox) {
 	Email *mail = init_email();
 	StringArray content;
 
@@ -1540,6 +1559,16 @@ Email *parse_email_headers(char *payload, char *chunk) {
 		free_email(mail);
 		free(mail);
 		return NULL;
+	}
+
+	mail->mailbox = malloc(strlen(mailbox)+1);
+	if(mail->mailbox == NULL) {
+		fputs("Couldn't allocate for mailbox copy.\n", stderr);
+		free_email(mail);
+		free(mail);
+		return NULL;
+	} else {
+		strcpy(mail->mailbox, mailbox);
 	}
 
 	free_string_array(content);

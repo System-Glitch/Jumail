@@ -23,7 +23,8 @@ enum Action {
 	NONE,
 	DELETE_FOLDER,
 	CREATE_FOLDER,
-	DELETE_MAIL
+	DELETE_MAIL,
+	MOVE_MAIL
 };
 
 extern enum Action action;
@@ -62,6 +63,7 @@ void callback_mail_delete(GtkMenuItem *menuitem, gpointer user_data);
 void callback_list_folder_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data);
 void callback_mail_seen(GtkMenuItem *menuitem, gpointer user_data);
 void callback_mail_unseen(GtkMenuItem *menuitem, gpointer user_data);
+void callback_mail_move(GtkMenuItem *menuitem, gpointer user_data);
 void callback_mail_window_close(GtkWidget *widget, GdkEvent *event, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */
