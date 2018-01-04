@@ -351,6 +351,7 @@ Helder SALVADOR</property>
     <property name="can_focus">False</property>
     <property name="window_position">center</property>
     <property name="transient_for">MainWindow</property>
+    <signal name="delete-event" handler="callback_mail_compose_window_close" swapped="no"/>
     <child>
       <object class="GtkBox" id="box6">
         <property name="visible">True</property>
@@ -719,6 +720,7 @@ Helder SALVADOR</property>
                 <property name="label" translatable="yes">Répondre</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-undo</property>
+                <signal name="clicked" handler="callback_mail_view_response" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>

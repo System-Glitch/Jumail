@@ -17,6 +17,7 @@ typedef struct
 	GtkBuilder *builder;
 	gpointer user_data;
 	Email *current_email;
+	Email *response_reference;
 	int selected_mail_index;
 } SGlobalData;
 
@@ -27,6 +28,7 @@ enum Action {
 	DELETE_MAIL,
 	DELETE_MAIL_FROM_VIEW,
 	MOVE_MAIL_FROM_VIEW,
+	RESPOND_MAIL_FROM_VIEW,
 	MOVE_MAIL
 };
 
@@ -71,5 +73,7 @@ void callback_mail_unseen(GtkMenuItem *menuitem, gpointer user_data);
 void callback_mail_move(GtkMenuItem *menuitem, gpointer user_data);
 void callback_mail_window_close(GtkWidget *widget, GdkEvent *event, gpointer user_data);
 void callback_mail_view_delete_email(GtkButton *widget, gpointer user_data);
+void callback_mail_view_response(GtkButton *widget, gpointer user_data);
+void callback_mail_compose_window_close(GtkWidget *widget, GdkEvent *event, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */

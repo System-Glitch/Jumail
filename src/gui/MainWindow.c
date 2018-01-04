@@ -21,6 +21,7 @@ static void main_window_activate(GtkApplication* app, gpointer user_data) {
 
 	data.builder = gtk_builder_new();
 	data.current_email = NULL;
+	data.response_reference = NULL;
 	data.selected_mail_index = -1;
 
 

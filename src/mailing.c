@@ -871,7 +871,7 @@ int ssl_delete_mail(char * username, char * password, char * domain, char * mail
 /**
  * Creates an Email, sets every pointer to NULL and returns the result.
  */
-static Email *init_email() {
+Email *init_email() {
 	Email *mail = malloc(sizeof(Email));
 	if(mail == NULL) return NULL;
 	mail->date 		 = NULL;

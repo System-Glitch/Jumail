@@ -64,6 +64,9 @@ void callback_quit(GtkMenuItem *menuitem, gpointer user_data) {
 	free_email(data->current_email);
 	if(data->current_email != NULL)
 		free(data->current_email);
+	free_email(data->response_reference);
+	if(data->response_reference != NULL)
+		free(data->response_reference);
 }
 
 void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer user_data) {
@@ -95,6 +98,7 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 		case CREATE_FOLDER:
 		case MOVE_MAIL:
 		case MOVE_MAIL_FROM_VIEW:
+		case RESPOND_MAIL_FROM_VIEW:
 			window_show_error("Une erreur est survenue.\nAction invalide pour cette fonction.", data, "MainWindow");
 			break;
 		case DELETE_MAIL:

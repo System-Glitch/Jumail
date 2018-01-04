@@ -149,4 +149,9 @@ int ssl_load_mail_headers(char * username, char * password, char * domain, char 
  */
 Email *parse_email_headers(char *payload, char *chunk, char *mailbox);
 
+/**
+ * Creates an Email, sets every pointer to NULL and returns the result.
+ */
+Email *init_email();
+
 #endif /* SRC_MAILING_H_ */

@@ -159,6 +159,9 @@ void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data) {
 	gchar *text;
 	GtkWidget *button;
 	int status;
+	char **header;
+	char *id;
+	char **mail;
 
 	entry_to = GTK_ENTRY(gtk_builder_get_object (data->builder, "MailComposeTo"));
 	entry_subject = GTK_ENTRY(gtk_builder_get_object (data->builder, "MailComposeSubject"));
@@ -171,14 +174,25 @@ void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data) {
 	gtk_text_buffer_get_bounds (buffer, &start, &end);
 	text = gtk_text_buffer_get_text (buffer, &start, &end, FALSE);
 
-	char * id = generate_id(); //Must generate a unique Message-ID for our mail
+	id = generate_id(); //Must generate a unique Message-ID for our mail
 	if(id == NULL) {
 		fprintf(stderr, "An error occured while getting a new GUID. Check your internet connection.\n");
 		window_show_error("Une erreur est survenue lors de l'envoi du mail.\nVérifiez votre connexion internet.", data, "MailComposeWindow");
 		return;
 	}
 	//TODO profile
-	char** header = get_header("jumailimap@gmail.com", (char*)gtk_entry_get_text(entry_to), "User Name", (char*)gtk_entry_get_text(entry_subject), NULL, NULL, id); //Generate the header
+
+	if(action == RESPOND_MAIL_FROM_VIEW) {
+		header = get_header("jumailimap@gmail.com",
+				(char*)gtk_entry_get_text(entry_to),
+				"User Name",
+				(char*)gtk_entry_get_text(entry_subject),
+				data->response_reference->message_id,
+				data->response_reference->references == NULL ? data->response_reference->in_reply_to : data->response_reference->references,
+						id); //Generate the header
+	} else {
+		header = get_header("jumailimap@gmail.com", (char*)gtk_entry_get_text(entry_to), "User Name", (char*)gtk_entry_get_text(entry_subject), NULL, NULL, id); //Generate the header
+	}
 	if(header == NULL) {
 		fprintf(stderr, "An error occured while creating the email header.\n");
 		free(id);
@@ -186,7 +200,7 @@ void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data) {
 		return;
 	}
 	free(id); //We don't need "id" anymore as it is copied into the header
-	char ** mail = get_mail(header,text); //Generate the whole payload
+	mail = get_mail(header,text); //Generate the whole payload
 	if(mail == NULL) {
 		fprintf(stderr, "An error occured while creating the email payload.\n");
 		free_header(header);
@@ -204,6 +218,9 @@ void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data) {
 		//Close compose window and popup success
 		gtk_widget_set_sensitive(button, 0);
 		gtk_widget_hide (window);
+		free_email(data->response_reference);
+		if(data->response_reference != NULL)
+			free(data->response_reference);
 		window_show_info("Message envoyé !", data, "MainWindow");
 	} else {
 		window_show_error("Erreur lors de l'envoi du message.\nVérifiez les paramètres de votre profil.", data, "MailComposeWindow");
@@ -231,4 +248,84 @@ void callback_mail_view_move_email(GtkButton *widget, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
 	action = MOVE_MAIL_FROM_VIEW;
 	show_folder_select_dialog(data, "MailWindow");
+}
+
+static Email *clone_email_for_reference(Email *email) {
+	Email *clone = init_email();
+
+	if(clone == NULL) return NULL;
+
+	clone->from = malloc(strlen(email->from)+1);
+	if(clone->from == NULL) { free(clone); return NULL; }
+	strcpy(clone->from, email->from);
+
+	clone->subject = malloc(strlen(email->subject)+1);
+	if(clone->subject == NULL) { free_email(clone); free(clone); return NULL; }
+	strcpy(clone->subject, email->subject);
+
+	clone->message_id = malloc(strlen(email->message_id)+1);
+	if(clone->message_id == NULL) { free_email(clone); free(clone); return NULL; }
+	strcpy(clone->message_id, email->message_id);
+
+	if(email->in_reply_to != NULL) {
+		clone->in_reply_to = malloc(strlen(email->in_reply_to)+1);
+		if(clone->in_reply_to == NULL) { free_email(clone); free(clone); return NULL; }
+		strcpy(clone->in_reply_to, email->in_reply_to);
+	}
+
+	if(email->references != NULL) {
+		clone->references = malloc(strlen(email->references)+1);
+		if(clone->references == NULL) { free_email(clone); free(clone); return NULL; }
+		strcpy(clone->references, email->references);
+	}
+
+	return clone;
+}
+
+void callback_mail_view_response(GtkButton *widget, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	GtkWidget *window = NULL;
+	GtkWidget *content = NULL;
+	GtkWidget *button;
+	char *subject;
+
+	free_email(data->response_reference);
+	if(data->response_reference != NULL)
+		free(data->response_reference);
+	data->response_reference = clone_email_for_reference(data->current_email);
+
+	if(data->response_reference == NULL) {
+		window_show_error("Une erreur est survenue.\nMémoire insuffisante.", data, "MailWindow");
+		return;
+	}
+
+	action = RESPOND_MAIL_FROM_VIEW;
+	button = GTK_WIDGET(gtk_builder_get_object (data->builder, "MailComposeSend"));
+	window =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailComposeWindow"));
+
+	if(!gtk_widget_get_visible (window)) {
+
+		open_compose_mail_window(data);
+		subject = malloc(strlen(data->response_reference->subject)+5);
+
+		strcpy(subject, "Re: ");
+		strcat(subject, data->response_reference->subject);
+
+		content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailComposeTo"));
+		fill_text_entry(GTK_ENTRY(content), data->response_reference->from);
+		content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailComposeSubject"));
+		fill_text_entry(GTK_ENTRY(content), subject);
+		gtk_widget_set_sensitive(button, 1);
+
+		free(subject);
+	}
+}
+
+void callback_mail_compose_window_close(GtkWidget *widget, GdkEvent *event, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	free_email(data->response_reference);
+	if(data->response_reference != NULL)
+		free(data->response_reference);
+	data->response_reference = NULL;
+	gtk_widget_hide(widget);
 }
