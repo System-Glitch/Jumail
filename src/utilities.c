@@ -305,13 +305,7 @@ size_t payload_source(void *ptr, size_t size, size_t nmemb, void *userp) {
  * Enables SSL on the given CURL connection
  */
 void enable_ssl(CURL *curl) {
-	#ifdef SKIP_PEER_VERIFICATION
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-	#endif
-
-	#ifdef SKIP_HOSTNAME_VERIFICATION
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-	#endif
+	curl_easy_setopt(curl, CURLOPT_USE_SSL, (long)CURLUSESSL_ALL);
 	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 }
 

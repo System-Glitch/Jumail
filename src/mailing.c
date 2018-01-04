@@ -325,7 +325,7 @@ int send_mail_ssl(char * username, char * password, char * to, char * domain, co
 	struct upload_status upload_ctx;
 	char * address;
 
-	address = generate_address(domain, "smtps");
+	address = generate_address(domain, "smtps"); //TODO check profile if SSL enabled (don't put 's' if no SSL)
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating SMTP address from domain.\n");
 		return -1;
@@ -352,6 +352,7 @@ int send_mail_ssl(char * username, char * password, char * to, char * domain, co
 		curl_easy_setopt(curl, CURLOPT_READFUNCTION, payload_source); //Set the source
 		curl_easy_setopt(curl, CURLOPT_READDATA, &upload_ctx);
 		curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+		curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4); //Force ipv4
 
 		infilesize = 0;
 		for(p = mail; *p; ++p) {
