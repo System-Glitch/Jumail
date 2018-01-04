@@ -47,6 +47,8 @@ void window_show_error(const char * message, SGlobalData *data, char *parent_win
  */
 void window_show_info(const char * message, SGlobalData *data, char *parent_window_name);
 
+void show_folder_select_dialog(SGlobalData *data, char *parent_window_name);
+
 void callback_quit(GtkMenuItem *menuitem, gpointer user_data);
 void callback_about (GtkMenuItem *menuitem, gpointer user_data);
 void callback_browsing_select(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data);

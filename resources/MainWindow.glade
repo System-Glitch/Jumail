@@ -17,119 +17,6 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-apply</property>
   </object>
-  <object class="GtkDialog" id="SelectFolderDialog">
-    <property name="can_focus">False</property>
-    <property name="title" translatable="yes">Créer un dossier</property>
-    <property name="modal">True</property>
-    <property name="default_height">200</property>
-    <property name="type_hint">dialog</property>
-    <property name="skip_taskbar_hint">True</property>
-    <property name="deletable">False</property>
-    <property name="transient_for">MainWindow</property>
-    <child internal-child="vbox">
-      <object class="GtkBox" id="dialog-vbox3">
-        <property name="can_focus">False</property>
-        <property name="orientation">vertical</property>
-        <property name="spacing">2</property>
-        <child internal-child="action_area">
-          <object class="GtkButtonBox" id="dialog-action_area3">
-            <property name="can_focus">False</property>
-            <property name="layout_style">end</property>
-            <child>
-              <object class="GtkButton" id="ButtonCancelMoveMail">
-                <property name="label" translatable="yes">Annuler</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="image">ImageCancel</property>
-                <signal name="clicked" handler="callback_move_mail_cancel" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="ButtonConfirmMoveMail">
-                <property name="label" translatable="yes">Déplacer</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="image">ImageCheck</property>
-                <signal name="clicked" handler="callback_mail_move_confirm" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkBox" id="box5">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="orientation">vertical</property>
-            <child>
-              <object class="GtkLabel" id="label6">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Sélectionner le dossier :</property>
-                <property name="ellipsize">middle</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkScrolledWindow" id="scrolledwindow1">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="shadow_type">in</property>
-                <property name="min_content_height">200</property>
-                <child>
-                  <object class="GtkViewport" id="viewport1">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkTreeView" id="TreeViewFolderPick">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="headers_visible">False</property>
-                        <property name="headers_clickable">False</property>
-                        <child internal-child="selection">
-                          <object class="GtkTreeSelection" id="treeview-selection5"/>
-                        </child>
-                      </object>
-                    </child>
-                  </object>
-                </child>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-      </object>
-    </child>
-  </object>
   <object class="GtkImage" id="ImageCheck2">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -582,6 +469,119 @@ Helder SALVADOR</property>
       </object>
     </child>
   </object>
+  <object class="GtkDialog" id="SelectFolderDialog">
+    <property name="can_focus">False</property>
+    <property name="title" translatable="yes">Créer un dossier</property>
+    <property name="modal">True</property>
+    <property name="default_height">200</property>
+    <property name="type_hint">dialog</property>
+    <property name="skip_taskbar_hint">True</property>
+    <property name="deletable">False</property>
+    <property name="transient_for">MainWindow</property>
+    <child internal-child="vbox">
+      <object class="GtkBox" id="dialog-vbox3">
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox" id="dialog-action_area3">
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+            <child>
+              <object class="GtkButton" id="ButtonCancelMoveMail">
+                <property name="label" translatable="yes">Annuler</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="image">ImageCancel</property>
+                <signal name="clicked" handler="callback_move_mail_cancel" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="ButtonConfirmMoveMail">
+                <property name="label" translatable="yes">Déplacer</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="image">ImageCheck</property>
+                <signal name="clicked" handler="callback_mail_move_confirm" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox" id="box5">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkLabel" id="label6">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Sélectionner le dossier :</property>
+                <property name="ellipsize">middle</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">False</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkScrolledWindow" id="scrolledwindow1">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="shadow_type">in</property>
+                <property name="min_content_height">200</property>
+                <child>
+                  <object class="GtkViewport" id="viewport1">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkTreeView" id="TreeViewFolderPick">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="headers_visible">False</property>
+                        <property name="headers_clickable">False</property>
+                        <child internal-child="selection">
+                          <object class="GtkTreeSelection" id="treeview-selection5"/>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
   <object class="GtkImage" id="ImageFolderCreate">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -710,6 +710,7 @@ Helder SALVADOR</property>
           <object class="GtkToolbar" id="toolbar2">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="show_arrow">False</property>
             <child>
               <object class="GtkToolButton" id="MailView">
                 <property name="visible">True</property>
@@ -718,6 +719,20 @@ Helder SALVADOR</property>
                 <property name="label" translatable="yes">Répondre</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-undo</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="MailViewMove">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="is_important">True</property>
+                <property name="label" translatable="yes">Déplacer vers...</property>
+                <property name="use_underline">True</property>
+                <signal name="clicked" handler="callback_mail_view_move_email" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>

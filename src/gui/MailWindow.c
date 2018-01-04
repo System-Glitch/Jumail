@@ -226,3 +226,9 @@ void callback_mail_view_delete_email(GtkButton *widget, gpointer user_data) {
 	action = DELETE_MAIL_FROM_VIEW;
 	show_confirm_dialog("Êtes-vous sûr de vouloir supprimer ce message?\nCette action est irréversible.", data, "MailWindow");
 }
+
+void callback_mail_view_move_email(GtkButton *widget, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	action = MOVE_MAIL_FROM_VIEW;
+	show_folder_select_dialog(data, "MailWindow");
+}
