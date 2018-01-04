@@ -30,10 +30,10 @@ int open_mail_window(Email *mail, char* mailbox, SGlobalData *data) {
 	//TODO profile
 	uid = ssl_search_by_id_with_new_connection("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mailbox, mail->message_id);
 	if(uid == -1) {
-		window_show_error("Impossible de charger le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data);
+		window_show_error("Impossible de charger le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 		return 0;
 	} else if(uid == 0) {
-		window_show_error("Une erreur est survenue.\nAucun message trouvé pour cet identifiant.", data);
+		window_show_error("Une erreur est survenue.\nAucun message trouvé pour cet identifiant.", data, "MainWindow");
 		return 0;
 	}
 	data->current_email = ssl_get_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mailbox, uid);
@@ -73,6 +73,7 @@ void mail_window_clear(SGlobalData *data) {
 	data->current_email = NULL;
 
 	gtk_widget_hide(window);
+	data->selected_mail_index = -1;
 }
 
 /**
@@ -122,6 +123,7 @@ void callback_show_mail(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewCo
 	if(mail != NULL) {
 		tree_browsing_get_selected_row(data, &folder, &iter);
 
+		data->selected_mail_index = *i;
 		if(open_mail_window(mail, folder ,data)) {
 			list_folder_get_selected_row(data, &iter);
 			gtk_list_store_set (GTK_LIST_STORE(model), &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, 4, PANGO_WEIGHT_NORMAL, 5, TRUE, -1);
@@ -172,7 +174,7 @@ void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data) {
 	char * id = generate_id(); //Must generate a unique Message-ID for our mail
 	if(id == NULL) {
 		fprintf(stderr, "An error occured while getting a new GUID. Check your internet connection.\n");
-		window_show_error("Une erreur est survenue lors de l'envoi du mail.\nVérifiez votre connexion internet.", data);
+		window_show_error("Une erreur est survenue lors de l'envoi du mail.\nVérifiez votre connexion internet.", data, "MailComposeWindow");
 		return;
 	}
 	//TODO profile
@@ -180,7 +182,7 @@ void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data) {
 	if(header == NULL) {
 		fprintf(stderr, "An error occured while creating the email header.\n");
 		free(id);
-		window_show_error("Une erreur est survenue lors de l'envoi du mail.\nErreur lors de la génération des headers.", data);
+		window_show_error("Une erreur est survenue lors de l'envoi du mail.\nErreur lors de la génération des headers.", data, "MailComposeWindow");
 		return;
 	}
 	free(id); //We don't need "id" anymore as it is copied into the header
@@ -188,7 +190,7 @@ void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data) {
 	if(mail == NULL) {
 		fprintf(stderr, "An error occured while creating the email payload.\n");
 		free_header(header);
-		window_show_error("Une erreur est survenue lors de l'envoi du mail.\nErreur lors de la génération du payload.", data);
+		window_show_error("Une erreur est survenue lors de l'envoi du mail.\nErreur lors de la génération du payload.", data, "MailComposeWindow");
 		return;
 	}
 
@@ -202,9 +204,9 @@ void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data) {
 		//Close compose window and popup success
 		gtk_widget_set_sensitive(button, 0);
 		gtk_widget_hide (window);
-		window_show_info("Message envoyé !", data);
+		window_show_info("Message envoyé !", data, "MainWindow");
 	} else {
-		window_show_error("Erreur lors de l'envoi du message.\nVérifiez les paramètres de votre profil.", data);
+		window_show_error("Erreur lors de l'envoi du message.\nVérifiez les paramètres de votre profil.", data, "MailComposeWindow");
 	}
 
 }
@@ -217,4 +219,10 @@ void callback_about (GtkMenuItem *menuitem, gpointer user_data) {
 	gtk_dialog_run (GTK_DIALOG (dialog));
 
 	gtk_widget_hide (dialog);
+}
+
+void callback_mail_view_delete_email(GtkButton *widget, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	action = DELETE_MAIL_FROM_VIEW;
+	show_confirm_dialog("Êtes-vous sûr de vouloir supprimer ce message?\nCette action est irréversible.", data, "MailWindow");
 }

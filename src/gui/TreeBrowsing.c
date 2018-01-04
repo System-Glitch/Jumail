@@ -70,14 +70,14 @@ int tree_browsing_refresh(SGlobalData *data) {
 
 	tree_view = GTK_TREE_VIEW (gtk_builder_get_object (data->builder, "TreeViewBrowsing"));
 	if(tree_view == NULL) {
-		window_show_error("Impossible de charger l'interface de navigation.", data);
+		window_show_error("Impossible de charger l'interface de navigation.", data, "MainWindow");
 		return 0;
 	}
 
 	StringArray *list = ssl_list("jumailimap@gmail.com", "azerty12", "imap.gmail.com");
 
 	if(list == NULL) {
-		window_show_error("Impossible de charger les dossiers existants.\nVérifiez votre connexion internet et les paramètres de votre profil.", data);
+		window_show_error("Impossible de charger les dossiers existants.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 		return 0;
 	}
 
@@ -123,13 +123,13 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 	free_list_loaded_mails();
 	loaded_mails = linkedlist_init();
 	if(loaded_mails == NULL) {
-		window_show_error("Mémoire insuffisante.", data);
+		window_show_error("Mémoire insuffisante.", data, "MainWindow");
 		return 0;
 	}
 
 	tree_view = GTK_TREE_VIEW (gtk_builder_get_object (data->builder, "TreeViewFolderList"));
 	if(tree_view == NULL) {
-		window_show_error("Impossible de charger l'interface de dossier.", data);
+		window_show_error("Impossible de charger l'interface de dossier.", data, "MainWindow");
 		return 0;
 	}
 
@@ -162,7 +162,7 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 	if(folder != NULL) {
 		struct ParsedSearch *search = ssl_search_all("jumailimap@gmail.com", "azerty12", "imap.gmail.com", folder);
 		if(search == NULL) {
-			window_show_error("Impossible de charger le contenu du dossier.\nVérifiez votre connexion internet et les paramètres de votre profil.", data);
+			window_show_error("Impossible de charger le contenu du dossier.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 			return 1;
 		}
 
@@ -171,7 +171,7 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 			while(current != NULL) {
 				mail = current->val;
 				if(mail == NULL) {
-					window_show_error("Une erreur est survenue lors de la récupération des messages.", data);
+					window_show_error("Une erreur est survenue lors de la récupération des messages.", data, "MainWindow");
 					break;
 				}
 				gtk_list_store_append(model, &iter);
@@ -184,7 +184,7 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 				current = current->next;
 			}
 		} else {
-			window_show_error("Une erreur est survenue lors de la récupération des messages.", data);
+			window_show_error("Une erreur est survenue lors de la récupération des messages.", data, "MainWindow");
 		}
 		free_parsed_search(search); //Always free
 	}
@@ -226,8 +226,7 @@ void callback_list_folder_context_menu(GtkWidget *tree_view, GdkEventButton *eve
 void callback_mail_delete(GtkMenuItem *menuitem, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
 	action = DELETE_MAIL;
-	mail_window_clear(data);
-	show_confirm_dialog("Êtes-vous sûr de vouloir supprimer ce message?\nCette action est irréversible.", data);
+	show_confirm_dialog("Êtes-vous sûr de vouloir supprimer ce message?\nCette action est irréversible.", data, "MainWindow");
 }
 
 static void mail_set_seen(SGlobalData* data, gboolean seen) {
@@ -246,7 +245,7 @@ static void mail_set_seen(SGlobalData* data, gboolean seen) {
 
 		mail = linkedlist_get(loaded_mails, i);
 		if(ssl_see_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", string, mail->message_id, seen) != 0) { //TODO profile
-			window_show_error("Impossible de changer le status du message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data);
+			window_show_error("Impossible de changer le status du message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 		} else {
 			if(!seen) {
 				gtk_list_store_set (GTK_LIST_STORE(model), &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, 4, PANGO_WEIGHT_BOLD, 5, TRUE, -1);
@@ -255,7 +254,7 @@ static void mail_set_seen(SGlobalData* data, gboolean seen) {
 			}
 		}
 	} else {
-		window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data);
+		window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data, "MainWindow");
 	}
 }
 
@@ -319,64 +318,7 @@ void callback_browsing_context_menu(GtkWidget *tree_view, GdkEventButton *event,
 void callback_browsing_delete (GtkMenuItem *menuitem, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
 	action = DELETE_FOLDER;
-	show_confirm_dialog("Êtes-vous sûr de vouloir supprimer ce dossier?\nCette action est irréversible.", data);
-}
-
-void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer user_data) {
-	SGlobalData *data = (SGlobalData*) user_data;
-	GtkTreeStore *tree_store;
-	GtkListStore *list_store;
-	GtkWidget *tree_view;
-	gchar *string;
-	GtkTreeIter iter;
-	Email *mail;
-
-	if(response_id == -8) { //YES
-
-		switch(action) {
-		case DELETE_FOLDER:
-			tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewBrowsing"));
-			tree_browsing_get_selected_row(data, &string, &iter);
-			if(ssl_remove_folder("jumailimap@gmail.com", "azerty12", "imap.gmail.com", string)) { //TODO profile
-				window_show_error("Impossible de supprimer le dossier.\nVérifiez votre connexion internet et les paramètres de votre profil.", data);
-			} else {
-				//Remove folder from GUI
-				tree_store = GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view)));
-				gtk_tree_store_remove (tree_store, &iter);
-				browsing_refresh_folder(NULL, data);
-			}
-			break;
-		case CREATE_FOLDER:
-		case MOVE_MAIL:
-			window_show_error("Une erreur est survenue.\nAction invalide pour cette fonction.", data);
-			break;
-		case DELETE_MAIL:
-			tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderList"));
-			tree_browsing_get_selected_row(data, &string, &iter);
-			int i = list_folder_get_selected_row(data, &iter);
-			if(i >= 0) {
-
-				mail = linkedlist_get(loaded_mails, i);
-				if(ssl_delete_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", string ,mail->message_id) != 0) { //TODO profile
-					window_show_error("Impossible de supprimer le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data);
-				} else {
-					//Remove mail from GUI
-					list_store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view)));
-					gtk_list_store_remove (list_store, &iter);
-
-					free_email(mail);
-					linkedlist_remove_index(loaded_mails, i);
-				}
-			} else {
-				window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data);
-			}
-
-			break;
-		case NONE:
-			window_show_error("Une erreur est survenue.\nAction non définie.", data);
-			break;
-		}
-	}
+	show_confirm_dialog("Êtes-vous sûr de vouloir supprimer ce dossier?\nCette action est irréversible.", data, "MainWindow");
 }
 
 void callback_folder_create_entry_changed(GtkEditable *editable, gpointer user_data) {
@@ -414,7 +356,7 @@ void callback_browsing_create(GtkMenuItem *menuitem, gpointer user_data) {
 	if(string != NULL) { //A row is selected
 		string2 = malloc(strlen(string)+1+8);
 		if(string2 == NULL) {
-			window_show_error("Une erreur est survenue.\nMémoire insuffisante.", data);
+			window_show_error("Une erreur est survenue.\nMémoire insuffisante.", data, "MainWindow");
 			return;
 		}
 		strcpy(string2, string);
@@ -450,7 +392,7 @@ void callback_create_folder_confirm(GtkButton *widget, gpointer user_data) {
 	gtk_widget_hide(dialog);
 
 	if(status != 0) {
-		window_show_error("La création du dossier a échoué.", data);
+		window_show_error("La création du dossier a échoué.", data, "MainWindow");
 	} else {
 		gtk_tree_store_append(model, &iter, NULL);
 		gtk_tree_store_set (model, &iter, 0, foldername, -1);
@@ -534,7 +476,7 @@ void callback_mail_move_confirm(GtkButton *widget, gpointer user_data) {
 
 	index = list_folder_get_selected_row(data, &iter);
 	if(index == -1) {
-		window_show_error("Une erreur est survenue.\nAucun message n'est sélectionné.", data);
+		window_show_error("Une erreur est survenue.\nAucun message n'est sélectionné.", data, "MainWindow");
 		return;
 	}
 
@@ -558,7 +500,7 @@ void callback_mail_move_confirm(GtkButton *widget, gpointer user_data) {
 			status = ssl_move_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mail->mailbox, folder_dst, mail->message_id); //TODO profile
 
 			if(status) {
-				window_show_error("Impossible de déplacer le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data);
+				window_show_error("Impossible de déplacer le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 			} else {
 				//Remove mail from GUI
 				list_store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view_mails)));
@@ -567,16 +509,16 @@ void callback_mail_move_confirm(GtkButton *widget, gpointer user_data) {
 				free_email(mail);
 				linkedlist_remove_index(loaded_mails, i);
 				gtk_widget_hide(dialog);
-				window_show_info("Le message a été déplacé.", data);
+				window_show_info("Le message a été déplacé.", data, "MainWindow");
 			}
 		} else {
 			gtk_widget_hide(dialog);
-			window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data);
+			window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data, "MainWindow");
 		}
 
 	} else {
 		gtk_widget_hide(dialog);
-		window_show_error("Une erreur est survenue.\nAucun dossier n'est sélectionné.", data);
+		window_show_error("Une erreur est survenue.\nAucun dossier n'est sélectionné.", data, "MainWindow");
 	}
 }
 

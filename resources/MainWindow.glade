@@ -590,7 +590,7 @@ Helder SALVADOR</property>
   <object class="GtkImage" id="ImageFolderRemove">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-remove</property>
+    <property name="stock">gtk-delete</property>
   </object>
   <object class="GtkMenu" id="ContextMenuBrowsing">
     <property name="visible">True</property>
@@ -635,7 +635,7 @@ Helder SALVADOR</property>
   <object class="GtkImage" id="ImageFolderRemove1">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-remove</property>
+    <property name="stock">gtk-delete</property>
   </object>
   <object class="GtkImage" id="ImageFolderRemove2">
     <property name="visible">True</property>
@@ -710,6 +710,49 @@ Helder SALVADOR</property>
           <object class="GtkToolbar" id="toolbar2">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <child>
+              <object class="GtkToolButton" id="MailView">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="is_important">True</property>
+                <property name="label" translatable="yes">Répondre</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-undo</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="MailViewArchive">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="is_important">True</property>
+                <property name="label" translatable="yes">Archiver</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-floppy</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkToolButton" id="MailViewDelete">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="is_important">True</property>
+                <property name="label" translatable="yes">Supprimer</property>
+                <property name="use_underline">True</property>
+                <property name="stock_id">gtk-delete</property>
+                <signal name="clicked" handler="callback_mail_view_delete_email" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="homogeneous">True</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>

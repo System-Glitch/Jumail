@@ -17,6 +17,7 @@ typedef struct
 	GtkBuilder *builder;
 	gpointer user_data;
 	Email *current_email;
+	int selected_mail_index;
 } SGlobalData;
 
 enum Action {
@@ -24,6 +25,8 @@ enum Action {
 	DELETE_FOLDER,
 	CREATE_FOLDER,
 	DELETE_MAIL,
+	DELETE_MAIL_FROM_VIEW,
+	MOVE_MAIL_FROM_VIEW,
 	MOVE_MAIL
 };
 
@@ -32,17 +35,17 @@ extern enum Action action;
 /**
  * Displays a modal confirm dialog and calls callback_confirm_response
  */
-void show_confirm_dialog(const char * message, SGlobalData *data);
+void show_confirm_dialog(const char * message, SGlobalData *data, char *parent_window_name);
 
 /**
  * Displays a modal error dialog.
  */
-void window_show_error(const char * message, SGlobalData *data);
+void window_show_error(const char * message, SGlobalData *data, char *parent_window_name);
 
 /**
  * Displays a modal success dialog.
  */
-void window_show_info(const char * message, SGlobalData *data);
+void window_show_info(const char * message, SGlobalData *data, char *parent_window_name);
 
 void callback_quit(GtkMenuItem *menuitem, gpointer user_data);
 void callback_about (GtkMenuItem *menuitem, gpointer user_data);
@@ -65,5 +68,6 @@ void callback_mail_seen(GtkMenuItem *menuitem, gpointer user_data);
 void callback_mail_unseen(GtkMenuItem *menuitem, gpointer user_data);
 void callback_mail_move(GtkMenuItem *menuitem, gpointer user_data);
 void callback_mail_window_close(GtkWidget *widget, GdkEvent *event, gpointer user_data);
+void callback_mail_view_delete_email(GtkButton *widget, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */
