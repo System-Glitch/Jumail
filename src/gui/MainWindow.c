@@ -7,6 +7,7 @@
  */
 #include "MainWindow.h"
 #include "TreeBrowsing.h"
+#include "SettingsWindow.h"
 #include "../mailing.h"
 #include "../profils.h"
 
@@ -45,9 +46,15 @@ static void main_window_activate(GtkApplication* app, gpointer user_data) {
 
 	gtk_widget_show_all (main_window);
 
+	init_settings_window(&data);
 	tree_browsing_refresh(&data); //Fill the browser
 	browsing_refresh_folder(NULL, &data);
 	gtk_main();
+}
+
+void callback_settings(GtkMenuItem *menuitem, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	open_settings_window(data);
 }
 
 static int init_app(int *argc, char*** argv) {
