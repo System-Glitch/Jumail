@@ -5,6 +5,7 @@
  *  Date : 05/01/2018
  *  Description : Creates and manage the settings window
  */
+#include "TreeBrowsing.h"
 #include "SettingsWindow.h"
 #include "../profils.h"
 #include "../config.h"
@@ -47,13 +48,13 @@ static void settings_window_fill_entries(SGlobalData *data, Profile *profile) {
 	settings_window_fill_entry(data, "ProfileEntrySend", profile->sendP);
 
 	check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckSSLReceive"));
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), !strcmp(profile->SslImap, "TRUE"));
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), profile->SslImap == NULL ? 0 : !strcmp(profile->SslImap, "TRUE"));
 
 	check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckSSLSend"));
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), !strcmp(profile->SslSmtp, "TRUE"));
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), profile->SslSmtp == NULL ? 0 : !strcmp(profile->SslSmtp, "TRUE"));
 
 	check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckTLSSend"));
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), !strcmp(profile->TlsSmtp, "TRUE"));
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), profile->TlsSmtp == NULL ? 0 : !strcmp(profile->TlsSmtp, "TRUE"));
 
 }
 
@@ -110,14 +111,17 @@ void callback_profile_setting_checked(GtkToggleButton *togglebutton, gpointer us
 
 	profile = (Profile*)linkedlist_get(listProfile, data->selected_profile_index);
 
-	if(togglebutton == GTK_TOGGLE_BUTTON(gtk_builder_get_object (data->builder, "ProfileCheckSSLReceive")))
-		edit_string(&profile->SslImap, gtk_toggle_button_get_active(togglebutton) ? "TRUE" : "FALSE", data);
-	else if(togglebutton == GTK_TOGGLE_BUTTON(gtk_builder_get_object (data->builder, "ProfileCheckSSLSend")))
-		edit_string(&profile->SslSmtp, gtk_toggle_button_get_active(togglebutton) ? "TRUE" : "FALSE", data);
-	else if(togglebutton == GTK_TOGGLE_BUTTON(gtk_builder_get_object (data->builder, "ProfileCheckTLSSend")))
-		edit_string(&profile->TlsSmtp, gtk_toggle_button_get_active(togglebutton) ? "TRUE" : "FALSE", data);
+	if(profile != NULL) {
+		if(togglebutton == GTK_TOGGLE_BUTTON(gtk_builder_get_object (data->builder, "ProfileCheckSSLReceive")))
+			edit_string(&profile->SslImap, gtk_toggle_button_get_active(togglebutton) ? "TRUE" : "FALSE", data);
+		else if(togglebutton == GTK_TOGGLE_BUTTON(gtk_builder_get_object (data->builder, "ProfileCheckSSLSend")))
+			edit_string(&profile->SslSmtp, gtk_toggle_button_get_active(togglebutton) ? "TRUE" : "FALSE", data);
+		else if(togglebutton == GTK_TOGGLE_BUTTON(gtk_builder_get_object (data->builder, "ProfileCheckTLSSend")))
+			edit_string(&profile->TlsSmtp, gtk_toggle_button_get_active(togglebutton) ? "TRUE" : "FALSE", data);
 
-	saveProfile(profile,profile->name);
+		saveProfile(profile,profile->name);
+	}
+
 }
 
 //Update the profile name in the list
@@ -154,6 +158,9 @@ void callback_profile_name_changed(GtkEditable *editable, gpointer user_data) {
 		strcpy(profile->name, string);
 		saveProfile(profile,previous_name);
 		free(previous_name);
+
+		if(profile == current_profile)
+			updateConfig(profile);
 
 		gtk_list_store_set (GTK_LIST_STORE(model), &iter, 1, string, -1);
 
@@ -276,4 +283,6 @@ void callback_settings_window_close(GtkButton *widget, gpointer user_data) {
 
 	window =  GTK_WIDGET (gtk_builder_get_object (data->builder, "SettingsWindow"));
 	gtk_widget_hide (window);
+
+	tree_browsing_refresh(data);
 }

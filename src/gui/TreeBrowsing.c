@@ -6,7 +6,6 @@
  *  Description : Handler for the folder navigation menu
  */
 #include <stdlib.h>
-#include "callbacks.h"
 #include "TreeBrowsing.h"
 #include "MailWindow.h"
 

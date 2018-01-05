@@ -8,6 +8,7 @@
 #ifndef SRC_GUI_TREEBROWSING_H_
 #define SRC_GUI_TREEBROWSING_H_
 
+#include "callbacks.h"
 #include "../folders.h"
 #include "../mailing.h"
 
