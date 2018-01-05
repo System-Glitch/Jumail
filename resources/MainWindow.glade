@@ -25,12 +25,13 @@
   <object class="GtkImage" id="ImageCompose">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-edit</property>
+    <property name="icon_name">mail-message-new</property>
   </object>
   <object class="GtkWindow" id="MainWindow">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Jumail</property>
     <property name="window_position">center</property>
+    <property name="icon_name">emblem-mail</property>
     <property name="gravity">center</property>
     <property name="has_resize_grip">True</property>
     <child>
@@ -221,14 +222,16 @@
     <property name="can_focus">False</property>
     <property name="resizable">False</property>
     <property name="modal">True</property>
+    <property name="destroy_with_parent">True</property>
+    <property name="icon_name">emblem-mail</property>
     <property name="type_hint">dialog</property>
     <property name="transient_for">MainWindow</property>
     <property name="program_name">Jumail</property>
     <property name="version">1.0</property>
+    <property name="comments" translatable="yes">Jumail est un client mail simple à configurer, simple à utiliser.</property>
     <property name="authors">Jérémy LAMBERT
-Louis LAURENT
-Helder SALVADOR</property>
-    <property name="logo_icon_name">mail-unread</property>
+Louis LAURENT</property>
+    <property name="logo_icon_name">mail-mark-unread</property>
     <child internal-child="vbox">
       <object class="GtkBox" id="aboutdialog-vbox1">
         <property name="can_focus">False</property>
@@ -256,6 +259,7 @@ Helder SALVADOR</property>
     <property name="title" translatable="yes">Créer un dossier</property>
     <property name="resizable">False</property>
     <property name="modal">True</property>
+    <property name="icon_name">emblem-mail</property>
     <property name="type_hint">dialog</property>
     <property name="skip_taskbar_hint">True</property>
     <property name="deletable">False</property>
@@ -350,6 +354,7 @@ Helder SALVADOR</property>
   <object class="GtkWindow" id="MailComposeWindow">
     <property name="can_focus">False</property>
     <property name="window_position">center</property>
+    <property name="icon_name">emblem-mail</property>
     <property name="transient_for">MainWindow</property>
     <signal name="delete-event" handler="callback_mail_compose_window_close" swapped="no"/>
     <child>
@@ -475,6 +480,7 @@ Helder SALVADOR</property>
     <property name="title" translatable="yes">Créer un dossier</property>
     <property name="modal">True</property>
     <property name="default_height">200</property>
+    <property name="icon_name">emblem-mail</property>
     <property name="type_hint">dialog</property>
     <property name="skip_taskbar_hint">True</property>
     <property name="deletable">False</property>
@@ -701,6 +707,7 @@ Helder SALVADOR</property>
   <object class="GtkWindow" id="MailWindow">
     <property name="can_focus">False</property>
     <property name="window_position">center</property>
+    <property name="icon_name">emblem-mail</property>
     <signal name="delete-event" handler="callback_mail_window_close" swapped="no"/>
     <child>
       <object class="GtkBox" id="box2">
@@ -719,7 +726,7 @@ Helder SALVADOR</property>
                 <property name="is_important">True</property>
                 <property name="label" translatable="yes">Répondre</property>
                 <property name="use_underline">True</property>
-                <property name="stock_id">gtk-undo</property>
+                <property name="icon_name">mail-reply-sender</property>
                 <signal name="clicked" handler="callback_mail_view_response" swapped="no"/>
               </object>
               <packing>
@@ -945,6 +952,7 @@ Helder SALVADOR</property>
     <property name="height_request">400</property>
     <property name="can_focus">False</property>
     <property name="destroy_with_parent">True</property>
+    <property name="icon_name">emblem-mail</property>
     <property name="type_hint">normal</property>
     <property name="skip_taskbar_hint">True</property>
     <property name="transient_for">MailWindow</property>
