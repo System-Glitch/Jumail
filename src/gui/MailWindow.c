@@ -28,7 +28,7 @@ int open_mail_window(Email *mail, char* mailbox, SGlobalData *data) {
 	int uid;
 
 	//TODO profile
-	uid = ssl_search_by_id_with_new_connection("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mailbox, mail->message_id);
+	uid = ssl_search_by_id_with_new_connection("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mailbox, mail->message_id, 1);
 	if(uid == -1) {
 		window_show_error("Impossible de charger le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 		return 0;
@@ -36,7 +36,7 @@ int open_mail_window(Email *mail, char* mailbox, SGlobalData *data) {
 		window_show_error("Une erreur est survenue.\nAucun message trouvé pour cet identifiant.", data, "MainWindow");
 		return 0;
 	}
-	data->current_email = ssl_get_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mailbox, uid);
+	data->current_email = ssl_get_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mailbox, 1, uid);
 
 	window = GTK_WIDGET (gtk_builder_get_object (data->builder, "MailWindow"));
 	gtk_window_set_title(GTK_WINDOW(window), mail->subject);
@@ -211,7 +211,7 @@ void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data) {
 		return;
 	}
 
-	status = send_mail_ssl("jumailimap@gmail.com", "azerty12", (char*)gtk_entry_get_text(entry_to), "smtp.gmail.com", (const char **)mail); //TODO Profile
+	status = send_mail_ssl("jumailimap@gmail.com", "azerty12", (char*)gtk_entry_get_text(entry_to), "smtp.gmail.com", 1,1, (const char **)mail); //TODO Profile
 
 	free_header(header); //The header is a two dimensional array. It must be freed using this function
 	free_mail(mail); //Always free

@@ -78,7 +78,7 @@ size_t payload_source(void *ptr, size_t size, size_t nmemb, void *userp);
 /**
  * Enables SSL on the given CURL connection
  */
-void enable_ssl(CURL *curl);
+void enable_tls(CURL *curl);
 
 /**
  * Executes the given regexp on the source and stores the result into the array pmatch

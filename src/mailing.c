@@ -316,7 +316,7 @@ void free_mail(char ** mail) {
 /**
  * Sends a mail generated with get_mail using SMTP. "mail" is the full email payload, built with get_mai() and get_header()
  */
-int send_mail_ssl(char * username, char * password, char * to, char * domain, const char ** mail) {
+int send_mail_ssl(char * username, char * password, char * to, char * domain, char ssl, char tls, const char ** mail) {
 	CURL *curl;
 	CURLcode res = CURLE_OK;
 	struct curl_slist *recipients = NULL;
@@ -325,7 +325,7 @@ int send_mail_ssl(char * username, char * password, char * to, char * domain, co
 	struct upload_status upload_ctx;
 	char * address;
 
-	address = generate_address(domain, "smtps"); //TODO check profile if SSL enabled (don't put 's' if no SSL)
+	address = generate_address(domain, ssl ? "smtps" : "smtp");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating SMTP address from domain.\n");
 		return -1;
@@ -341,8 +341,10 @@ int send_mail_ssl(char * username, char * password, char * to, char * domain, co
 		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
 
 		curl_easy_setopt(curl, CURLOPT_URL,address);
+		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); //Toggle full logging
 
-		enable_ssl(curl);
+		if(tls)
+			enable_tls(curl);
 
 		curl_easy_setopt(curl, CURLOPT_MAIL_FROM, username); //Set sender
 
@@ -508,7 +510,7 @@ static StringArray *parse_flags(char * answer, char *regexp) {
 /**
  * Performs a SEARCH ?ALL (IMAP) operation in the given mailbox. This returns all the UIDs present in the mailbox.
  */
-struct ParsedSearch *ssl_search_all(char * username, char * password, char * domain, char * mailbox) {
+struct ParsedSearch *ssl_search_all(char * username, char * password, char * domain, char ssl, char * mailbox) {
 	CURL *curl;
 	CURLcode res = CURLE_OK;
 	struct MemoryStruct chunk;
@@ -518,7 +520,7 @@ struct ParsedSearch *ssl_search_all(char * username, char * password, char * dom
 	char * full_address;
 	char * mailbox_encoded;
 
-	address = generate_address(domain, "imaps");
+	address = generate_address(domain, ssl ? "imaps" : "imap");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
 		return NULL;
@@ -566,12 +568,13 @@ struct ParsedSearch *ssl_search_all(char * username, char * password, char * dom
 	chunk.size = 0;
 
 	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); //Toggle full logging
 		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
 		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
 		curl_easy_setopt(curl, CURLOPT_URL,full_address);
 
-		enable_ssl(curl);
+		//enable_tls(curl);
 
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
@@ -605,7 +608,7 @@ struct ParsedSearch *ssl_search_all(char * username, char * password, char * dom
  * Performs a FETCH (IMAP) operation to get an email. Returns NULL if an error occurred
  * Don't forget to free it with free_email()
  */
-Email *ssl_get_mail(char * username, char * password, char * domain, char * mailbox, int uid) {
+Email *ssl_get_mail(char * username, char * password, char * domain, char * mailbox, char ssl, int uid) {
 	Email *mail = NULL;
 	CURL *curl;
 	CURLcode res = CURLE_OK;
@@ -617,7 +620,7 @@ Email *ssl_get_mail(char * username, char * password, char * domain, char * mail
 	char * full_request;
 	char uidStr[12];
 
-	address = generate_address(domain, "imaps");
+	address = generate_address(domain, ssl ? "imaps" : "imap");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
 		return NULL;
@@ -677,13 +680,14 @@ Email *ssl_get_mail(char * username, char * password, char * domain, char * mail
 	chunk.size = 0;
 
 	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); //Toggle full logging
 		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
 		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
 
 		curl_easy_setopt(curl, CURLOPT_URL,full_address);
 
-		enable_ssl(curl);
+		//enable_tls(curl);
 
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
 
@@ -751,7 +755,7 @@ Email *ssl_get_mail(char * username, char * password, char * domain, char * mail
  * Example: "STORE %d +Flags \\Deleted"
  * Here, %d will be replaced by uid
  */
-int ssl_mail_request(char * username, char * password, char * domain, char * mailbox, char *message_id, const char *request) {
+int ssl_mail_request(char * username, char * password, char * domain, char * mailbox, char *message_id, char ssl, const char *request) {
 	CURL *curl;
 	CURLcode res = CURLE_OK;
 	int mailboxlen = 0, uidstrlen = 0, requestlen = 0;
@@ -762,7 +766,7 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 	char uidStr[12];
 	int uid;
 
-	address = generate_address(domain, "imaps");
+	address = generate_address(domain, ssl ? "imaps" : "imap");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
 		return -1;
@@ -799,13 +803,14 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 	strcat(full_address, mailbox_encoded);
 	free(mailbox_encoded);
 
+	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); //Toggle full logging
 	curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
 	curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 	curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
 
 	curl_easy_setopt(curl, CURLOPT_URL,full_address);
 
-	enable_ssl(curl);
+	//enable_tls(curl);
 
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
 
@@ -858,15 +863,15 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 /**
  * Performs a STORE (IMAP) operation to flag an email as seen (1) or unseen (0).
  */
-int ssl_see_mail(char * username, char * password, char * domain, char * mailbox, char *message_id, char seen) {
-	return ssl_mail_request(username,password,domain,mailbox,message_id, seen ? "STORE %d +Flags \\Seen" : "STORE %d -Flags \\Seen");
+int ssl_see_mail(char * username, char * password, char * domain, char * mailbox, char *message_id, char ssl, char seen) {
+	return ssl_mail_request(username,password,domain,mailbox,message_id, ssl ,seen ? "STORE %d +Flags \\Seen" : "STORE %d -Flags \\Seen");
 }
 
 /**
  * Performs a STORE (IMAP) operation to flag an email as deleted.
  */
-int ssl_delete_mail(char * username, char * password, char * domain, char * mailbox, char *message_id) {
-	return ssl_mail_request(username,password,domain,mailbox,message_id,"STORE %d +Flags \\Deleted");
+int ssl_delete_mail(char * username, char * password, char * domain, char * mailbox, char *message_id, char ssl) {
+	return ssl_mail_request(username,password,domain,mailbox,message_id, ssl ,"STORE %d +Flags \\Deleted");
 }
 
 /**
@@ -1077,7 +1082,7 @@ void free_email(Email *email) {
 /**
  * Moves an email from one folder to another performing a COPY (IMAP) operation then flags the mail as deleted in the source folder
  */
-int ssl_move_mail(char * username, char * password, char * domain, char * mailbox_src, char * mailbox_dst, char *message_id) {
+int ssl_move_mail(char * username, char * password, char * domain, char * mailbox_src, char * mailbox_dst, char *message_id, char ssl) {
 
 	const char* request = "STORE %d +Flags \\Deleted";
 
@@ -1093,7 +1098,7 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 	char uidStr[12];
 	int uid;
 
-	address = generate_address(domain, "imaps");
+	address = generate_address(domain, ssl ? "imaps": "imap");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
 		return -1;
@@ -1128,6 +1133,7 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 	free(address);
 	strcat(full_address, mailbox_encoded_src);
 
+	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); //Toggle full logging
 	curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
 	curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 	curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
@@ -1136,7 +1142,7 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 
 	curl_easy_setopt(curl, CURLOPT_URL,full_address);
 
-	enable_ssl(curl);
+	//enable_tls(curl);
 
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
 
@@ -1255,7 +1261,7 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
  * Creates an new CURL connection
  * Returns 0 if not found, -1 if an error occurred
  */
-int ssl_search_by_id_with_new_connection(char * username, char * password, char * domain, char * mailbox, char *message_id) {
+int ssl_search_by_id_with_new_connection(char * username, char * password, char * domain, char * mailbox, char *message_id, char ssl) {
 	CURL *curl;
 	int mailboxlen = 0;
 	char * address;
@@ -1263,7 +1269,7 @@ int ssl_search_by_id_with_new_connection(char * username, char * password, char 
 	char * mailbox_encoded;
 	int result = -1;
 
-	address = generate_address(domain, "imaps");
+	address = generate_address(domain, ssl ? "imaps" : "imap");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
 		return -1;
@@ -1300,11 +1306,12 @@ int ssl_search_by_id_with_new_connection(char * username, char * password, char 
 	strcat(full_address, mailbox_encoded);
 	free(mailbox_encoded);
 
+	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); //Toggle full logging
 	curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
 	curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 	curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
 
-	enable_ssl(curl);
+	enable_tls(curl);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
 	curl_easy_setopt(curl, CURLOPT_URL,full_address);
 
@@ -1373,7 +1380,7 @@ void free_parsed_search(struct ParsedSearch *search) {
 /**
  * Loads the email necessary headers into the LinkedList loaded_mails. Return 1 if success, 0 otherwise.
  */
-int ssl_load_mail_headers(char * username, char * password, char * domain, char * mailbox, struct ParsedSearch *search) {
+int ssl_load_mail_headers(char * username, char * password, char * domain, char * mailbox, char ssl, struct ParsedSearch *search) {
 	Email *mail = NULL;
 	CURL *curl;
 	CURLcode res = CURLE_OK;
@@ -1386,7 +1393,7 @@ int ssl_load_mail_headers(char * username, char * password, char * domain, char 
 	char * full_request;
 	char uidStr[12];
 
-	address = generate_address(domain, "imaps");
+	address = generate_address(domain, ssl ? "imaps" : "imap");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
 		return 0;
@@ -1423,13 +1430,14 @@ int ssl_load_mail_headers(char * username, char * password, char * domain, char 
 	strcat(full_address, mailbox_encoded);
 	free(mailbox_encoded);
 
+	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); //Toggle full logging
 	curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
 	curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 	curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
 
 	curl_easy_setopt(curl, CURLOPT_URL,full_address);
 
-	enable_ssl(curl);
+	enable_tls(curl);
 
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
 	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, write_memory_callback);

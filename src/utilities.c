@@ -304,9 +304,8 @@ size_t payload_source(void *ptr, size_t size, size_t nmemb, void *userp) {
 /**
  * Enables SSL on the given CURL connection
  */
-void enable_ssl(CURL *curl) {
+void enable_tls(CURL *curl) {
 	curl_easy_setopt(curl, CURLOPT_USE_SSL, (long)CURLUSESSL_ALL);
-	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 }
 
 /**

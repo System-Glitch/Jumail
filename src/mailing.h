@@ -75,35 +75,35 @@ void free_mail(char ** header);
 /**
  * Sends a mail generated with get_mail using SMTP. "mail" is the full email payload, built with get_mai() and get_header()
  */
-int send_mail_ssl(char * username, char * password, char * to, char * domain, const char ** mail);
+int send_mail_ssl(char * username, char * password, char * to, char * domain, char ssl, char tls, const char ** mail);
 
 /**
  * Performs a SEARCH ?ALL (IMAP) operation in the given mailbox. This returns all the UIDs present in the mailbox.
  */
-struct ParsedSearch *ssl_search_all(char * username, char * password, char * domain, char * mailbox);
+struct ParsedSearch *ssl_search_all(char * username, char * password, char * domain, char ssl, char * mailbox);
 
 /**
  * Performs a FETCH (IMAP) operation to get an email. Returns NULL if an error occurred
  * Don't forget to free it with free_email()
  */
-Email *ssl_get_mail(char * username, char * password, char * domain, char * mailbox, int uid);
+Email *ssl_get_mail(char * username, char * password, char * domain, char * mailbox, char ssl, int uid);
 
 /**
  * Performs a STORE operation (IMAP). The request is a formatted string.
  * Example: "STORE %d +Flags \\Deleted"
  * Here, %d will be replaced by uid
  */
-int ssl_mail_request(char * username, char * password, char * domain, char * mailbox, char *message_id, const char *request);
+int ssl_mail_request(char * username, char * password, char * domain, char * mailbox, char *message_id, char ssl, const char *request);
 
 /**
  * Performs a STORE (IMAP) operation to flag an email as seen (1) or unseen (0).
  */
-int ssl_see_mail(char * username, char * password, char * domain, char * mailbox, char *message_id, char seen);
+int ssl_see_mail(char * username, char * password, char * domain, char * mailbox, char *message_id, char ssl, char seen);
 
 /**
  * Performs a STORE (IMAP) operation to flag an email as deleted.
  */
-int ssl_delete_mail(char * username, char * password, char * domain, char * mailbox, char *message_id);
+int ssl_delete_mail(char * username, char * password, char * domain, char * mailbox, char *message_id, char ssl);
 
 /**
  * Parses a complete email payload (header + body) and returns the result into an Email struct. Returns NULL if an error occurred
@@ -118,7 +118,7 @@ void free_email(Email *email);
 /**
  * Moves an email from one folder to another performing a COPY (IMAP) operation then flags the mail as deleted in the source folder
  */
-int ssl_move_mail(char * username, char * password, char * domain, char * mailbox_src, char * mailbox_dst, char *message_id);
+int ssl_move_mail(char * username, char * password, char * domain, char * mailbox_src, char * mailbox_dst, char *message_id, char ssl);
 
 /**
  * Searches an email by Message-ID and returns the UID if found
@@ -132,7 +132,7 @@ int ssl_search_by_id(CURL *curl, char *message_id);
  * Creates an new CURL connection
  * Returns 0 if not found, -1 if an error occurred
  */
-int ssl_search_by_id_with_new_connection(char * username, char * password, char * domain, char * mailbox, char *message_id);
+int ssl_search_by_id_with_new_connection(char * username, char * password, char * domain, char * mailbox, char *message_id, char ssl);
 
 /**
  * Safe free of a ParsedSearch struct, ignoring NULL pointers
@@ -142,7 +142,7 @@ void free_parsed_search(struct ParsedSearch *search);
 /**
  * Loads the email necessary headers into the LinkedList loaded_mails. Return 1 if success, 0 otherwise.
  */
-int ssl_load_mail_headers(char * username, char * password, char * domain, char * mailbox, struct ParsedSearch *search);
+int ssl_load_mail_headers(char * username, char * password, char * domain, char * mailbox, char ssl, struct ParsedSearch *search);
 
 /**
  * Parses the response for request "FETCH uid (FLAGS BODY[HEADER.FIELDS (SUBJECT DATE FROM TO MESSAGE-ID)])"

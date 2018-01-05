@@ -8,17 +8,32 @@
 
 linkedlist_t * listProfile = NULL;
 // Fonction de création du fichier xml du profil
-void createNewProfile(Profile * profile){
+void saveProfile(Profile * profile, char * previous_name){
 	xmlDocPtr doc = NULL;
 	xmlNodePtr root_node = NULL, node = NULL;
 	char * filename = NULL;
-	filename = malloc(strlen(PROFILE_FILENAME_START) + strlen(PROFILE_FILENAME_END) + strlen(profile->nameOfProfile) + 1);
+	char * filename2 = NULL;
+	filename = malloc(strlen(PROFILE_FILENAME_START) + strlen(PROFILE_FILENAME_END) + strlen(profile->name) + 1);
+	if(previous_name != NULL){
+		filename2 = malloc(strlen(PROFILE_FILENAME_START) + strlen(PROFILE_FILENAME_END) + strlen(previous_name) + 1);
+		if(filename2 == NULL){
+			printf("Erreur allocation ! \n");
+			free(filename);
+			return;
+		}
+		strcpy(filename2, PROFILE_FILENAME_START);
+		strcat(filename2, previous_name);
+		strcat(filename2, PROFILE_FILENAME_END);
+	}
 	if(filename == NULL){
 		printf("Erreur allocation ! \n");
 		exit(EXIT_FAILURE);
 	}
+	if(previous_name != NULL && strcmp(profile->name, previous_name) != 0){
+		remove(filename2);
+	}
 	strcpy(filename, PROFILE_FILENAME_START);
-	strcat(filename, profile->nameOfProfile);
+	strcat(filename, profile->name);
 	strcat(filename, PROFILE_FILENAME_END);
 	// Données
 
@@ -28,19 +43,30 @@ void createNewProfile(Profile * profile){
 
 	// Les données
 	node = xmlNewChild(root_node, NULL, BAD_CAST "Name", NULL);
-	xmlNewProp(node, BAD_CAST "Value", BAD_CAST (profile)->userName);
+	xmlNewProp(node, BAD_CAST "Value", BAD_CAST profile->emailAddress);
 
 	node = xmlNewChild(root_node, NULL, BAD_CAST "Password", NULL);
-	xmlNewProp(node, BAD_CAST "Value", BAD_CAST (profile)->password);
+	xmlNewProp(node, BAD_CAST "Value", BAD_CAST profile->password);
 
 	node = xmlNewChild(root_node, NULL, BAD_CAST "Send", NULL);
-	xmlNewProp(node, BAD_CAST "Value", BAD_CAST (profile)->sendP);
+	xmlNewProp(node, BAD_CAST "Value", BAD_CAST profile->sendP);
 
 	node = xmlNewChild(root_node, NULL, BAD_CAST "Receive", NULL);
-	xmlNewProp(node, BAD_CAST "Value", BAD_CAST (profile)->receiveP);
+	xmlNewProp(node, BAD_CAST "Value", BAD_CAST profile->receiveP);
 
 	node = xmlNewChild(root_node, NULL, BAD_CAST "fullName", NULL);
-	xmlNewProp(node, BAD_CAST "Value", BAD_CAST (profile)->fullName);
+	xmlNewProp(node, BAD_CAST "Value", BAD_CAST profile->fullName);
+
+	node = xmlNewChild(root_node, NULL, BAD_CAST "SSL_IMAP", NULL);
+	xmlNewProp(node, BAD_CAST "Value", BAD_CAST profile->SslImap);
+
+	node = xmlNewChild(root_node, NULL, BAD_CAST "SSL_SMTP", NULL);
+	xmlNewProp(node, BAD_CAST "Value", BAD_CAST profile->SslSmtp);
+
+	node = xmlNewChild(root_node, NULL, BAD_CAST "TLS_SMTP", NULL);
+	xmlNewProp(node, BAD_CAST "Value", BAD_CAST profile->TlsSmtp);
+
+
 
 
 	// Création d'un fichier ou affichage dans la console
@@ -61,10 +87,13 @@ void createNewProfile(Profile * profile){
 void showProfile(Profile * profile){
 	printf("%s\n", profile->receiveP == NULL ? "(null)" : profile->receiveP);
 	printf("%s\n", profile->sendP == NULL ? "(null)" : profile->sendP);
-	printf("%s\n", profile->userName == NULL ? "(null)" : profile->userName);
+	printf("%s\n", profile->emailAddress == NULL ? "(null)" : profile->emailAddress);
 	printf("%s\n", profile->password == NULL ? "(null)" : profile->password);
-	printf("%s\n", profile->nameOfProfile == NULL ? "(null)" : profile->nameOfProfile);
+	printf("%s\n", profile->name == NULL ? "(null)" : profile->name);
 	printf("%s\n", profile->fullName == NULL ? "(null)" : profile->fullName);
+	printf("%s\n", profile->SslImap == NULL ? "(null)" : profile->SslImap);
+	printf("%s\n", profile->SslSmtp == NULL ? "(null)" : profile->SslSmtp);
+	printf("%s\n", profile->TlsSmtp == NULL ? "(null)" : profile->TlsSmtp);
 }
 
 // Verrification de l'ouverture du fichier
@@ -85,12 +114,15 @@ Profile * initProfile(){
 		printf("Erreur d'allocation ! \n");
 		return NULL;
 	}
-	profile->nameOfProfile = NULL;
+	profile->name = NULL;
 	profile->password = NULL;
 	profile->receiveP = NULL;
 	profile->sendP = NULL;
-	profile->userName = NULL;
+	profile->emailAddress = NULL;
 	profile->fullName = NULL;
+	profile->SslImap = NULL;
+	profile->SslSmtp = NULL;
+	profile->TlsSmtp = NULL;
 	return profile;
 }
 
@@ -98,7 +130,6 @@ Profile * initProfile(){
 Profile * loadProfile(char * fileName1, Profile * profile, char * fileName2){
 	xmlDoc *doc = NULL;
 	xmlNode *root_element = NULL;
-	int cpt = 0;
 
 	profile = initProfile();
 	if(profile == NULL){
@@ -117,17 +148,17 @@ Profile * loadProfile(char * fileName1, Profile * profile, char * fileName2){
 		root_element = xmlDocGetRootElement(doc);
 
 		// Récupération des données
-		profile = parseFile(root_element, &cpt, profile);
-		profile->nameOfProfile = malloc(strlen(fileName2)+1);
-		if(profile->userName  == NULL) {
+		profile = parseFile(root_element, profile);
+		profile->name = malloc(strlen(fileName2)+1);
+		if(profile->emailAddress  == NULL) {
 			printf("Erreur allocation userName ! \n");
 			freeProfile(profile);
 			free(profile);
 			xmlFreeDoc(doc);
 			return NULL;
 		}
-		strcpy(profile->nameOfProfile, fileName2);
-		profile->nameOfProfile[strlen(profile->nameOfProfile)-4] = '\0';
+		strcpy(profile->name, fileName2);
+		profile->name[strlen(profile->name)-4] = '\0';
 
 		// Libération du document
 		xmlFreeDoc(doc);
@@ -140,7 +171,7 @@ Profile * loadProfile(char * fileName1, Profile * profile, char * fileName2){
 }
 
 // Fonction d'attribution des données du parsing
-Profile * parseFile(xmlNode * a_node, int * cpt, Profile * profile){
+Profile * parseFile(xmlNode * a_node, Profile * profile){
 	xmlNode *cur_node = NULL;
 	// cur_node est égale au xmlNode envoie puis cur_node avance de node en node
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
@@ -151,7 +182,7 @@ Profile * parseFile(xmlNode * a_node, int * cpt, Profile * profile){
 			}
 
 			if(!strcmp((char*)cur_node->name, "Name")) {
-				get_attribute(cur_node, &(profile->userName));
+				get_attribute(cur_node, &(profile->emailAddress));
 
 			} else if(!strcmp((char*)cur_node->name, "Password")) {
 				get_attribute(cur_node, &(profile->password));
@@ -164,6 +195,16 @@ Profile * parseFile(xmlNode * a_node, int * cpt, Profile * profile){
 
 			} else if(!strcmp((char*)cur_node->name, "fullName")) {
 				get_attribute(cur_node, &(profile->fullName));
+
+			} else if(!strcmp((char*)cur_node->name, "SSL_IMAP")){
+				get_attribute(cur_node, &(profile->SslImap));
+
+			} else if(!strcmp((char*)cur_node->name, "SSL_SMTP")){
+				get_attribute(cur_node, &(profile->SslSmtp));
+
+			} else if(!strcmp((char*)cur_node->name, "TLS_SMTP")){
+				get_attribute(cur_node, &(profile->TlsSmtp));
+
 			}
 		}
 	}
@@ -173,22 +214,27 @@ Profile * parseFile(xmlNode * a_node, int * cpt, Profile * profile){
 // Fonction de libération la structure
 
 void freeProfile(Profile * profile){
-	if(profile->nameOfProfile != NULL)
-		free(profile->nameOfProfile);
+	if(profile->name != NULL)
+		free(profile->name);
 	if(profile->password != NULL)
 		free(profile->password);
 	if(profile->receiveP != NULL)
 		free(profile->receiveP);
 	if(profile->sendP != NULL)
 		free(profile->sendP);
-	if(profile->userName != NULL)
-		free(profile->userName);
+	if(profile->emailAddress != NULL)
+		free(profile->emailAddress);
 	if(profile->fullName != NULL)
 		free(profile->fullName);
-
+	if(profile->SslImap != NULL)
+		free(profile->SslImap);
+	if(profile->SslSmtp != NULL)
+		free(profile->SslSmtp);
+	if(profile->TlsSmtp != NULL)
+		free(profile->TlsSmtp);
 }
 
-// #balanceTonAttribut
+// Récupération de la valeur d'un attribut
 void get_attribute(xmlNode *node, char ** ptr) {
 	xmlAttr* attribute = node->properties;
 	while(attribute) {
@@ -227,10 +273,9 @@ int loadAllProfile(){
 		return -2;
 	}
 
-	file = readdir(rep);
-	file = readdir(rep);
 	// Lecture des fichiers des du dossier
 	while ((file = readdir(rep)) != NULL){
+		if(!strcmp(file->d_name, ".") || !strcmp(file->d_name, "..")) continue;
 		filename = malloc(strlen(PROFILE_FILENAME_START) + strlen(file->d_name) + 1);
 		if(filename == NULL){
 			printf("Erreur allocation ! \n");

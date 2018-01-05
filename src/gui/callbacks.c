@@ -86,7 +86,7 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 			mail_window_clear(data);
 			tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewBrowsing"));
 			tree_browsing_get_selected_row(data, &string, &iter);
-			if(ssl_remove_folder("jumailimap@gmail.com", "azerty12", "imap.gmail.com", string)) { //TODO profile
+			if(ssl_remove_folder("jumailimap@gmail.com", "azerty12", "imap.gmail.com", string, 1)) { //TODO profile
 				window_show_error("Impossible de supprimer le dossier.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 			} else {
 				//Remove folder from GUI
@@ -107,7 +107,7 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 			int i = list_folder_get_selected_row(data, &iter);
 			if(i >= 0) {
 				mail = linkedlist_get(loaded_mails, i);
-				if(ssl_delete_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mail->mailbox ,mail->message_id) != 0) { //TODO profile
+				if(ssl_delete_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mail->mailbox ,mail->message_id, 1) != 0) { //TODO profile
 					window_show_error("Impossible de supprimer le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 				} else {
 					//Remove mail from GUI
@@ -128,7 +128,7 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 			tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderList"));
 			if(i >= 0) {
 				mail = linkedlist_get(loaded_mails, i);
-				if(ssl_delete_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mail->mailbox ,mail->message_id) != 0) { //TODO profile
+				if(ssl_delete_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mail->mailbox ,mail->message_id, 1) != 0) { //TODO profile
 					window_show_error("Impossible de supprimer le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MailWindow");
 				} else {
 					//Remove mail from GUI
@@ -196,7 +196,7 @@ void callback_mail_move_confirm(GtkButton *widget, gpointer user_data) {
 
 			mail = linkedlist_get(loaded_mails, i);
 
-			status = ssl_move_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mail->mailbox, folder_dst, mail->message_id); //TODO profile
+			status = ssl_move_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mail->mailbox, folder_dst, mail->message_id, 1); //TODO profile
 
 			if(status) {
 				window_show_error("Impossible de déplacer le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, action == MOVE_MAIL ? "MainWindow" : "MailWindow");

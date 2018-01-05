@@ -95,14 +95,14 @@ static StringArray *parse_list(CURL *curl, char * list) {
 /**
  * Performs a LIST (IMAP) operation, parses it and returns the existing folders inside a StringArray
  */
-StringArray *ssl_list(char * username, char * password, char * domain) {
+StringArray *ssl_list(char * username, char * password, char * domain, char ssl) {
 	CURL *curl;
 	CURLcode res = CURLE_OK;
 	StringArray *list = NULL;
 	struct MemoryStruct chunk;
 	char * address;
 
-	address = generate_address(domain, "imaps");
+	address = generate_address(domain, ssl ? "imaps":"imap");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
 		return NULL;
@@ -113,12 +113,13 @@ StringArray *ssl_list(char * username, char * password, char * domain) {
 
 	curl = curl_easy_init();
 	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); //Toggle full logging
 		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
 		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
 		curl_easy_setopt(curl, CURLOPT_URL,address);
 
-		enable_ssl(curl);
+		//enable_tls(curl);
 
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
@@ -148,7 +149,7 @@ StringArray *ssl_list(char * username, char * password, char * domain) {
  * action  = 1 -> CREATE
  * action != 1 -> DELETE
  */
-static int ssl_folder(char * username, char * password, char * domain, char * mailbox, int action) {
+static int ssl_folder(char * username, char * password, char * domain, char * mailbox, char ssl, int action) {
 	CURL *curl;
 	CURLcode res = CURLE_OK;
 	int mailboxlen = 0;
@@ -156,7 +157,7 @@ static int ssl_folder(char * username, char * password, char * domain, char * ma
 	char * full_request;
 	char * mailbox_encoded;
 
-	address = generate_address(domain, "imaps");
+	address = generate_address(domain, ssl ? "imaps":"imap");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
 		return -1;
@@ -193,6 +194,7 @@ static int ssl_folder(char * username, char * password, char * domain, char * ma
 	free(mailbox_encoded);
 
 	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); //Toggle full logging
 		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
 		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
@@ -202,7 +204,7 @@ static int ssl_folder(char * username, char * password, char * domain, char * ma
 		curl_easy_setopt(curl, CURLOPT_URL,address);
 		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,full_request);
 
-		enable_ssl(curl);
+		//enable_tls(curl);
 
 		curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
 
@@ -229,14 +231,14 @@ static int ssl_folder(char * username, char * password, char * domain, char * ma
 /**
  * Performs a CREATE (IMAP) operation in order to create a new mailbox
  */
-int ssl_create_folder(char * username, char * password, char * domain, char * mailbox) {
-	return ssl_folder(username, password, domain, mailbox, 1);
+int ssl_create_folder(char * username, char * password, char * domain, char * mailbox, char ssl) {
+	return ssl_folder(username, password, domain, mailbox, ssl, 1);
 }
 
 /**
  * Performs a DELETE (IMAP) operation in order to delete an existing mailbox
  */
-int ssl_remove_folder(char * username, char * password, char * domain, char * mailbox) {
-	return ssl_folder(username, password, domain, mailbox, 0);
+int ssl_remove_folder(char * username, char * password, char * domain, char * mailbox, char ssl) {
+	return ssl_folder(username, password, domain, mailbox, ssl, 0);
 }
 

@@ -21,20 +21,23 @@ extern linkedlist_t * listProfile;
 
 typedef struct Profile{
 	char * sendP;
+	char * SslSmtp;
+	char * TlsSmtp;
 	char * receiveP;
-	char * userName;
+	char * SslImap;
+	char * emailAddress;
 	char * password;
-	char * nameOfProfile;
+	char * name;
 	char * fullName;
 
 }Profile;
 
-void createNewProfile(Profile *);
+void saveProfile(Profile *, char *);
 Profile * loadProfile(char *, Profile *, char *);
 void showProfile(Profile *);
 Profile * initProfile();
 void get_attribute(xmlNode *, char **);
-Profile * parseFile(xmlNode *, int *, Profile *);
+Profile * parseFile(xmlNode *, Profile *);
 void check(FILE *);
 void freeProfile(Profile *);
 void freeListProfile();

@@ -38,21 +38,21 @@ static void settings_window_fill_entry(SGlobalData *data, const char *entry_name
 static void settings_window_fill_entries(SGlobalData *data, Profile *profile) {
 	GtkCheckButton *check;
 
-	settings_window_fill_entry(data, "ProfileEntryName", profile->nameOfProfile);
-	settings_window_fill_entry(data, "ProfileEntryAddress", profile->userName);
+	settings_window_fill_entry(data, "ProfileEntryName", profile->name);
+	settings_window_fill_entry(data, "ProfileEntryAddress", profile->emailAddress);
 	settings_window_fill_entry(data, "ProfileEntryPassword", profile->password);
 	settings_window_fill_entry(data, "ProfileEntryFullName", profile->fullName);
 	settings_window_fill_entry(data, "ProfileEntryReceive", profile->receiveP);
 	settings_window_fill_entry(data, "ProfileEntrySend", profile->sendP);
 
 	/*check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckSSLReceive"));
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), profile->ssl_imap_enabled);
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), !strcmp(profile->ssl_imap_enabled, "TRUE"));
 
 	check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckSSLSend"));
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), profile->ssl_smtp_enabled);
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), !strcmp(profile->ssl_smtp_enabled, "TRUE"));
 
 	check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckTLSSend"));
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), profile->tls_smtp_enabled);*/
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), !strcmp(profile->tls_smtp_enabled, "TRUE"));*/
 
 }
 
@@ -62,7 +62,7 @@ static gboolean check_if_name_exists(const char* name, Profile *exclusion) {
 		node_t * current = listProfile->head;
 		while(current != NULL){
 			profile = (Profile*)current->val;
-			if(!strcmp(profile->nameOfProfile, name)) return TRUE;
+			if(!strcmp(profile->name, name)) return TRUE;
 			current = current->next;
 			profile = (Profile*)current->val;
 		}
@@ -89,7 +89,7 @@ gboolean callback_settings_entry_lose_focus(GtkWidget *widget, GdkEvent *event, 
 	string = gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(widget)));
 
 	if(widget == GTK_WIDGET(gtk_builder_get_object (data->builder, "ProfileEntryAddress")))
-		edit_string(&profile->userName, string, data);
+		edit_string(&profile->emailAddress, string, data);
 	else if(widget == GTK_WIDGET(gtk_builder_get_object (data->builder, "ProfileEntryPassword")))
 		edit_string(&profile->password, string, data);
 	else if(widget == GTK_WIDGET(gtk_builder_get_object (data->builder, "ProfileEntryFullName")))
@@ -125,15 +125,15 @@ void callback_profile_name_changed(GtkEditable *editable, gpointer user_data) {
 
 		profile = (Profile*)linkedlist_get(listProfile, data->selected_profile_index);
 
-		previous_name = malloc(strlen(profile->nameOfProfile)+1);
-		profile->nameOfProfile = realloc(profile->nameOfProfile, strlen(string)+1);
-		if(profile->nameOfProfile == NULL || previous_name == NULL) {
+		previous_name = malloc(strlen(profile->name)+1);
+		profile->name = realloc(profile->name, strlen(string)+1);
+		if(profile->name == NULL || previous_name == NULL) {
 			window_show_error("Une erreur est survenue.\nMémoire insuffisante.", data, "SettingsWindow");
 			return;
 		}
 
-		strcpy(previous_name, profile->nameOfProfile);
-		strcpy(profile->nameOfProfile, string);
+		strcpy(previous_name, profile->name);
+		strcpy(profile->name, string);
 		//saveProfile(profile,previous_name);
 		free(previous_name);
 
@@ -221,7 +221,7 @@ void init_settings_window(SGlobalData *data) {
 		node_t * current = listProfile->head;
 		while(current != NULL){
 			gtk_list_store_append(model, &iter);
-			gtk_list_store_set (model, &iter, 0, FALSE, 1, ((Profile*)current->val)->nameOfProfile, -1);
+			gtk_list_store_set (model, &iter, 0, FALSE, 1, ((Profile*)current->val)->name, -1);
 			current = current->next;
 		}
 		settings_window_fill_entries(data, (Profile*)listProfile->head->val);

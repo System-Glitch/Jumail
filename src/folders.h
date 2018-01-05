@@ -19,16 +19,16 @@
 /**
  * Performs a LIST (IMAP) operation, parses it and returns the existing folders inside a StringArray
  */
-StringArray *ssl_list(char * username, char * password, char * domain);
+StringArray *ssl_list(char * username, char * password, char * domain, char ssl);
 
 /**
  * Performs a CREATE (IMAP) operation in order to create a new mailbox
  */
-int ssl_create_folder(char * username, char * password, char * domain, char * mailbox);
+int ssl_create_folder(char * username, char * password, char * domain, char * mailbox, char ssl);
 
 /**
  * Performs a DELETE (IMAP) operation in order to delete an existing mailbox
  */
-int ssl_remove_folder(char * username, char * password, char * domain, char * mailbox);
+int ssl_remove_folder(char * username, char * password, char * domain, char * mailbox, char ssl);
 
 #endif /* SRC_FOLDERS_H_ */
