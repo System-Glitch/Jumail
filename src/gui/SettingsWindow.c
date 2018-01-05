@@ -56,8 +56,90 @@ static void settings_window_fill_entries(SGlobalData *data, Profile *profile) {
 
 }
 
+static gboolean check_if_name_exists(const char* name, Profile *exclusion) {
+	Profile *profile;
+	if(listProfile->length){
+		node_t * current = listProfile->head;
+		while(current != NULL){
+			profile = (Profile*)current->val;
+			if(!strcmp(profile->nameOfProfile, name)) return TRUE;
+			current = current->next;
+			profile = (Profile*)current->val;
+		}
+	}
+	return FALSE;
+}
+
+static void edit_string(char **str, const char *new_str, SGlobalData *data) {
+	if(str == NULL || new_str == NULL) return;
+	*str = realloc(*str, strlen(new_str)+1);
+	if(*str == NULL) {
+		window_show_error("Une erreur est survenue.\nMémoire insuffisante.", data, "SettingsWindow");
+		return;
+	}
+	strcpy(*str, new_str);
+}
+
+gboolean callback_settings_entry_lose_focus(GtkWidget *widget, GdkEvent *event, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	Profile *profile;
+	const char *string;
+
+	profile = (Profile*)linkedlist_get(listProfile, data->selected_profile_index);
+	string = gtk_entry_buffer_get_text(gtk_entry_get_buffer(GTK_ENTRY(widget)));
+
+	if(widget == GTK_WIDGET(gtk_builder_get_object (data->builder, "ProfileEntryAddress")))
+		edit_string(&profile->userName, string, data);
+	else if(widget == GTK_WIDGET(gtk_builder_get_object (data->builder, "ProfileEntryPassword")))
+		edit_string(&profile->password, string, data);
+	else if(widget == GTK_WIDGET(gtk_builder_get_object (data->builder, "ProfileEntryFullName")))
+		edit_string(&profile->fullName, string, data);
+	else if(widget == GTK_WIDGET(gtk_builder_get_object (data->builder, "ProfileEntryReceive")))
+		edit_string(&profile->receiveP, string, data);
+	else if(widget == GTK_WIDGET(gtk_builder_get_object (data->builder, "ProfileEntrySend")))
+		edit_string(&profile->sendP, string, data);
+
+	return FALSE;
+}
+
+//Update the profile name in the list
 void callback_profile_name_changed(GtkEditable *editable, gpointer user_data) {
-	//TODO
+	SGlobalData *data = (SGlobalData*) user_data;
+	GtkTreeModel *model;
+	GtkWidget *tree_view;
+	GtkTreeIter iter;
+	GtkEntry *entry;
+	GtkTreeSelection *selection;
+	Profile *profile;
+	const char *string;
+	char *previous_name;
+
+	tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewProfiles"));
+	model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
+	entry = GTK_ENTRY (gtk_builder_get_object (data->builder, "ProfileEntryName"));
+	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
+	string = gtk_entry_buffer_get_text(gtk_entry_get_buffer(entry));
+	gtk_tree_selection_get_selected (selection, &model, &iter);
+
+	if (strlen(string) > 0 && !check_if_name_exists(string, profile)) {
+
+		profile = (Profile*)linkedlist_get(listProfile, data->selected_profile_index);
+
+		previous_name = malloc(strlen(profile->nameOfProfile)+1);
+		profile->nameOfProfile = realloc(profile->nameOfProfile, strlen(string)+1);
+		if(profile->nameOfProfile == NULL || previous_name == NULL) {
+			window_show_error("Une erreur est survenue.\nMémoire insuffisante.", data, "SettingsWindow");
+			return;
+		}
+
+		strcpy(previous_name, profile->nameOfProfile);
+		strcpy(profile->nameOfProfile, string);
+		//saveProfile(profile,previous_name);
+		free(previous_name);
+
+		gtk_list_store_set (GTK_LIST_STORE(model), &iter, 1, string, -1);
+
+	}
 }
 
 void callback_profile_selected(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data) {
@@ -70,6 +152,7 @@ void callback_profile_selected(GtkTreeView *tree_view, GtkTreePath *path, GtkTre
 	if(profile == NULL) {
 		window_show_error("Une erreur est survenue.\nLe profil sélectionné n'existe pas.", data, "SettingsWindow");
 	} else {
+		data->selected_profile_index = *i;
 		settings_window_fill_entries(data, profile);
 		settings_window_set_all_fields_active(data, TRUE);
 	}
@@ -142,6 +225,7 @@ void init_settings_window(SGlobalData *data) {
 			current = current->next;
 		}
 		settings_window_fill_entries(data, (Profile*)listProfile->head->val);
+		data->selected_profile_index = 0;
 	}
 
 	//TODO check selected profile

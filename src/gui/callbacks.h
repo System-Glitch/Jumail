@@ -19,6 +19,7 @@ typedef struct
 	Email *current_email;
 	Email *response_reference;
 	int selected_mail_index;
+	int selected_profile_index;
 } SGlobalData;
 
 enum Action {

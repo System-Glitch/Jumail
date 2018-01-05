@@ -24,6 +24,7 @@ static void main_window_activate(GtkApplication* app, gpointer user_data) {
 	data.current_email = NULL;
 	data.response_reference = NULL;
 	data.selected_mail_index = -1;
+	data.selected_profile_index = -1;
 
 
 	filename =  g_build_filename ("resources/MainWindow.glade", NULL);

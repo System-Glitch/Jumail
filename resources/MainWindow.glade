@@ -689,6 +689,7 @@ Louis LAURENT</property>
                                 <property name="margin_top">5</property>
                                 <property name="margin_bottom">5</property>
                                 <property name="placeholder_text" translatable="yes">Nom du profil</property>
+                                <signal name="changed" handler="callback_profile_name_changed" swapped="no"/>
                               </object>
                               <packing>
                                 <property name="left_attach">0</property>
@@ -705,6 +706,7 @@ Louis LAURENT</property>
                                 <property name="margin_top">5</property>
                                 <property name="margin_bottom">5</property>
                                 <property name="placeholder_text" translatable="yes">Adresse email</property>
+                                <signal name="focus-out-event" handler="callback_settings_entry_lose_focus" swapped="no"/>
                               </object>
                               <packing>
                                 <property name="left_attach">0</property>
@@ -723,6 +725,7 @@ Louis LAURENT</property>
                                 <property name="visibility">False</property>
                                 <property name="invisible_char">●</property>
                                 <property name="placeholder_text" translatable="yes">Mot de passe</property>
+                                <signal name="focus-out-event" handler="callback_settings_entry_lose_focus" swapped="no"/>
                               </object>
                               <packing>
                                 <property name="left_attach">0</property>
@@ -739,6 +742,7 @@ Louis LAURENT</property>
                                 <property name="margin_top">5</property>
                                 <property name="margin_bottom">5</property>
                                 <property name="placeholder_text" translatable="yes">Nom complet</property>
+                                <signal name="focus-out-event" handler="callback_settings_entry_lose_focus" swapped="no"/>
                               </object>
                               <packing>
                                 <property name="left_attach">0</property>
@@ -759,6 +763,7 @@ Louis LAURENT</property>
                                     <property name="margin_top">5</property>
                                     <property name="margin_bottom">5</property>
                                     <property name="placeholder_text" translatable="yes">Serveur de réception (Ex: imap.gmail.com)</property>
+                                    <signal name="focus-out-event" handler="callback_settings_entry_lose_focus" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -805,6 +810,7 @@ Louis LAURENT</property>
                                     <property name="margin_top">5</property>
                                     <property name="margin_bottom">5</property>
                                     <property name="placeholder_text" translatable="yes">Serveur d'envoi (Ex: smtp.gmail.com)</property>
+                                    <signal name="focus-out-event" handler="callback_settings_entry_lose_focus" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
