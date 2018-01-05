@@ -65,22 +65,26 @@ int tree_browsing_refresh(SGlobalData *data) {
 
 	fputs("Refreshing browser\n", stdout);
 
-	//TODO check selected profile
-
 	tree_view = GTK_TREE_VIEW (gtk_builder_get_object (data->builder, "TreeViewBrowsing"));
 	if(tree_view == NULL) {
 		window_show_error("Impossible de charger l'interface de navigation.", data, "MainWindow");
 		return 0;
 	}
+	model = GTK_TREE_STORE(gtk_tree_view_get_model(tree_view));
 
-	StringArray *list = ssl_list("jumailimap@gmail.com", "azerty12", "imap.gmail.com", 1);
+	browsing_refresh_folder(NULL, data);
+	if(model != NULL) gtk_tree_store_clear(model);
+	if(!check_selected_profile(data, "MainWindow")) {
+		return 0;
+	}
+
+	StringArray *list = ssl_list(current_profile->emailAddress, current_profile->password, current_profile->receiveP, !strcmp(current_profile->SslImap, "TRUE"));
 
 	if(list == NULL) {
 		window_show_error("Impossible de charger les dossiers existants.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 		return 0;
 	}
 
-	model = GTK_TREE_STORE(gtk_tree_view_get_model(tree_view));
 	if(model == NULL) {
 
 		model = gtk_tree_store_new (1, G_TYPE_STRING);
@@ -159,7 +163,7 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 	gtk_list_store_clear(model);
 
 	if(folder != NULL) {
-		struct ParsedSearch *search = ssl_search_all("jumailimap@gmail.com", "azerty12", "imap.gmail.com", 1, folder); //TODO profile
+		struct ParsedSearch *search = ssl_search_all(current_profile->emailAddress, current_profile->password, current_profile->receiveP, !strcmp(current_profile->SslImap, "TRUE"), folder);
 		if(search == NULL) {
 			window_show_error("Impossible de charger le contenu du dossier.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 			return 1;
@@ -243,7 +247,7 @@ static void mail_set_seen(SGlobalData* data, gboolean seen) {
 	if(i >= 0) {
 
 		mail = linkedlist_get(loaded_mails, i);
-		if(ssl_see_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", string, mail->message_id, 1, seen) != 0) { //TODO profile
+		if(ssl_see_mail(current_profile->emailAddress, current_profile->password, current_profile->receiveP, string, mail->message_id, !strcmp(current_profile->SslImap, "TRUE"), seen) != 0) {
 			window_show_error("Impossible de changer le status du message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 		} else {
 			if(!seen) {
@@ -386,7 +390,7 @@ void callback_create_folder_confirm(GtkButton *widget, gpointer user_data) {
 	model = GTK_TREE_STORE(gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view)));
 	foldername = gtk_entry_get_text(GTK_ENTRY(entry));
 
-	status = ssl_create_folder("jumailimap@gmail.com", "azerty12", "imap.gmail.com", (char*)foldername, 1); //TODO profile
+	status = ssl_create_folder(current_profile->emailAddress, current_profile->password, current_profile->receiveP, (char*)foldername, !strcmp(current_profile->SslImap, "TRUE"));
 
 	gtk_widget_hide(dialog);
 

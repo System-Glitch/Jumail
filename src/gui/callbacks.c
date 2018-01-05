@@ -12,6 +12,14 @@
 
 enum Action action = NONE;
 
+char check_selected_profile(SGlobalData *data, char* parent_window_name) {
+	if(current_profile == NULL) {
+		window_show_error("Erreur, aucun profil sélectionné.", data, parent_window_name);
+		return 0;
+	}
+	return 1;
+}
+
 /**
  * Displays a modal confirm dialog and calls callback_confirm_response
  */
@@ -83,10 +91,11 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 		gtk_widget_hide(GTK_WIDGET(dialog));
 		switch(action) {
 		case DELETE_FOLDER:
+			if(!check_selected_profile(data, "MainWindow")) return;
 			mail_window_clear(data);
 			tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewBrowsing"));
 			tree_browsing_get_selected_row(data, &string, &iter);
-			if(ssl_remove_folder("jumailimap@gmail.com", "azerty12", "imap.gmail.com", string, 1)) { //TODO profile
+			if(ssl_remove_folder(current_profile->emailAddress, current_profile->password, current_profile->receiveP, string, !strcmp(current_profile->SslImap, "TRUE"))) {
 				window_show_error("Impossible de supprimer le dossier.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 			} else {
 				//Remove folder from GUI
@@ -102,12 +111,13 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 			window_show_error("Une erreur est survenue.\nAction invalide pour cette fonction.", data, "MainWindow");
 			break;
 		case DELETE_MAIL:
+			if(!check_selected_profile(data, "MainWindow")) return;
 			mail_window_clear(data);
 			tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderList"));
 			int i = list_folder_get_selected_row(data, &iter);
 			if(i >= 0) {
 				mail = linkedlist_get(loaded_mails, i);
-				if(ssl_delete_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mail->mailbox ,mail->message_id, 1) != 0) { //TODO profile
+				if(ssl_delete_mail(current_profile->emailAddress, current_profile->password, current_profile->receiveP, mail->mailbox ,mail->message_id, !strcmp(current_profile->SslImap, "TRUE")) != 0) {
 					window_show_error("Impossible de supprimer le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 				} else {
 					//Remove mail from GUI
@@ -123,12 +133,13 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 
 			break;
 		case DELETE_MAIL_FROM_VIEW:
+			if(!check_selected_profile(data, "MailWindow")) return;
 			i = data->selected_mail_index;
 			mail_window_clear(data);
 			tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderList"));
 			if(i >= 0) {
 				mail = linkedlist_get(loaded_mails, i);
-				if(ssl_delete_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mail->mailbox ,mail->message_id, 1) != 0) { //TODO profile
+				if(ssl_delete_mail(current_profile->emailAddress, current_profile->password, current_profile->receiveP, mail->mailbox ,mail->message_id, !strcmp(current_profile->SslImap, "TRUE")) != 0) {
 					window_show_error("Impossible de supprimer le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MailWindow");
 				} else {
 					//Remove mail from GUI
@@ -170,6 +181,8 @@ void callback_mail_move_confirm(GtkButton *widget, gpointer user_data) {
 	int i = -1;
 	Email *mail;
 
+	if(!check_selected_profile(data, action == MOVE_MAIL ? "MainWindow" : "MailWindow")) return;
+
 	index = list_folder_get_selected_row(data, &iter);
 	if(index == -1) {
 		window_show_error("Une erreur est survenue.\nAucun message n'est sélectionné.", data, "MainWindow");
@@ -196,7 +209,7 @@ void callback_mail_move_confirm(GtkButton *widget, gpointer user_data) {
 
 			mail = linkedlist_get(loaded_mails, i);
 
-			status = ssl_move_mail("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mail->mailbox, folder_dst, mail->message_id, 1); //TODO profile
+			status = ssl_move_mail(current_profile->emailAddress, current_profile->password, current_profile->receiveP, mail->mailbox, folder_dst, mail->message_id, !strcmp(current_profile->SslImap, "TRUE"));
 
 			if(status) {
 				window_show_error("Impossible de déplacer le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, action == MOVE_MAIL ? "MainWindow" : "MailWindow");

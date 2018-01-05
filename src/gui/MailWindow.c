@@ -27,8 +27,9 @@ int open_mail_window(Email *mail, char* mailbox, SGlobalData *data) {
 	GtkWidget *content = NULL;
 	int uid;
 
-	//TODO profile
-	uid = ssl_search_by_id_with_new_connection("jumailimap@gmail.com", "azerty12", "imap.gmail.com", mailbox, mail->message_id, 1);
+	if(!check_selected_profile(data, "MainWindow")) return 0;
+
+	uid = ssl_search_by_id_with_new_connection(current_profile->emailAddress, current_profile->password, current_profile->receiveP, mailbox, mail->message_id, !strcmp(current_profile->SslImap, "TRUE"));
 	if(uid == -1) {
 		window_show_error("Impossible de charger le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 		return 0;
@@ -166,6 +167,8 @@ void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data) {
 	char *id;
 	char **mail;
 
+	if(!check_selected_profile(data, "MailComposeWindow")) return;
+
 	entry_to = GTK_ENTRY(gtk_builder_get_object (data->builder, "MailComposeTo"));
 	entry_subject = GTK_ENTRY(gtk_builder_get_object (data->builder, "MailComposeSubject"));
 	text_view = GTK_TEXT_VIEW(gtk_builder_get_object (data->builder, "MailComposeContent"));
@@ -183,18 +186,17 @@ void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data) {
 		window_show_error("Une erreur est survenue lors de l'envoi du mail.\nVérifiez votre connexion internet.", data, "MailComposeWindow");
 		return;
 	}
-	//TODO profile
 
 	if(action == RESPOND_MAIL_FROM_VIEW) {
-		header = get_header("jumailimap@gmail.com",
+		header = get_header(current_profile->emailAddress,
 				(char*)gtk_entry_get_text(entry_to),
-				"User Name",
+				current_profile->fullName,
 				(char*)gtk_entry_get_text(entry_subject),
 				data->response_reference->message_id,
 				data->response_reference->references == NULL ? data->response_reference->in_reply_to : data->response_reference->references,
 						id); //Generate the header
 	} else {
-		header = get_header("jumailimap@gmail.com", (char*)gtk_entry_get_text(entry_to), "User Name", (char*)gtk_entry_get_text(entry_subject), NULL, NULL, id); //Generate the header
+		header = get_header(current_profile->emailAddress, (char*)gtk_entry_get_text(entry_to), current_profile->fullName, (char*)gtk_entry_get_text(entry_subject), NULL, NULL, id); //Generate the header
 	}
 	if(header == NULL) {
 		fprintf(stderr, "An error occured while creating the email header.\n");
@@ -211,7 +213,7 @@ void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data) {
 		return;
 	}
 
-	status = send_mail_ssl("jumailimap@gmail.com", "azerty12", (char*)gtk_entry_get_text(entry_to), "smtp.gmail.com", 1,1, (const char **)mail); //TODO Profile
+	status = send_mail_ssl(current_profile->emailAddress, current_profile->password, (char*)gtk_entry_get_text(entry_to), current_profile->sendP, !strcmp(current_profile->SslSmtp, "TRUE"), !strcmp(current_profile->TlsSmtp, "TRUE"), (const char **)mail);
 
 	free_header(header); //The header is a two dimensional array. It must be freed using this function
 	free_mail(mail); //Always free

@@ -11,6 +11,7 @@
 
 #include <gtk/gtk.h>
 #include "../mailing.h"
+#include "../profils.h"
 
 typedef struct
 {
@@ -34,6 +35,8 @@ enum Action {
 };
 
 extern enum Action action;
+
+char check_selected_profile(SGlobalData *data, char* parent_window_name);
 
 /**
  * Displays a modal confirm dialog and calls callback_confirm_response
