@@ -7,6 +7,8 @@
 #include "profils.h"
 
 linkedlist_t * listProfile = NULL;
+Profile *current_profile = NULL;
+
 // Fonction de création du fichier xml du profil
 void saveProfile(Profile * profile, char * previous_name){
 	xmlDocPtr doc = NULL;
@@ -255,7 +257,7 @@ void get_attribute(xmlNode *node, char ** ptr) {
 }
 
 // Charger tous les profils
-int loadAllProfile(){
+int loadAllProfile(char *selected_profile){
 
 	Profile * profile = NULL;
 	DIR* rep = NULL; // Création varaible dossier
@@ -290,6 +292,9 @@ int loadAllProfile(){
 		if(profile != NULL){
 			// Ajout à la liste
 			linkedlist_add(listProfile, profile);
+
+			if(strcmp(selected_profile,"$NULL") != 0 && !strcmp(profile->name, selected_profile))
+				current_profile = profile;
 		}
 		free(filename);
 	}
@@ -319,7 +324,7 @@ void freeListProfile(){
 }
 
 // Fonction de verification de l'existance du dossier
-void checkDirectoryExist(){
+void checkProfileDirectoryExist(){
 	#if defined(_WIN32)
 		DIR* dir = opendir(PROFILE_FILENAME_START);
 	#else

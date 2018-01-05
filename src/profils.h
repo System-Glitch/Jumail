@@ -11,9 +11,9 @@
 #include "LinkedList.h"
 
 #if defined(_WIN32)
-	#define PROFILE_FILENAME_START "Profils\\"
+#define PROFILE_FILENAME_START "Profils\\"
 #else
-	#define PROFILE_FILENAME_START "Profils/"
+#define PROFILE_FILENAME_START "Profils/"
 #endif
 
 #define PROFILE_FILENAME_END ".xml"
@@ -32,6 +32,8 @@ typedef struct Profile{
 
 }Profile;
 
+extern Profile *current_profile;
+
 void saveProfile(Profile *, char *);
 Profile * loadProfile(char *, Profile *, char *);
 void showProfile(Profile *);
@@ -41,7 +43,7 @@ Profile * parseFile(xmlNode *, Profile *);
 void check(FILE *);
 void freeProfile(Profile *);
 void freeListProfile();
-int loadAllProfile();
-void checkDirectoryExist();
+int loadAllProfile(char *selected_profile);
+void checkProfileDirectoryExist();
 
 #endif /* PROFILS_H_ */

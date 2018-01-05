@@ -13,12 +13,7 @@
 #include "LinkedList.h"
 #include "profils.h"
 
-#if defined(_WIN32)
-	#define CONFIG_FOLDER "Config\\"
-#else
-	#define CONFIG_FOLDER "Config/"
-#endif
-#define PATH "Config/config.xml"
+#define PATH "config.xml"
 
 void updateConfig(Profile *);
 void checkDirectoryExistConfig();

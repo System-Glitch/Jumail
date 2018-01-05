@@ -783,6 +783,7 @@ Louis LAURENT</property>
                                     <property name="margin_bottom">5</property>
                                     <property name="xalign">0</property>
                                     <property name="draw_indicator">True</property>
+                                    <signal name="toggled" handler="callback_profile_setting_checked" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -830,6 +831,7 @@ Louis LAURENT</property>
                                     <property name="margin_bottom">5</property>
                                     <property name="xalign">0</property>
                                     <property name="draw_indicator">True</property>
+                                    <signal name="toggled" handler="callback_profile_setting_checked" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -849,6 +851,7 @@ Louis LAURENT</property>
                                     <property name="margin_bottom">5</property>
                                     <property name="xalign">0</property>
                                     <property name="draw_indicator">True</property>
+                                    <signal name="toggled" handler="callback_profile_setting_checked" swapped="no"/>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>

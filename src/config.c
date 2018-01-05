@@ -12,7 +12,6 @@ void updateConfig(Profile * profile){
 	xmlDocPtr doc = NULL;
 	xmlNodePtr root_node = NULL, node = NULL;
 
-	checkDirectoryExistConfig();
 	// Données
 	doc = xmlNewDoc(BAD_CAST "1.0");
 	root_node = xmlNewNode(NULL, BAD_CAST "Config");
@@ -23,7 +22,7 @@ void updateConfig(Profile * profile){
 	xmlNewProp(node, BAD_CAST "Value", BAD_CAST (profile)->name);
 
 	// Création d'un fichier ou affichage dans la console
-	xmlSaveFormatFileEnc("Config/config.xml", doc, "UTF-8", 1);
+	xmlSaveFormatFileEnc("config.xml", doc, "UTF-8", 1);
 
 	// Libération du document
 	xmlFreeDoc(doc);
@@ -70,31 +69,50 @@ char * loadConfig(){
 	int cpt = 0;
 	char * filename = NULL;
 
-	doc = xmlReadFile(PATH, NULL, 0);
-	if (doc == NULL){
-		printf("error: could not parse file %s\n", PATH);
-		return NULL;
-
-	}else{
-
-		// Get the root element node
-		root_element = xmlDocGetRootElement(doc);
-
-		// Récupération des données
-		filename = parseFileConfig(root_element, &cpt);
-		if(filename  == NULL) {
-			printf("Erreur retour filename ! \n");
-			xmlFreeDoc(doc);
+	if( access( PATH, F_OK ) != -1 ) {
+		doc = xmlReadFile(PATH, NULL, 0);
+		if (doc == NULL){
+			printf("error: could not parse file %s\n", PATH);
 			return NULL;
+
+		}else{
+
+			// Get the root element node
+			root_element = xmlDocGetRootElement(doc);
+
+			// Récupération des données
+			filename = parseFileConfig(root_element, &cpt);
+			if(filename  == NULL) {
+				printf("Erreur retour filename ! \n");
+				xmlFreeDoc(doc);
+				return NULL;
+			}
+
+			// Libération du document
+			xmlFreeDoc(doc);
+			return filename;
 		}
 
-		// Libération du document
-		xmlFreeDoc(doc);
+		// Libération de la mémoire des fonctions
+		xmlCleanupParser();
+	} else {
+		fputs("Config file not found. Creating a new one\n", stdout);
+		Profile *profile = initProfile();
+		if(profile == NULL) return NULL;
+		profile->name = "$NULL";
+		updateConfig(profile);
+
+		free(profile);
+
+		filename = malloc(6);
+		if(filename == NULL) {
+			fputs("Not enough memory.\n", stderr);
+			return NULL;
+		}
+		strcpy(filename, "$NULL");
 		return filename;
 	}
 
-	// Libération de la mémoire des fonctions
-	xmlCleanupParser();
 }
 
 char * parseFileConfig(xmlNode * a_node, int * cpt){
@@ -131,33 +149,6 @@ char * parseFileConfig(xmlNode * a_node, int * cpt){
 		}
 	}
 	return NULL;
-}
-
-void checkDirectoryExistConfig(){
-#if defined(_WIN32)
-	DIR* dir = opendir(CONFIG_FOLDER);
-#else
-	DIR* dir = opendir(CONFIG_FOLDER);
-#endif
-
-	if (dir){
-		// Si oui
-		closedir(dir);
-
-	}else if (ENOENT == errno){
-		// Sinon
-#if defined(_WIN32)
-		_		mkdir(CONFIG_FOLDER);
-#else
-		mkdir(CONFIG_FOLDER, 0700);
-#endif
-
-	}else{
-		// Erreur
-		printf("Erreur à l'ouverture/creation du dossier Profils ! \n");
-		exit(EXIT_FAILURE);
-
-	}
 }
 
 

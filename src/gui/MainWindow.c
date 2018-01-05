@@ -10,6 +10,7 @@
 #include "SettingsWindow.h"
 #include "../mailing.h"
 #include "../profils.h"
+#include "../config.h"
 
 /**
  * Initializes the main window
@@ -61,9 +62,16 @@ void callback_settings(GtkMenuItem *menuitem, gpointer user_data) {
 static int init_app(int *argc, char*** argv) {
 	GtkApplication *app;
 	int status;
+	char *selected_profile;
+
+	fputs("Loading global config...\n", stdout);
+	checkProfileDirectoryExist();
+	selected_profile = loadConfig();
+	if(selected_profile == NULL) return -1;
 
 	fputs("Loading profiles...\n", stdout);
-	loadAllProfile(); //Loading profiles
+	loadAllProfile(selected_profile); //Loading profiles
+	free(selected_profile);
 
 	//Loading GUI
 	fputs("Loading GUI...\n", stdout);

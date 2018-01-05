@@ -7,6 +7,7 @@
  */
 #include "SettingsWindow.h"
 #include "../profils.h"
+#include "../config.h"
 
 static gboolean clear_profile_selection_tree_view(GtkTreeModel *model, GtkTreePath  *path, GtkTreeIter *iter, gpointer user_data) {
 	gtk_list_store_set(GTK_LIST_STORE(model), iter, 0, FALSE, -1);
@@ -45,14 +46,14 @@ static void settings_window_fill_entries(SGlobalData *data, Profile *profile) {
 	settings_window_fill_entry(data, "ProfileEntryReceive", profile->receiveP);
 	settings_window_fill_entry(data, "ProfileEntrySend", profile->sendP);
 
-	/*check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckSSLReceive"));
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), !strcmp(profile->ssl_imap_enabled, "TRUE"));
+	check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckSSLReceive"));
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), !strcmp(profile->SslImap, "TRUE"));
 
 	check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckSSLSend"));
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), !strcmp(profile->ssl_smtp_enabled, "TRUE"));
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), !strcmp(profile->SslSmtp, "TRUE"));
 
 	check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckTLSSend"));
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), !strcmp(profile->tls_smtp_enabled, "TRUE"));*/
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), !strcmp(profile->TlsSmtp, "TRUE"));
 
 }
 
@@ -99,7 +100,24 @@ gboolean callback_settings_entry_lose_focus(GtkWidget *widget, GdkEvent *event, 
 	else if(widget == GTK_WIDGET(gtk_builder_get_object (data->builder, "ProfileEntrySend")))
 		edit_string(&profile->sendP, string, data);
 
+	saveProfile(profile,profile->name);
 	return FALSE;
+}
+
+void callback_profile_setting_checked(GtkToggleButton *togglebutton, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	Profile *profile;
+
+	profile = (Profile*)linkedlist_get(listProfile, data->selected_profile_index);
+
+	if(togglebutton == GTK_TOGGLE_BUTTON(gtk_builder_get_object (data->builder, "ProfileCheckSSLReceive")))
+		edit_string(&profile->SslImap, gtk_toggle_button_get_active(togglebutton) ? "TRUE" : "FALSE", data);
+	else if(togglebutton == GTK_TOGGLE_BUTTON(gtk_builder_get_object (data->builder, "ProfileCheckSSLSend")))
+		edit_string(&profile->SslSmtp, gtk_toggle_button_get_active(togglebutton) ? "TRUE" : "FALSE", data);
+	else if(togglebutton == GTK_TOGGLE_BUTTON(gtk_builder_get_object (data->builder, "ProfileCheckTLSSend")))
+		edit_string(&profile->TlsSmtp, gtk_toggle_button_get_active(togglebutton) ? "TRUE" : "FALSE", data);
+
+	saveProfile(profile,profile->name);
 }
 
 //Update the profile name in the list
@@ -134,7 +152,7 @@ void callback_profile_name_changed(GtkEditable *editable, gpointer user_data) {
 
 		strcpy(previous_name, profile->name);
 		strcpy(profile->name, string);
-		//saveProfile(profile,previous_name);
+		saveProfile(profile,previous_name);
 		free(previous_name);
 
 		gtk_list_store_set (GTK_LIST_STORE(model), &iter, 1, string, -1);
@@ -166,11 +184,18 @@ void callback_profile_toggle(GtkCellRendererToggle *cell_renderer, gchar *path, 
 	GtkTreePath *tree_path;
 	gint *i;
 	GtkTreeIter iter;
+	Profile *profile;
 
 	tree_view = GTK_TREE_VIEW (gtk_builder_get_object (data->builder, "TreeViewProfiles"));
 	model = GTK_LIST_STORE(gtk_tree_view_get_model(tree_view));
 	tree_path = gtk_tree_path_new_from_string(path);
 	i = gtk_tree_path_get_indices (tree_path);
+
+	profile = linkedlist_get(listProfile, *i);
+	if(profile == NULL) {
+		window_show_error("Une erreur est survenue.\nProfil sélectionné introuvable.", data, "SettingsWindow");
+		return;
+	}
 
 	//Clear all selection
 	gtk_tree_model_foreach (GTK_TREE_MODEL(model), clear_profile_selection_tree_view, NULL);
@@ -180,7 +205,10 @@ void callback_profile_toggle(GtkCellRendererToggle *cell_renderer, gchar *path, 
 	gtk_list_store_set(model, &iter, 0, TRUE, -1);
 
 	settings_window_set_all_fields_active(data, TRUE);
-	//set_active_profile(i);
+
+	//Change active profile
+	current_profile = profile;
+	updateConfig(profile);
 
 }
 
@@ -221,14 +249,14 @@ void init_settings_window(SGlobalData *data) {
 		node_t * current = listProfile->head;
 		while(current != NULL){
 			gtk_list_store_append(model, &iter);
-			gtk_list_store_set (model, &iter, 0, FALSE, 1, ((Profile*)current->val)->name, -1);
+			gtk_list_store_set (model, &iter, 0, (Profile*)current->val == current_profile, 1, ((Profile*)current->val)->name, -1);
+
 			current = current->next;
 		}
 		settings_window_fill_entries(data, (Profile*)listProfile->head->val);
 		data->selected_profile_index = 0;
 	}
 
-	//TODO check selected profile
 	settings_window_set_all_fields_active(data, listProfile->length);
 }
 
