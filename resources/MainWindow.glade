@@ -592,7 +592,7 @@ Louis LAURENT</property>
   </object>
   <object class="GtkDialog" id="SettingsWindow">
     <property name="width_request">500</property>
-    <property name="height_request">250</property>
+    <property name="height_request">280</property>
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Préférences</property>
     <property name="icon_name">preferences-system</property>
@@ -612,7 +612,19 @@ Louis LAURENT</property>
               <placeholder/>
             </child>
             <child>
-              <placeholder/>
+              <object class="GtkButton" id="SettingsButtonOk">
+                <property name="label">gtk-apply</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+                <signal name="clicked" handler="callback_settings_window_close" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
             </child>
           </object>
           <packing>
@@ -643,6 +655,7 @@ Louis LAURENT</property>
                         <property name="headers_visible">False</property>
                         <property name="search_column">1</property>
                         <property name="activate_on_single_click">True</property>
+                        <signal name="row-activated" handler="callback_profile_selected" swapped="no"/>
                         <child internal-child="selection">
                           <object class="GtkTreeSelection" id="treeview-selection6"/>
                         </child>
@@ -670,6 +683,7 @@ Louis LAURENT</property>
                               <object class="GtkEntry" id="ProfileEntryName">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
+                                <property name="tooltip_text" translatable="yes">Nom du profil</property>
                                 <property name="margin_left">5</property>
                                 <property name="margin_right">5</property>
                                 <property name="margin_top">5</property>
@@ -685,6 +699,7 @@ Louis LAURENT</property>
                               <object class="GtkEntry" id="ProfileEntryAddress">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
+                                <property name="tooltip_text" translatable="yes">Adresse email</property>
                                 <property name="margin_left">5</property>
                                 <property name="margin_right">5</property>
                                 <property name="margin_top">5</property>
@@ -700,6 +715,7 @@ Louis LAURENT</property>
                               <object class="GtkEntry" id="ProfileEntryPassword">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
+                                <property name="tooltip_text" translatable="yes">Mot de passe</property>
                                 <property name="margin_left">5</property>
                                 <property name="margin_right">5</property>
                                 <property name="margin_top">5</property>
@@ -717,6 +733,7 @@ Louis LAURENT</property>
                               <object class="GtkEntry" id="ProfileEntryFullName">
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
+                                <property name="tooltip_text" translatable="yes">Nom complet</property>
                                 <property name="margin_left">5</property>
                                 <property name="margin_right">5</property>
                                 <property name="margin_top">5</property>
@@ -736,6 +753,7 @@ Louis LAURENT</property>
                                   <object class="GtkEntry" id="ProfileEntryReceive">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">Serveur de réception (IMAP)</property>
                                     <property name="margin_left">5</property>
                                     <property name="margin_right">5</property>
                                     <property name="margin_top">5</property>
@@ -781,11 +799,12 @@ Louis LAURENT</property>
                                   <object class="GtkEntry" id="ProfileEntrySend">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
+                                    <property name="tooltip_text" translatable="yes">Serveur d'envoi (SMTP)</property>
                                     <property name="margin_left">5</property>
                                     <property name="margin_right">5</property>
                                     <property name="margin_top">5</property>
                                     <property name="margin_bottom">5</property>
-                                    <property name="placeholder_text" translatable="yes">Serveur d'envoie (Ex: smtp.gmail.com)</property>
+                                    <property name="placeholder_text" translatable="yes">Serveur d'envoi (Ex: smtp.gmail.com)</property>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>

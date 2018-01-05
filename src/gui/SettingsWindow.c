@@ -13,6 +13,69 @@ static gboolean clear_profile_selection_tree_view(GtkTreeModel *model, GtkTreePa
 	return FALSE;
 }
 
+static void settings_window_set_field_active(SGlobalData *data, const char * name, gboolean active) {
+	GtkWidget *widget = GTK_WIDGET (gtk_builder_get_object (data->builder, name));
+	gtk_widget_set_sensitive(widget, active);
+}
+
+static void settings_window_set_all_fields_active(SGlobalData *data, gboolean active) {
+	settings_window_set_field_active(data, "ProfileEntryName", active);
+	settings_window_set_field_active(data, "ProfileEntryAddress", active);
+	settings_window_set_field_active(data, "ProfileEntryPassword", active);
+	settings_window_set_field_active(data, "ProfileEntryFullName", active);
+	settings_window_set_field_active(data, "ProfileEntryReceive", active);
+	settings_window_set_field_active(data, "ProfileCheckSSLReceive", active);
+	settings_window_set_field_active(data, "ProfileEntrySend", active);
+	settings_window_set_field_active(data, "ProfileCheckSSLSend", active);
+	settings_window_set_field_active(data, "ProfileCheckTLSSend", active);
+}
+
+static void settings_window_fill_entry(SGlobalData *data, const char *entry_name, char *text) {
+	GtkEntry *widget = GTK_ENTRY (gtk_builder_get_object (data->builder, entry_name));
+	gtk_entry_set_text(widget, text == NULL ? "" : text);
+}
+
+static void settings_window_fill_entries(SGlobalData *data, Profile *profile) {
+	GtkCheckButton *check;
+
+	settings_window_fill_entry(data, "ProfileEntryName", profile->nameOfProfile);
+	settings_window_fill_entry(data, "ProfileEntryAddress", profile->userName);
+	settings_window_fill_entry(data, "ProfileEntryPassword", profile->password);
+	settings_window_fill_entry(data, "ProfileEntryFullName", profile->fullName);
+	settings_window_fill_entry(data, "ProfileEntryReceive", profile->receiveP);
+	settings_window_fill_entry(data, "ProfileEntrySend", profile->sendP);
+
+	/*check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckSSLReceive"));
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), profile->ssl_imap_enabled);
+
+	check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckSSLSend"));
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), profile->ssl_smtp_enabled);
+
+	check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckTLSSend"));
+	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), profile->tls_smtp_enabled);*/
+
+}
+
+void callback_profile_name_changed(GtkEditable *editable, gpointer user_data) {
+	//TODO
+}
+
+void callback_profile_selected(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data) {
+	gint *i;
+	Profile *profile;
+	SGlobalData *data = (SGlobalData*) user_data;
+
+	i = gtk_tree_path_get_indices (path);
+	profile = (Profile*)linkedlist_get(listProfile, *i);
+	if(profile == NULL) {
+		window_show_error("Une erreur est survenue.\nLe profil sélectionné n'existe pas.", data, "SettingsWindow");
+	} else {
+		settings_window_fill_entries(data, profile);
+		settings_window_set_all_fields_active(data, TRUE);
+	}
+
+}
+
 void callback_profile_toggle(GtkCellRendererToggle *cell_renderer, gchar *path, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
 	GtkListStore *model;
@@ -32,8 +95,10 @@ void callback_profile_toggle(GtkCellRendererToggle *cell_renderer, gchar *path, 
 	//Set the selected one to "activated"
 	gtk_tree_model_get_iter(GTK_TREE_MODEL(model), &iter, tree_path);
 	gtk_list_store_set(model, &iter, 0, TRUE, -1);
-	//printf("%d\n", *i);
-	g_free(i);
+
+	settings_window_set_all_fields_active(data, TRUE);
+	//set_active_profile(i);
+
 }
 
 void init_settings_window(SGlobalData *data) {
@@ -76,7 +141,11 @@ void init_settings_window(SGlobalData *data) {
 			gtk_list_store_set (model, &iter, 0, FALSE, 1, ((Profile*)current->val)->nameOfProfile, -1);
 			current = current->next;
 		}
+		settings_window_fill_entries(data, (Profile*)listProfile->head->val);
 	}
+
+	//TODO check selected profile
+	settings_window_set_all_fields_active(data, listProfile->length);
 }
 
 void open_settings_window(SGlobalData *data) {
@@ -87,4 +156,12 @@ void open_settings_window(SGlobalData *data) {
 	if(!gtk_widget_get_visible (window)) {
 		gtk_widget_show_all (window);
 	}
+}
+
+void callback_settings_window_close(GtkButton *widget, gpointer user_data) {
+	GtkWidget *window = NULL;
+	SGlobalData *data = (SGlobalData*) user_data;
+
+	window =  GTK_WIDGET (gtk_builder_get_object (data->builder, "SettingsWindow"));
+	gtk_widget_hide (window);
 }

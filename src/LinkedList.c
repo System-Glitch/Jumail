@@ -96,6 +96,7 @@ void *linkedlist_get(linkedlist_t * list, int index) {
  * Returns the node at the given index
  */
 node_t * linkedlist_get_node(linkedlist_t * list, int index) {
+	if(index >= list->length || index < 0) return NULL;
 	node_t * current = list->head;
 	for(int i = 1; i <= index && current != NULL ; i++) {
 		current = current->next;
