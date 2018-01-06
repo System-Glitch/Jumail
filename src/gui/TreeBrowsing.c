@@ -78,7 +78,7 @@ int tree_browsing_refresh(SGlobalData *data) {
 		return 0;
 	}
 
-	StringArray *list = ssl_list(current_profile->emailAddress, current_profile->password, current_profile->receiveP, !strcmp(current_profile->SslImap, "TRUE"));
+	StringArray *list = ssl_list(current_profile->emailAddress, current_profile->password, current_profile->receiveP, strequals(current_profile->SslImap, "TRUE"));
 
 	if(list == NULL) {
 		window_show_error("Impossible de charger les dossiers existants.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
@@ -163,13 +163,13 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 	gtk_list_store_clear(model);
 
 	if(folder != NULL) {
-		struct ParsedSearch *search = ssl_search_all(current_profile->emailAddress, current_profile->password, current_profile->receiveP, !strcmp(current_profile->SslImap, "TRUE"), folder);
+		struct ParsedSearch *search = ssl_search_all(current_profile->emailAddress, current_profile->password, current_profile->receiveP, strequals(current_profile->SslImap, "TRUE"), folder);
 		if(search == NULL) {
 			window_show_error("Impossible de charger le contenu du dossier.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 			return 1;
 		}
 
-		if(ssl_load_mail_headers(current_profile->emailAddress, current_profile->password, current_profile->receiveP, folder, !strcmp(current_profile->SslImap, "TRUE"), search)) {
+		if(ssl_load_mail_headers(current_profile->emailAddress, current_profile->password, current_profile->receiveP, folder, strequals(current_profile->SslImap, "TRUE"), search)) {
 			current = loaded_mails->head;
 			while(current != NULL) {
 				mail = current->val;
@@ -247,7 +247,7 @@ static void mail_set_seen(SGlobalData* data, gboolean seen) {
 	if(i >= 0) {
 
 		mail = linkedlist_get(loaded_mails, i);
-		if(ssl_see_mail(current_profile->emailAddress, current_profile->password, current_profile->receiveP, string, mail->message_id, !strcmp(current_profile->SslImap, "TRUE"), seen) != 0) {
+		if(ssl_see_mail(current_profile->emailAddress, current_profile->password, current_profile->receiveP, string, mail->message_id, strequals(current_profile->SslImap, "TRUE"), seen) != 0) {
 			window_show_error("Impossible de changer le status du message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 		} else {
 			if(!seen) {
@@ -390,7 +390,7 @@ void callback_create_folder_confirm(GtkButton *widget, gpointer user_data) {
 	model = GTK_TREE_STORE(gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view)));
 	foldername = gtk_entry_get_text(GTK_ENTRY(entry));
 
-	status = ssl_create_folder(current_profile->emailAddress, current_profile->password, current_profile->receiveP, (char*)foldername, !strcmp(current_profile->SslImap, "TRUE"));
+	status = ssl_create_folder(current_profile->emailAddress, current_profile->password, current_profile->receiveP, (char*)foldername, strequals(current_profile->SslImap, "TRUE"));
 
 	gtk_widget_hide(dialog);
 

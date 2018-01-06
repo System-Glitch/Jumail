@@ -13,7 +13,12 @@
 
 enum Action action = NONE;
 
-char check_selected_profile(SGlobalData *data, char* parent_window_name) {
+char strequals(char* str, char* str2) {
+	if(str == NULL || str2 == NULL) return 0;
+	return !strcmp(str,str2);
+}
+
+char check_selected_profile() {
 	return current_profile != NULL;
 }
 

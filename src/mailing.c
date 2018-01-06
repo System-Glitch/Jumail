@@ -325,6 +325,11 @@ int send_mail_ssl(char * username, char * password, char * to, char * domain, ch
 	struct upload_status upload_ctx;
 	char * address;
 
+	if(username == NULL || password == NULL || domain == NULL || mail == NULL) {
+		fprintf(stderr, "null pointers given for send_mail_ssl.\n");
+		return -1;
+	}
+
 	address = generate_address(domain, ssl ? "smtps" : "smtp");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating SMTP address from domain.\n");
@@ -520,6 +525,11 @@ struct ParsedSearch *ssl_search_all(char * username, char * password, char * dom
 	char * full_address;
 	char * mailbox_encoded;
 
+	if(username == NULL || password == NULL || domain == NULL) {
+		fprintf(stderr, "null pointers given for ssl_search_all.\n");
+		return NULL;
+	}
+
 	address = generate_address(domain, ssl ? "imaps" : "imap");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
@@ -620,6 +630,11 @@ Email *ssl_get_mail(char * username, char * password, char * domain, char * mail
 	char * full_request;
 	char uidStr[12];
 
+	if(username == NULL || password == NULL || domain == NULL) {
+		fprintf(stderr, "null pointers given for ssl_get_mail.\n");
+		return NULL;
+	}
+
 	address = generate_address(domain, ssl ? "imaps" : "imap");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
@@ -627,6 +642,7 @@ Email *ssl_get_mail(char * username, char * password, char * domain, char * mail
 	}
 	if(mailbox == NULL) {
 		fprintf(stderr, "mailbox is not nullable.\n");
+		free(address);
 		return NULL;
 	}
 
@@ -636,11 +652,13 @@ Email *ssl_get_mail(char * username, char * password, char * domain, char * mail
 	curl = curl_easy_init();
 	if(!curl) {
 		fprintf(stderr, "Error on creating curl.\n");
+		free(address);
 		return NULL;
 	}
 	mailbox_encoded = url_encode(curl, mailbox);
 	if(mailbox_encoded == NULL) {
 		fprintf(stderr, "Error on URL encoding.\n");
+		free(address);
 		curl_easy_cleanup(curl);
 		return NULL;
 	}
@@ -649,6 +667,7 @@ Email *ssl_get_mail(char * username, char * password, char * domain, char * mail
 	full_address = malloc(strlen(address)+mailboxlen+uidstrlen+6+1);
 	if(full_address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		free(address);
 		curl_easy_cleanup(curl);
 		return NULL;
 	}
@@ -656,6 +675,7 @@ Email *ssl_get_mail(char * username, char * password, char * domain, char * mail
 	full_request = malloc(6+8+uidstrlen+1); //6 for "FETCH ", +8 for " (FLAGS)"
 	if(full_request == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		free(address);
 		curl_easy_cleanup(curl);
 		return NULL;
 	}
@@ -766,6 +786,11 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 	char uidStr[12];
 	int uid;
 
+	if(username == NULL || password == NULL || domain == NULL || message_id == NULL) {
+		fprintf(stderr, "null pointers given for ssl_mail_request.\n");
+		return -1;
+	}
+
 	address = generate_address(domain, ssl ? "imaps" : "imap");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
@@ -773,18 +798,21 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 	}
 	if(mailbox == NULL) {
 		fprintf(stderr, "mailbox is not nullable.\n");
+		free(address);
 		return -1;
 	}
 
 	curl = curl_easy_init();
 	if(!curl) {
 		fprintf(stderr, "Error on creating curl.\n");
+		free(address);
 		return -1;
 	}
 
 	mailbox_encoded = url_encode(curl, mailbox);
 	if(mailbox_encoded == NULL) {
 		fprintf(stderr, "Error on URL encoding.\n");
+		free(address);
 		curl_easy_cleanup(curl);
 		return -1;
 	}
@@ -793,6 +821,7 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 	full_address = malloc(strlen(address)+mailboxlen+1);
 	if(full_address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		free(address);
 		free(mailbox_encoded);
 		curl_easy_cleanup(curl);
 		return -1;
@@ -1098,6 +1127,11 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 	char uidStr[12];
 	int uid;
 
+	if(username == NULL || password == NULL || domain == NULL || mailbox_dst == NULL) {
+		fprintf(stderr, "null pointers given for ssl_move_mail.\n");
+		return -1;
+	}
+
 	address = generate_address(domain, ssl ? "imaps": "imap");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
@@ -1105,6 +1139,7 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 	}
 	if(mailbox_src == NULL) {
 		fprintf(stderr, "mailbox is not nullable.\n");
+		free(address);
 		return -1;
 	}
 
@@ -1117,6 +1152,7 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 	mailbox_encoded_src = url_encode(curl, mailbox_src);
 	if(mailbox_encoded_src == NULL) {
 		fprintf(stderr, "Error on URL encoding.\n");
+		free(address);
 		return -1;
 	}
 	mailboxlen_src = strlen(mailbox_encoded_src);
@@ -1125,6 +1161,7 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 	if(full_address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
 		free(mailbox_encoded_src);
+		free(address);
 		return -1;
 	}
 
@@ -1269,6 +1306,11 @@ int ssl_search_by_id_with_new_connection(char * username, char * password, char 
 	char * mailbox_encoded;
 	int result = -1;
 
+	if(username == NULL || password == NULL || domain == NULL || message_id == NULL) {
+		fprintf(stderr, "null pointers given for ssl_search_by_id_with_new_connection.\n");
+		return -1;
+	}
+
 	address = generate_address(domain, ssl ? "imaps" : "imap");
 	if(address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
@@ -1276,6 +1318,7 @@ int ssl_search_by_id_with_new_connection(char * username, char * password, char 
 	}
 	if(mailbox == NULL) {
 		fprintf(stderr, "mailbox is not nullable.\n");
+		free(address);
 		return -1;
 	}
 
@@ -1332,6 +1375,11 @@ int ssl_search_by_id(CURL *curl, char *message_id) {
 	char *full_request;
 	int message_id_len = 0;
 	int uid = -1;
+
+	if(message_id == NULL) {
+		fprintf(stderr, "message_id is not nullable.\n");
+		return -1;
+	}
 
 	message_id_len = strlen(message_id);
 
@@ -1400,17 +1448,20 @@ int ssl_load_mail_headers(char * username, char * password, char * domain, char 
 	}
 	if(mailbox == NULL) {
 		fprintf(stderr, "mailbox is not nullable.\n");
+		free(address);
 		return 0;
 	}
 
 	curl = curl_easy_init();
 	if(!curl) {
 		fprintf(stderr, "Error on creating curl.\n");
+		free(address);
 		return 0;
 	}
 	mailbox_encoded = url_encode(curl, mailbox);
 	if(mailbox_encoded == NULL) {
 		fprintf(stderr, "Error on URL encoding.\n");
+		free(address);
 		curl_easy_cleanup(curl);
 		return 0;
 	}
@@ -1419,6 +1470,7 @@ int ssl_load_mail_headers(char * username, char * password, char * domain, char 
 	full_address = malloc(strlen(address)+mailboxlen+1);
 	if(full_address == NULL) {
 		fprintf(stderr, "Error while creating IMAP address from domain.\n");
+		free(address);
 		curl_easy_cleanup(curl);
 		return 0;
 	}

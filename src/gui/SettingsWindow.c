@@ -67,7 +67,7 @@ void settings_window_fill_entries(SGlobalData *data, Profile *profile) {
 
 }
 
-static gboolean check_if_name_exists(const char* name, Profile *exclusion) {
+static gboolean check_if_name_exists(const char* name) {
 	Profile *profile;
 	if(listProfile->length){
 		node_t * current = listProfile->head;
@@ -152,7 +152,7 @@ void callback_profile_name_changed(GtkEditable *editable, gpointer user_data) {
 	string = gtk_entry_buffer_get_text(gtk_entry_get_buffer(entry));
 	gtk_tree_selection_get_selected (selection, &model, &iter);
 
-	if (strlen(string) > 0 && !check_if_name_exists(string, profile)) {
+	if (strlen(string) > 0 && !check_if_name_exists(string)) {
 
 		profile = (Profile*)linkedlist_get(listProfile, data->selected_profile_index);
 
@@ -334,7 +334,67 @@ void callback_profile_context_menu(GtkWidget *tree_view, GdkEventButton *event, 
 }
 
 void callback_profile_create(GtkMenuItem *menuitem, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	char *name = NULL;
+	int i = 0;
+	char iStr[12];
+	gboolean ok = FALSE;
+	int istrlen = 0;
 
+	GtkTreeIter iter;
+	GtkListStore *model;
+	GtkTreeView *tree_view;
+
+	tree_view = GTK_TREE_VIEW (gtk_builder_get_object (data->builder, "TreeViewProfiles"));
+	model = GTK_LIST_STORE(gtk_tree_view_get_model(tree_view));
+
+	while(name == NULL) {
+
+		if(i > 0) {
+			sprintf(iStr, "%d", i);
+			istrlen = strlen(iStr);
+		}
+
+		name = malloc(14 + (istrlen > 0 ? istrlen+3 : 0)); //"Nom du profil"
+		if(name == NULL) {
+			window_show_error("Une erreur est survenue.\nMémoire insuffisante", data, "SettingsWindow");
+			return;
+		}
+		strcpy(name, "Nom du profil");
+		if(istrlen > 0) {
+			strcat(name, " (");
+			strcat(name, iStr);
+			strcat(name, ")");
+		}
+		i++;
+
+		ok = !check_if_name_exists(name);
+
+		if(ok) {
+			//Name found, exit the loop
+			break;
+		} else {
+			free(name);
+			name = NULL;
+		}
+	}
+
+	if(name == NULL) {
+		window_show_error("Une erreur est survenue.\nImpossible de trouver un nom disponible.", data, "SettingsWindow");
+	} else {
+		//Name found, create profile
+		Profile *profile = initProfile();
+		if(profile == NULL) {
+			window_show_error("Une erreur est survenue.\nMémoire insuffisante", data, "SettingsWindow");
+			return;
+		}
+		profile->name = name;
+
+		linkedlist_add(listProfile,profile);
+		saveProfile(profile, NULL);
+		gtk_list_store_append(model, &iter);
+		gtk_list_store_set (model, &iter, 0, FALSE, 1, profile->name, -1);
+	}
 }
 
 void callback_profile_delete(GtkMenuItem *menuitem, gpointer user_data) {

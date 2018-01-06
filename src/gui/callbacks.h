@@ -37,7 +37,8 @@ enum Action {
 
 extern enum Action action;
 
-char check_selected_profile(SGlobalData *data, char* parent_window_name);
+char strequals(char* str, char* str2);
+char check_selected_profile();
 
 /**
  * Displays a modal confirm dialog and calls callback_confirm_response

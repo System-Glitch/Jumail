@@ -29,7 +29,7 @@ int open_mail_window(Email *mail, char* mailbox, SGlobalData *data) {
 
 	if(!check_selected_profile(data, "MainWindow")) return 0;
 
-	uid = ssl_search_by_id_with_new_connection(current_profile->emailAddress, current_profile->password, current_profile->receiveP, mailbox, mail->message_id, !strcmp(current_profile->SslImap, "TRUE"));
+	uid = ssl_search_by_id_with_new_connection(current_profile->emailAddress, current_profile->password, current_profile->receiveP, mailbox, mail->message_id, strequals(current_profile->SslImap, "TRUE"));
 	if(uid == -1) {
 		window_show_error("Impossible de charger le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 		return 0;
@@ -87,6 +87,11 @@ void open_compose_mail_window(SGlobalData *data) {
 	GtkWidget *window = NULL;
 	GtkWidget *content = NULL;
 	GtkWidget *button;
+
+	if(!check_selected_profile()) {
+		window_show_info("Vous devez sélectionner un profil avant de\npouvoir envoyer des messages.", data, "MainWindow");
+		return;
+	}
 
 	button = GTK_WIDGET(gtk_builder_get_object (data->builder, "MailComposeSend"));
 	window =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailComposeWindow"));
@@ -213,7 +218,7 @@ void callback_compose_mail_send(GtkToolButton *widget, gpointer user_data) {
 		return;
 	}
 
-	status = send_mail_ssl(current_profile->emailAddress, current_profile->password, (char*)gtk_entry_get_text(entry_to), current_profile->sendP, !strcmp(current_profile->SslSmtp, "TRUE"), !strcmp(current_profile->TlsSmtp, "TRUE"), (const char **)mail);
+	status = send_mail_ssl(current_profile->emailAddress, current_profile->password, (char*)gtk_entry_get_text(entry_to), current_profile->sendP, strequals(current_profile->SslSmtp, "TRUE"), strequals(current_profile->TlsSmtp, "TRUE"), (const char **)mail);
 
 	free_header(header); //The header is a two dimensional array. It must be freed using this function
 	free_mail(mail); //Always free
@@ -310,6 +315,10 @@ void callback_mail_view_response(GtkButton *widget, gpointer user_data) {
 
 	if(!gtk_widget_get_visible (window)) {
 
+		if(!check_selected_profile()) {
+			window_show_info("Vous devez sélectionner un profil avant de\npouvoir envoyer des messages.", data, "MainWindow");
+			return;
+		}
 		open_compose_mail_window(data);
 		subject = malloc(strlen(data->response_reference->subject)+5);
 
