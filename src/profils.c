@@ -140,7 +140,7 @@ Profile * loadProfile(char * fileName1, Profile * profile, char * fileName2){
 
 	doc = xmlReadFile(fileName1, NULL, 0);
 	if (doc == NULL){
-		printf("error: could not parse file %s\n", fileName1);
+		printf("Invalid profile file %s. Skipping.\n", fileName1);
 		free(profile);
 		return NULL;
 
