@@ -655,6 +655,7 @@ Louis LAURENT</property>
                         <property name="headers_visible">False</property>
                         <property name="search_column">1</property>
                         <property name="activate_on_single_click">True</property>
+                        <signal name="button-press-event" handler="callback_profile_context_menu" swapped="no"/>
                         <signal name="row-activated" handler="callback_profile_selected" swapped="no"/>
                         <child internal-child="selection">
                           <object class="GtkTreeSelection" id="treeview-selection6"/>
@@ -1297,6 +1298,46 @@ Louis LAURENT</property>
             <property name="position">1</property>
           </packing>
         </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkImage" id="image1">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-delete</property>
+  </object>
+  <object class="GtkMenu" id="ContextMenuProfile">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkImageMenuItem" id="MenuItemProfileCreate">
+        <property name="label" translatable="yes">Créer un profil</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="image">image1</property>
+        <property name="use_stock">False</property>
+        <signal name="activate" handler="callback_profile_create" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="menuitem2">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="MenuItemProfileDelete">
+        <property name="label" translatable="yes">Supprimer</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="image">image2</property>
+        <property name="use_stock">False</property>
+        <signal name="activate" handler="callback_profile_delete" swapped="no"/>
       </object>
     </child>
   </object>

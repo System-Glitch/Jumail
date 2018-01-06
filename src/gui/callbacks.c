@@ -9,15 +9,12 @@
 #include "callbacks.h"
 #include "TreeBrowsing.h"
 #include "MailWindow.h"
+#include "SettingsWindow.h"
 
 enum Action action = NONE;
 
 char check_selected_profile(SGlobalData *data, char* parent_window_name) {
-	if(current_profile == NULL) {
-		window_show_error("Erreur, aucun profil sélectionné.", data, parent_window_name);
-		return 0;
-	}
-	return 1;
+	return current_profile != NULL;
 }
 
 /**
@@ -83,8 +80,12 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 	GtkListStore *list_store;
 	GtkWidget *tree_view;
 	gchar *string;
+	char *filename;
 	GtkTreeIter iter;
 	Email *mail;
+	Profile *profile;
+	int i;
+	gint *index;
 
 	if(response_id == -8) { //YES
 
@@ -104,6 +105,38 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 				browsing_refresh_folder(NULL, data);
 			}
 			break;
+		case DELETE_PROFILE:
+			tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewProfiles"));
+			tree_profile_get_selected_row(data, &string, &iter);
+			filename = malloc(strlen(PROFILE_FILENAME_START) + strlen(PROFILE_FILENAME_END) + strlen((char*)string) + 1);
+			if(filename == NULL) {
+				window_show_error("Une erreur est survenue.\nMémoire insuffisante.", data, "SettingsWindow");
+				return;
+			}
+			strcpy(filename, PROFILE_FILENAME_START);
+			strcat(filename, string);
+			strcat(filename, PROFILE_FILENAME_END);
+			if(remove(filename)) {
+				window_show_error("Erreur. Impossible de supprimer le profil.", data, "SettingsWindow");
+			} else {
+				//Remove profile from loaded profiles
+				index = gtk_tree_path_get_indices(gtk_tree_path_new_from_string (string));
+				profile = linkedlist_get(listProfile, *index);
+				if(profile == NULL) {
+					window_show_error("Une erreur est survenue.\nLe profil sélectionné n'existe pas.", data, "SettingsWindow");
+				} else {
+					freeProfile(profile);
+					linkedlist_remove_index(listProfile, *index);
+
+					//Remove profile from GUI
+					list_store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view)));
+					gtk_list_store_remove (list_store, &iter);
+					settings_window_set_all_fields_active(data, FALSE);
+					settings_window_fill_entries(data, NULL);
+				}
+			}
+			free(filename);
+			break;
 		case CREATE_FOLDER:
 		case MOVE_MAIL:
 		case MOVE_MAIL_FROM_VIEW:
@@ -114,7 +147,7 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 			if(!check_selected_profile(data, "MainWindow")) return;
 			mail_window_clear(data);
 			tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderList"));
-			int i = list_folder_get_selected_row(data, &iter);
+			i = list_folder_get_selected_row(data, &iter);
 			if(i >= 0) {
 				mail = linkedlist_get(loaded_mails, i);
 				if(ssl_delete_mail(current_profile->emailAddress, current_profile->password, current_profile->receiveP, mail->mailbox ,mail->message_id, !strcmp(current_profile->SslImap, "TRUE")) != 0) {

@@ -31,6 +31,7 @@ enum Action {
 	DELETE_MAIL_FROM_VIEW,
 	MOVE_MAIL_FROM_VIEW,
 	RESPOND_MAIL_FROM_VIEW,
+	DELETE_PROFILE,
 	MOVE_MAIL
 };
 
@@ -86,5 +87,8 @@ void callback_settings_window_close(GtkButton *widget, gpointer user_data);
 void callback_profile_selected(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data);
 void callback_profile_name_changed(GtkEditable *editable, gpointer user_data);
 void callback_profile_setting_checked(GtkToggleButton *togglebutton, gpointer user_data);
+void callback_profile_create(GtkMenuItem *menuitem, gpointer user_data);
+void callback_profile_delete(GtkMenuItem *menuitem, gpointer user_data);
+void callback_profile_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */

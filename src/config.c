@@ -18,7 +18,7 @@ void updateConfig(Profile * profile){
 	xmlDocSetRootElement(doc, root_node);
 
 	// Les données
-	node = xmlNewChild(root_node, NULL, BAD_CAST "Name", NULL);
+	node = xmlNewChild(root_node, NULL, BAD_CAST "CurrentProfile", NULL);
 	xmlNewProp(node, BAD_CAST "Value", BAD_CAST (profile)->name);
 
 	// Création d'un fichier ou affichage dans la console
@@ -83,9 +83,22 @@ char * loadConfig(){
 			// Récupération des données
 			filename = parseFileConfig(root_element, &cpt);
 			if(filename  == NULL) {
-				printf("Erreur retour filename ! \n");
+				printf("Invalid config file. Overwriting with a valid one.\n");
 				xmlFreeDoc(doc);
-				return NULL;
+				Profile *profile = initProfile();
+				if(profile == NULL) return NULL;
+				profile->name = "$NULL";
+				updateConfig(profile);
+
+				free(profile);
+
+				filename = malloc(6);
+				if(filename == NULL) {
+					fputs("Not enough memory.\n", stderr);
+					return NULL;
+				}
+				strcpy(filename, "$NULL");
+				return filename;
 			}
 
 			// Libération du document
@@ -127,7 +140,7 @@ char * parseFileConfig(xmlNode * a_node, int * cpt){
 	}
 	filename = malloc(sizeof(char) * 250);
 	if(filename == NULL){
-		printf("Erreur allocatuon filename ! \n");
+		printf("Erreur allocation filename ! \n");
 		free(profile);
 		return NULL;
 	}
@@ -140,7 +153,7 @@ char * parseFileConfig(xmlNode * a_node, int * cpt){
 				continue;
 			}
 
-			if(!strcmp((char*)cur_node->name, "Name")) {
+			if(!strcmp((char*)cur_node->name, "CurrentProfile")) {
 				get_attribute(cur_node, &profile->name);
 				strcpy(filename, profile->name);
 				free(profile);

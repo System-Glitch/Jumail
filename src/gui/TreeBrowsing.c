@@ -169,7 +169,7 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 			return 1;
 		}
 
-		if(ssl_load_mail_headers("jumailimap@gmail.com", "azerty12", "imap.gmail.com", folder, 1, search)) {
+		if(ssl_load_mail_headers(current_profile->emailAddress, current_profile->password, current_profile->receiveP, folder, !strcmp(current_profile->SslImap, "TRUE"), search)) {
 			current = loaded_mails->head;
 			while(current != NULL) {
 				mail = current->val;

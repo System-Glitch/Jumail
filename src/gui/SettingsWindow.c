@@ -20,7 +20,7 @@ static void settings_window_set_field_active(SGlobalData *data, const char * nam
 	gtk_widget_set_sensitive(widget, active);
 }
 
-static void settings_window_set_all_fields_active(SGlobalData *data, gboolean active) {
+void settings_window_set_all_fields_active(SGlobalData *data, gboolean active) {
 	settings_window_set_field_active(data, "ProfileEntryName", active);
 	settings_window_set_field_active(data, "ProfileEntryAddress", active);
 	settings_window_set_field_active(data, "ProfileEntryPassword", active);
@@ -37,24 +37,33 @@ static void settings_window_fill_entry(SGlobalData *data, const char *entry_name
 	gtk_entry_set_text(widget, text == NULL ? "" : text);
 }
 
-static void settings_window_fill_entries(SGlobalData *data, Profile *profile) {
+void settings_window_fill_entries(SGlobalData *data, Profile *profile) {
 	GtkCheckButton *check;
 
-	settings_window_fill_entry(data, "ProfileEntryName", profile->name);
-	settings_window_fill_entry(data, "ProfileEntryAddress", profile->emailAddress);
-	settings_window_fill_entry(data, "ProfileEntryPassword", profile->password);
-	settings_window_fill_entry(data, "ProfileEntryFullName", profile->fullName);
-	settings_window_fill_entry(data, "ProfileEntryReceive", profile->receiveP);
-	settings_window_fill_entry(data, "ProfileEntrySend", profile->sendP);
+	settings_window_fill_entry(data, "ProfileEntryName", profile == NULL ? NULL : profile->name);
+	settings_window_fill_entry(data, "ProfileEntryAddress", profile == NULL ? NULL : profile->emailAddress);
+	settings_window_fill_entry(data, "ProfileEntryPassword", profile == NULL ? NULL : profile->password);
+	settings_window_fill_entry(data, "ProfileEntryFullName", profile == NULL ? NULL : profile->fullName);
+	settings_window_fill_entry(data, "ProfileEntryReceive", profile == NULL ? NULL : profile->receiveP);
+	settings_window_fill_entry(data, "ProfileEntrySend", profile == NULL ? NULL : profile->sendP);
 
 	check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckSSLReceive"));
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), profile->SslImap == NULL ? 0 : !strcmp(profile->SslImap, "TRUE"));
+	if(profile == NULL)
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), FALSE);
+	else
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), profile->SslImap == NULL ? 0 : !strcmp(profile->SslImap, "TRUE"));
 
 	check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckSSLSend"));
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), profile->SslSmtp == NULL ? 0 : !strcmp(profile->SslSmtp, "TRUE"));
+	if(profile == NULL)
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), FALSE);
+	else
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), profile->SslSmtp == NULL ? 0 : !strcmp(profile->SslSmtp, "TRUE"));
 
 	check = GTK_CHECK_BUTTON (gtk_builder_get_object (data->builder, "ProfileCheckTLSSend"));
-	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), profile->TlsSmtp == NULL ? 0 : !strcmp(profile->TlsSmtp, "TRUE"));
+	if(profile == NULL)
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), FALSE);
+	else
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(check), profile->TlsSmtp == NULL ? 0 : !strcmp(profile->TlsSmtp, "TRUE"));
 
 }
 
@@ -285,4 +294,72 @@ void callback_settings_window_close(GtkButton *widget, gpointer user_data) {
 	gtk_widget_hide (window);
 
 	tree_browsing_refresh(data);
+}
+
+void callback_profile_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
+	gchar *string;
+	GtkTreeIter iter;
+	GtkWidget *menu;
+	GtkWidget *menu_item_remove;
+
+	menu = GTK_WIDGET(gtk_builder_get_object (data->builder, "ContextMenuProfile"));
+	menu_item_remove = GTK_WIDGET(gtk_builder_get_object (data->builder, "MenuItemProfileDelete"));
+
+	gtk_widget_set_sensitive(menu_item_remove, 0);
+
+	if (event->type == GDK_BUTTON_PRESS  &&  event->button == 3) {
+
+		GtkTreeSelection *selection;
+
+		selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
+
+		if (gtk_tree_selection_count_selected_rows(selection)  <= 1) {
+			GtkTreePath *path;
+
+			/* Get tree path for row that was clicked */
+			if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(tree_view),	(gint) event->x, (gint) event->y, &path, NULL, NULL, NULL)) {
+				gtk_tree_model_get_iter(model, &iter, path);
+				gtk_tree_model_get (model, &iter, 0, &string, -1);
+
+				gtk_widget_set_sensitive(menu_item_remove, 1); //Enable "Delete" button if a row is selected
+			} else {
+				gtk_tree_selection_unselect_all(selection);
+			}
+		}
+
+		gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, (event != NULL) ? event->button : 0,	gdk_event_get_time((GdkEvent*)event));
+	}
+}
+
+void callback_profile_create(GtkMenuItem *menuitem, gpointer user_data) {
+
+}
+
+void callback_profile_delete(GtkMenuItem *menuitem, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	action = DELETE_PROFILE;
+	show_confirm_dialog("Êtes-vous sûr de vouloir supprimer ce profil?\nCette action est irréversible.", data, "SettingsWindow");
+}
+
+/**
+ * Gets the selected row in the profile tree and puts the reference to the value of the row in "string"
+ */
+void tree_profile_get_selected_row(SGlobalData *data, gchar **string, GtkTreeIter *iter) {
+	GtkTreeModel *model;
+	GtkWidget *tree_view;
+	GtkTreeSelection *selection;
+
+	tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewProfiles"));
+	model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
+	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
+
+	if (gtk_tree_selection_count_selected_rows(selection)  == 1) {
+
+		/* Get selected row */
+		gtk_tree_selection_get_selected (selection, &model, iter);
+		gtk_tree_model_get (model, iter, 1, string, -1);
+
+	}
 }
