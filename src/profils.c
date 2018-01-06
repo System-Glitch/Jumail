@@ -45,7 +45,7 @@ void saveProfile(Profile * profile, char * previous_name){
 
 	// Les données
 	node = xmlNewChild(root_node, NULL, BAD_CAST "Name", NULL);
-	xmlNewProp(node, BAD_CAST "Value", BAD_CAST profile->emailAddress); //TODO check if NULL
+	xmlNewProp(node, BAD_CAST "Value", BAD_CAST profile->emailAddress);
 
 	node = xmlNewChild(root_node, NULL, BAD_CAST "Password", NULL);
 	xmlNewProp(node, BAD_CAST "Value", BAD_CAST profile->password);
