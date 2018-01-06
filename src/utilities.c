@@ -157,9 +157,12 @@ StringArray split_list(char * list) {
 	int len, index, j;
 	int outsideHeader = 0;
 
-	array.size = -1;
+	array.size = 0;
 	array.array = NULL;
 	len = strlen(list);
+
+	if(len <= 0)
+		return array;
 
 	array.array = malloc(1*sizeof(char*));
 	if(array.array == NULL) return array;

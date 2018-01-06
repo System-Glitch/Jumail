@@ -21,6 +21,9 @@ typedef struct
 	Email *response_reference;
 	int selected_mail_index;
 	int selected_profile_index;
+	int page;
+	unsigned int *size;
+	gchar *selected_folder;
 } SGlobalData;
 
 enum Action {
@@ -91,5 +94,7 @@ void callback_profile_setting_checked(GtkToggleButton *togglebutton, gpointer us
 void callback_profile_create(GtkMenuItem *menuitem, gpointer user_data);
 void callback_profile_delete(GtkMenuItem *menuitem, gpointer user_data);
 void callback_profile_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data);
+void callback_page_previous(GtkButton *widget, gpointer user_data);
+void callback_page_next(GtkButton *widget, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */

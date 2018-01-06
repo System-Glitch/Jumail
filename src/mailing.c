@@ -6,6 +6,7 @@
  *  Description : Mailing utilities
  */
 #include "mailing.h"
+#include "folders.h"
 
 linkedlist_t *loaded_mails = NULL;
 
@@ -1354,7 +1355,7 @@ int ssl_search_by_id_with_new_connection(char * username, char * password, char 
 	curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 	curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
 
-	enable_tls(curl);
+	//enable_tls(curl);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
 	curl_easy_setopt(curl, CURLOPT_URL,full_address);
 
@@ -1428,7 +1429,7 @@ void free_parsed_search(struct ParsedSearch *search) {
 /**
  * Loads the email necessary headers into the LinkedList loaded_mails. Return 1 if success, 0 otherwise.
  */
-int ssl_load_mail_headers(char * username, char * password, char * domain, char * mailbox, char ssl, struct ParsedSearch *search) {
+int ssl_load_mail_headers(char * username, char * password, char * domain, char * mailbox, char ssl, int page, unsigned int *size) {
 	Email *mail = NULL;
 	CURL *curl;
 	CURLcode res = CURLE_OK;
@@ -1439,7 +1440,12 @@ int ssl_load_mail_headers(char * username, char * password, char * domain, char 
 	char * mailbox_encoded;
 	char * full_address;
 	char * full_request;
-	char uidStr[12];
+	char * request_size;
+	char uidStr[100];
+	char *ptr = NULL;
+	char *ptr_end;
+	char *sub;
+	int start, end;
 
 	address = generate_address(domain, ssl ? "imaps" : "imap");
 	if(address == NULL) {
@@ -1480,7 +1486,6 @@ int ssl_load_mail_headers(char * username, char * password, char * domain, char 
 	strcpy(full_address, address);
 	free(address);
 	strcat(full_address, mailbox_encoded);
-	free(mailbox_encoded);
 
 	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); //Toggle full logging
 	curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
@@ -1489,7 +1494,7 @@ int ssl_load_mail_headers(char * username, char * password, char * domain, char 
 
 	curl_easy_setopt(curl, CURLOPT_URL,full_address);
 
-	enable_tls(curl);
+	//enable_tls(curl);
 
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_memory_callback);
 	curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, write_memory_callback);
@@ -1498,51 +1503,108 @@ int ssl_load_mail_headers(char * username, char * password, char * domain, char 
 	curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void *)&headers);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
 
-	for(int i = search->size-1 ; i >= 0; i--) {
+	request_size = malloc(7+mailboxlen+14);
+	if(request_size == NULL) {
+		fprintf(stderr, "Error while creating IMAP size request.\n");
+		free(mailbox_encoded);
+		curl_easy_cleanup(curl);
+		return 0;
+	}
 
-		sprintf(uidStr, "%d", search->uids[i]);
+	//Building size request
+	strcpy(request_size, "STATUS \"");
+	strcat(request_size, mailbox_encoded);
+	strcat(request_size, "\" (MESSAGES)");
+
+	free(mailbox_encoded);
+
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,  request_size);
+
+	headers.memory = malloc(1); //Initial allocation. Will be reallocated in write_memory_callback() to fit the correct size.
+	headers.size = 0;
+	chunk.memory = malloc(1);
+	chunk.size = 0;
+
+	res = curl_easy_perform(curl);
+	if(res != CURLE_OK)
+		fprintf(stderr, "curl_easy_perform() failed: %s\n",
+				curl_easy_strerror(res));
+	else {
+		*size = parse_folder_size(chunk.memory);
+
+		free(chunk.memory);
+		free(headers.memory);
+
+		start = *size - page*MAX_MAIL_PER_PAGE;
+		end = *size - (page+1)*MAX_MAIL_PER_PAGE;
+		if(end < 1) end = 1;
+
+		sprintf(uidStr, "%d:%d", start, end);
 		uidstrlen = strlen(uidStr);
 		//Request : FETCH uid (FLAGS BODY.PEEK[HEADER.FIELDS (SUBJECT DATE FROM TO MESSAGE-ID)])
 		full_request = malloc(6+67+uidstrlen+1); //6 for "FETCH ", +67 for " (FLAGS BODY.PEEK[HEADER.FIELDS (SUBJECT DATE FROM TO MESSAGE-ID)])"
 		if(full_request == NULL) {
-			fprintf(stderr, "Error while creating IMAP request from domain.\n");
-			curl_easy_cleanup(curl);
-			return 0;
-		}
-		//Building request
-		strcpy(full_request,"FETCH ");
-		strcat(full_request, uidStr);
-		strcat(full_request, " (FLAGS BODY.PEEK[HEADER.FIELDS (SUBJECT DATE FROM TO MESSAGE-ID)])");
+			fprintf(stderr, "Error while creating IMAP request.\n");
+		} else {
 
+			//Building request
+			strcpy(full_request,"FETCH ");
+			strcat(full_request, uidStr);
+			strcat(full_request, " (FLAGS BODY.PEEK[HEADER.FIELDS (SUBJECT DATE FROM TO MESSAGE-ID)])");
 
-		headers.memory = malloc(1); //Initial allocation. Will be reallocated in write_memory_callback() to fit the correct size.
-		headers.size = 0;
-		chunk.memory = malloc(1);
-		chunk.size = 0;
+			headers.memory = malloc(1); //Initial allocation. Will be reallocated in write_memory_callback() to fit the correct size.
+			headers.size = 0;
+			chunk.memory = malloc(1);
+			chunk.size = 0;
+			chunk.memory[0] = '\0';
 
-		curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,  full_request);
-		res = curl_easy_perform(curl);
+			curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,  full_request);
+			res = curl_easy_perform(curl);
 
-		/* Check for errors */
-		if(res != CURLE_OK)
-			fprintf(stderr, "curl_easy_perform() failed: %s\n",
-					curl_easy_strerror(res));
-		else {
-			mail = parse_email_headers(headers.memory, chunk.memory, mailbox);
-			if(mail == NULL) {
-				fputs("Error, invalid mail headers payload.\n", stderr);
-			} else {
-				linkedlist_add(loaded_mails, mail);
+			/* Check for errors */
+			if(res != CURLE_OK)
+				fprintf(stderr, "curl_easy_perform() failed: %s\n",
+						curl_easy_strerror(res));
+			else {
+				StringArray array = split_list(chunk.memory);
+				if(array.size > 0) {
+					ptr = strstr(headers.memory, array.array[0]);
+					for(size_t i = 0 ; i < array.size ; i++) {
+
+						//Get the part we need for a single mail
+						ptr_end = i == array.size - 1 ? ptr+strlen(ptr) : strstr(ptr, array.array[i+1]);
+						sub = malloc(ptr_end-ptr+1);
+						if(sub == NULL) {
+							fputs("Error, not enough memory.\n", stderr);
+							break;
+						} else {
+							strncpy(sub, ptr, ptr_end-ptr-2); //-2 to not take \r\n
+							sub[ptr_end-ptr-2] = '\0';
+
+							ptr += ptr_end-ptr;
+
+							mail = parse_email_headers(sub, array.array[i], mailbox);
+							if(mail == NULL) {
+								fprintf(stderr, "Error, invalid mail headers payload. (ref: %s)\n", array.array[i]);
+							} else {
+								linkedlist_push(loaded_mails, mail);
+							}
+							free(sub);
+						}
+
+					}
+				}
+
+				free_string_array(array);
+				free(chunk.memory);
+				free(headers.memory);
 			}
-
-			free(chunk.memory);
-			free(headers.memory);
+			free(full_request);
 		}
-
-		/* Always cleanup */
-
-		free(full_request);
 	}
+
+	/* Always cleanup */
+	free(request_size);
 
 	curl_easy_cleanup(curl);
 	free(full_address);

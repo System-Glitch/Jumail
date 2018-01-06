@@ -77,6 +77,8 @@ void callback_quit(GtkMenuItem *menuitem, gpointer user_data) {
 	free_email(data->response_reference);
 	if(data->response_reference != NULL)
 		free(data->response_reference);
+	if(data->size != NULL)
+		free(data->size);
 }
 
 void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer user_data) {
@@ -107,6 +109,7 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 				//Remove folder from GUI
 				tree_store = GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view)));
 				gtk_tree_store_remove (tree_store, &iter);
+				data->page = 0;
 				browsing_refresh_folder(NULL, data);
 			}
 			break;
@@ -125,7 +128,8 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 				window_show_error("Erreur. Impossible de supprimer le profil.", data, "SettingsWindow");
 			} else {
 				//Remove profile from loaded profiles
-				index = gtk_tree_path_get_indices(gtk_tree_path_new_from_string (string));
+				list_store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view)));
+				index = gtk_tree_path_get_indices(gtk_tree_model_get_path(GTK_TREE_MODEL(list_store), &iter));
 				profile = linkedlist_get(listProfile, *index);
 				if(profile == NULL) {
 					window_show_error("Une erreur est survenue.\nLe profil sélectionné n'existe pas.", data, "SettingsWindow");
@@ -134,10 +138,10 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 					linkedlist_remove_index(listProfile, *index);
 
 					//Remove profile from GUI
-					list_store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view)));
 					gtk_list_store_remove (list_store, &iter);
 					settings_window_set_all_fields_active(data, FALSE);
 					settings_window_fill_entries(data, NULL);
+					gtk_tree_selection_unselect_all (gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view)));
 				}
 			}
 			free(filename);

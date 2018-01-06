@@ -22,10 +22,20 @@ static void main_window_activate(GtkApplication* app, gpointer user_data) {
 	SGlobalData data;
 
 	data.builder = gtk_builder_new();
+
+	data.size = malloc(sizeof(unsigned int));
+	if(data.size == NULL) {
+		fputs("Not enough memory\n", stderr);
+		return;
+	}
+	*data.size = 0;
+
 	data.current_email = NULL;
 	data.response_reference = NULL;
 	data.selected_mail_index = -1;
 	data.selected_profile_index = -1;
+	data.page = 0;
+	data.selected_folder = NULL;
 
 
 	filename =  g_build_filename ("resources/MainWindow.glade", NULL);

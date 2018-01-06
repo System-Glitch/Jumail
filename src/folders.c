@@ -242,3 +242,32 @@ int ssl_remove_folder(char * username, char * password, char * domain, char * ma
 	return ssl_folder(username, password, domain, mailbox, ssl, 0);
 }
 
+int parse_folder_size(char *payload) {
+	char *sub = NULL;
+	regex_t regex;
+	regmatch_t pmatch[3];
+	int len;
+	int res;
+
+	if(payload == NULL || strlen(payload) <= 0)
+		return -1;
+
+	if(exec_regex(&regex, REGEX_SIZE, payload, 3, &pmatch)) {
+		len = pmatch[2].rm_eo - pmatch[2].rm_so;
+		sub = malloc(len + 1);
+		if(sub == NULL) {
+			regfree(&regex);
+			return -1;
+		}
+		strncpy(sub, payload+pmatch[2].rm_so, len);
+		sub[len] = '\0';
+	}
+
+	regfree(&regex);
+
+	res = strtol(sub, NULL, 10);
+	free(sub);
+
+	return res;
+}
+

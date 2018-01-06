@@ -15,6 +15,7 @@
 #include "utilities.h"
 
 #define REGEX_FOLDER		"\\* LIST \\((.*?)\\) \"\\/\" \"?([^\"]*)\"?"
+#define REGEX_SIZE			"\\* STATUS (.*?) \\(MESSAGES (.*?)\\)"
 
 /**
  * Performs a LIST (IMAP) operation, parses it and returns the existing folders inside a StringArray
@@ -30,5 +31,7 @@ int ssl_create_folder(char * username, char * password, char * domain, char * ma
  * Performs a DELETE (IMAP) operation in order to delete an existing mailbox
  */
 int ssl_remove_folder(char * username, char * password, char * domain, char * mailbox, char ssl);
+
+int parse_folder_size(char *payload);
 
 #endif /* SRC_FOLDERS_H_ */

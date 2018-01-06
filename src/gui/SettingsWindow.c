@@ -303,6 +303,8 @@ void callback_profile_context_menu(GtkWidget *tree_view, GdkEventButton *event, 
 	GtkTreeIter iter;
 	GtkWidget *menu;
 	GtkWidget *menu_item_remove;
+	Profile *profile;
+	gint* i;
 
 	menu = GTK_WIDGET(gtk_builder_get_object (data->builder, "ContextMenuProfile"));
 	menu_item_remove = GTK_WIDGET(gtk_builder_get_object (data->builder, "MenuItemProfileDelete"));
@@ -324,11 +326,21 @@ void callback_profile_context_menu(GtkWidget *tree_view, GdkEventButton *event, 
 				gtk_tree_model_get (model, &iter, 0, &string, -1);
 
 				gtk_widget_set_sensitive(menu_item_remove, 1); //Enable "Delete" button if a row is selected
+
+				//Update fields
+				i = gtk_tree_path_get_indices (path);
+				profile = (Profile*)linkedlist_get(listProfile, *i);
+				if(profile == NULL) {
+					window_show_error("Une erreur est survenue.\nLe profil sélectionné n'existe pas.", data, "SettingsWindow");
+				} else {
+					data->selected_profile_index = *i;
+					settings_window_fill_entries(data, profile);
+					settings_window_set_all_fields_active(data, TRUE);
+				}
 			} else {
 				gtk_tree_selection_unselect_all(selection);
 			}
 		}
-
 		gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, (event != NULL) ? event->button : 0,	gdk_event_get_time((GdkEvent*)event));
 	}
 }

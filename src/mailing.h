@@ -20,11 +20,13 @@
 #define REGEX_TO 			"To: (.*?)"
 #define REGEX_FROM			"From: (.*?)"
 #define REGEX_SUBJECT		"Subject: (.*)"
-#define REGEX_MESSAGE_ID	"Message-ID: (.*)"
+#define REGEX_MESSAGE_ID	"Message-I[Dd]: (.*)"
 #define REGEX_IN_REPLY_TO	"In-Reply-To: (.*)"
 #define REGEX_REFERENCES	"References: (.*)"
 #define REGEX_FLAGS			"\\* (.*?) FETCH \\(FLAGS \\((.*?)\\)\\)"
 #define REGEX_FLAGS_HEADERS	"\\* (.*?) FETCH \\(FLAGS \\((.*?)\\) "
+
+#define MAX_MAIL_PER_PAGE 25
 
 extern linkedlist_t * loaded_mails;
 
@@ -142,7 +144,7 @@ void free_parsed_search(struct ParsedSearch *search);
 /**
  * Loads the email necessary headers into the LinkedList loaded_mails. Return 1 if success, 0 otherwise.
  */
-int ssl_load_mail_headers(char * username, char * password, char * domain, char * mailbox, char ssl, struct ParsedSearch *search);
+int ssl_load_mail_headers(char * username, char * password, char * domain, char * mailbox, char ssl, int page, unsigned int *size);
 
 /**
  * Parses the response for request "FETCH uid (FLAGS BODY[HEADER.FIELDS (SUBJECT DATE FROM TO MESSAGE-ID)])"
