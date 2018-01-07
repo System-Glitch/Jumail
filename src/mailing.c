@@ -86,7 +86,7 @@ static char * get_from(char * from, char* name) {
 	strcat(result, from);
 	strcat(result, ">");
 
-	if(name != NULL) {
+	if(name != NULL && namelen > 2) {
 		strcat(result, "(");
 		strcat(result, name);
 		strcat(result, ")");

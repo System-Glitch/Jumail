@@ -6,8 +6,6 @@
  *  Description : The main file
  */
 #include "gui/MainWindow.h"
-#include "mailing.h"
-#include "folders.h"
 
 int main(int argc, char** argv) {
 	return main_window_start(argc, argv);
