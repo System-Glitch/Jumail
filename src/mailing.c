@@ -937,7 +937,6 @@ static char * parse_header_line(StringArray * content, char * regexp) {
 
 	for(size_t i = 0 ; i < content->size-1 ; i++) {
 		line = content->array[i];
-
 		if(exec_regex(&regex, regexp, line, 2, &pmatch)) { //Use a regex to extract value
 			len = pmatch[1].rm_eo - pmatch[1].rm_so;
 			dest = malloc(len + 1);
@@ -1536,7 +1535,7 @@ int ssl_load_mail_headers(char * username, char * password, char * domain, char 
 		free(headers.memory);
 
 		start = *size - page*MAX_MAIL_PER_PAGE;
-		end = *size - (page+1)*MAX_MAIL_PER_PAGE;
+		end = *size - (page+1)*MAX_MAIL_PER_PAGE + 1;
 		if(end < 1) end = 1;
 
 		sprintf(uidStr, "%d:%d", start, end);

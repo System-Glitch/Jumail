@@ -190,7 +190,7 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 			sprintf(pageStr, "Page %d/%d", data->page+1, *data->size/MAX_MAIL_PER_PAGE+1);
 			gtk_label_set_text(GTK_LABEL(gtk_builder_get_object (data->builder, "PageLabel")), pageStr);
 			gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonPagePrevious")), FALSE);
-			gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonPageNext")), *data->size > MAX_MAIL_PER_PAGE);
+			gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonPageNext")), (data->page+1)*MAX_MAIL_PER_PAGE < *data->size);
 		} else {
 			window_show_error("Une erreur est survenue lors de la récupération des messages.", data, "MainWindow");
 		}
@@ -465,5 +465,5 @@ void callback_page_next(GtkButton *widget, gpointer user_data) {
 	browsing_refresh_folder(data->selected_folder,data);
 	gtk_label_set_text(GTK_LABEL(gtk_builder_get_object (data->builder, "PageLabel")), pageStr);
 	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonPagePrevious")), TRUE);
-	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonPageNext")), data->page+1 > *data->size/MAX_MAIL_PER_PAGE);
+	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonPageNext")), (data->page+1)*MAX_MAIL_PER_PAGE < *data->size);
 }

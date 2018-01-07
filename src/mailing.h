@@ -17,8 +17,8 @@
 #include "LinkedList.h"
 
 #define REGEX_DATE 			"Date: (.*)"
-#define REGEX_TO 			"To: (.*?)"
-#define REGEX_FROM			"From: (.*?)"
+#define REGEX_TO 			"To: (.*)"
+#define REGEX_FROM			"From: (.*)"
 #define REGEX_SUBJECT		"Subject: (.*)"
 #define REGEX_MESSAGE_ID	"Message-I[Dd]: (.*)"
 #define REGEX_IN_REPLY_TO	"In-Reply-To: (.*)"
