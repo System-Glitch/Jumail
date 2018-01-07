@@ -655,7 +655,7 @@ Louis LAURENT</property>
                 <property name="visible_vertical">False</property>
                 <property name="is_important">True</property>
                 <property name="label" translatable="yes">Envoyer</property>
-                <property name="stock_id">gtk-apply</property>
+                <property name="icon_name">mail-send</property>
                 <signal name="clicked" handler="callback_compose_mail_send" swapped="no"/>
               </object>
               <packing>
