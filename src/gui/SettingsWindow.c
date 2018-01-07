@@ -296,7 +296,7 @@ void callback_settings_window_close(GtkButton *widget, gpointer user_data) {
 	tree_browsing_refresh(data);
 }
 
-void callback_profile_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data) {
+gboolean callback_profile_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
 	GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
 	gchar *string;
@@ -343,6 +343,7 @@ void callback_profile_context_menu(GtkWidget *tree_view, GdkEventButton *event, 
 		}
 		gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, (event != NULL) ? event->button : 0,	gdk_event_get_time((GdkEvent*)event));
 	}
+	return FALSE;
 }
 
 void callback_profile_create(GtkMenuItem *menuitem, gpointer user_data) {

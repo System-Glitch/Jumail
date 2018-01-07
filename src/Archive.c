@@ -21,7 +21,7 @@ void checkDirectoryExistArchive(){
 	}else if (ENOENT == errno){
 		// Sinon
 #if defined(_WIN32)
-		_		mkdir(MAIL_FOLDER);
+		_mkdir(MAIL_FOLDER);
 #else
 		mkdir(MAIL_FOLDER, 0700);
 #endif
@@ -44,7 +44,6 @@ void createMailFile(Email * email, char * path){
 	filename = generate_id();
 	printf("id : %s\n", filename);
 	filename2 = malloc(strlen(filename) + strlen(path) + strlen(MAIL_FILENAME_END) + 1);
-	printf("taille chaine : %ld\n", sizeof(filename2));
 	if(filename == NULL||filename2 == NULL){
 		printf("Erreur generation email id ou allocation ! \n");
 		fclose(file);

@@ -203,7 +203,7 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 	return 1;
 }
 
-void callback_list_folder_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data) {
+gboolean callback_list_folder_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
 	GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
 	gchar *string;
@@ -232,6 +232,7 @@ void callback_list_folder_context_menu(GtkWidget *tree_view, GdkEventButton *eve
 			}
 		}
 	}
+	return FALSE;
 }
 
 void callback_mail_delete(GtkMenuItem *menuitem, gpointer user_data) {
@@ -289,7 +290,7 @@ void callback_browsing_select(GtkTreeView *tree_view, GtkTreePath *path, GtkTree
 	browsing_refresh_folder(data->selected_folder, data);
 }
 
-void callback_browsing_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data) {
+gboolean callback_browsing_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
 	GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
 	gchar *string;
@@ -324,6 +325,7 @@ void callback_browsing_context_menu(GtkWidget *tree_view, GdkEventButton *event,
 
 		gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, (event != NULL) ? event->button : 0,	gdk_event_get_time((GdkEvent*)event));
 	}
+	return FALSE;
 }
 
 void callback_browsing_delete (GtkMenuItem *menuitem, gpointer user_data) {

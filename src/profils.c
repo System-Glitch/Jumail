@@ -338,7 +338,7 @@ void checkProfileDirectoryExist(){
 	}else if (ENOENT == errno){
 	    // Sinon
 		#if defined(_WIN32)
-    _		mkdir(PROFILE_FIENAME_START);
+    _mkdir(PROFILE_FILENAME_START);
      	 #else
     		mkdir(PROFILE_FILENAME_START, 0700);
      	 #endif
