@@ -12,6 +12,11 @@
 #include "../profils.h"
 #include "../config.h"
 
+static gboolean update_progress_bar (gpointer data) {
+	gtk_progress_bar_pulse (GTK_PROGRESS_BAR (data));
+	return TRUE;
+}
+
 /**
  * Initializes the main window
  */
@@ -59,11 +64,23 @@ static void main_window_activate(GtkApplication* app, gpointer user_data) {
 	gtk_widget_show_all (main_window);
 
 	gtk_widget_hide(GTK_WIDGET(gtk_builder_get_object (data.builder, "LoadingBar"))); //Hide future loading bar
+	gint func_ref = g_timeout_add (100, update_progress_bar, GTK_PROGRESS_BAR(gtk_builder_get_object (data.builder, "LoadingBar")));
 
 	init_settings_window(&data);
 	tree_browsing_refresh(&data); //Fill the browser
 	browsing_refresh_folder(NULL, &data);
 	gtk_main();
+
+	g_source_remove (func_ref);
+}
+
+void main_window_set_loading(SGlobalData *data, gboolean loading) {
+	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "MenuBar")), !loading);
+	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ViewPort")), !loading);
+	if(loading)
+		gtk_widget_show(GTK_WIDGET(gtk_builder_get_object (data->builder, "LoadingBar")));
+	else
+		gtk_widget_hide(GTK_WIDGET(gtk_builder_get_object (data->builder, "LoadingBar")));
 }
 
 void callback_settings(GtkMenuItem *menuitem, gpointer user_data) {

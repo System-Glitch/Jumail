@@ -18,4 +18,6 @@
  */
 int main_window_start(int argc, char** argv);
 
+void main_window_set_loading(SGlobalData *data, gboolean loading);
+
 #endif

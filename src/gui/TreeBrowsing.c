@@ -9,6 +9,7 @@
 #include "../mailing.h"
 #include "TreeBrowsing.h"
 #include "MailWindow.h"
+#include "MainWindow.h"
 
 /**
  * Gets the selected row in the browsing tree and puts the reference to the value of the row in "string"
@@ -130,12 +131,14 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 
 	loaded_mails = linkedlist_init();
 	if(loaded_mails == NULL) {
+		main_window_set_loading(data, FALSE);
 		window_show_error("Mémoire insuffisante.", data, "MainWindow");
 		return 0;
 	}
 
 	tree_view = GTK_TREE_VIEW (gtk_builder_get_object (data->builder, "TreeViewFolderList"));
 	if(tree_view == NULL) {
+		main_window_set_loading(data, FALSE);
 		window_show_error("Impossible de charger l'interface de dossier.", data, "MainWindow");
 		return 0;
 	}
@@ -189,7 +192,7 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 			//Update paginate
 			sprintf(pageStr, "Page %d/%d", data->page+1, *data->size/MAX_MAIL_PER_PAGE+1);
 			gtk_label_set_text(GTK_LABEL(gtk_builder_get_object (data->builder, "PageLabel")), pageStr);
-			gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonPagePrevious")), FALSE);
+			gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonPagePrevious")), data->page > 0);
 			gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonPageNext")), (data->page+1)*MAX_MAIL_PER_PAGE < *data->size);
 		} else {
 			window_show_error("Une erreur est survenue lors de la récupération des messages.", data, "MainWindow");
@@ -200,6 +203,7 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 		gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonPageNext")), FALSE);
 	}
 
+	main_window_set_loading(data, FALSE);
 	return 1;
 }
 
@@ -280,14 +284,25 @@ void callback_mail_unseen(GtkMenuItem *menuitem, gpointer user_data) {
 	mail_set_seen(data, 0);
 }
 
+static gpointer threaded_browsing_refresh_folder(gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	main_window_set_loading(data, TRUE);
+	browsing_refresh_folder(data->selected_folder, data);
+	return NULL;
+}
+
 void callback_browsing_select(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data) {
 	GtkTreeIter iter;
+	GThread *thread;
 	SGlobalData *data = (SGlobalData*) user_data;
 	GtkTreeModel *model = gtk_tree_view_get_model (tree_view);
 	gtk_tree_model_get_iter(model, &iter, path);
 	gtk_tree_model_get (model, &iter, 0, &data->selected_folder, -1);
 	data->page = 0;
-	browsing_refresh_folder(data->selected_folder, data);
+
+	main_window_set_loading(data, TRUE);
+	thread = g_thread_new ("browsing_refresh_folder", threaded_browsing_refresh_folder, data);
+	g_thread_unref (thread);
 }
 
 gboolean callback_browsing_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data) {
@@ -441,29 +456,23 @@ void callback_mail_move(GtkMenuItem *menuitem, gpointer user_data) {
 
 void callback_page_previous(GtkButton *widget, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
-	char pageStr[100];
+	GThread *thread;
 
 	if(data->page > 0)
 		data->page--;
 
-	if(data->page <= 0)
-		gtk_widget_set_sensitive(GTK_WIDGET(widget), FALSE);
-
-	sprintf(pageStr, "Page %d/%d", data->page+1, *data->size/MAX_MAIL_PER_PAGE+1);
-
-	browsing_refresh_folder(data->selected_folder,data);
-	gtk_label_set_text(GTK_LABEL(gtk_builder_get_object (data->builder, "PageLabel")), pageStr);
+	main_window_set_loading(data, TRUE);
+	thread = g_thread_new ("browsing_refresh_folder", threaded_browsing_refresh_folder, data);
+	g_thread_unref (thread);
 }
 
 void callback_page_next(GtkButton *widget, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
-	char pageStr[100];
+	GThread *thread;
 	data->page++;
 
-	sprintf(pageStr, "Page %d/%d", data->page+1, *data->size/MAX_MAIL_PER_PAGE+1);
+	main_window_set_loading(data, TRUE);
+	thread = g_thread_new ("browsing_refresh_folder", threaded_browsing_refresh_folder, data);
+	g_thread_unref (thread);
 
-	browsing_refresh_folder(data->selected_folder,data);
-	gtk_label_set_text(GTK_LABEL(gtk_builder_get_object (data->builder, "PageLabel")), pageStr);
-	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonPagePrevious")), TRUE);
-	gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonPageNext")), (data->page+1)*MAX_MAIL_PER_PAGE < *data->size);
 }
