@@ -1626,6 +1626,7 @@ Email *parse_email_headers(char *payload, char *chunk, char *mailbox) {
 		return NULL;
 	} else if(content.size < 6) {
 		fputs("Invalid mail headers payload.\n", stderr);
+		free_string_array(content);
 		return NULL;
 	}
 
@@ -1633,6 +1634,7 @@ Email *parse_email_headers(char *payload, char *chunk, char *mailbox) {
 	mail->flags = parse_flags(chunk, REGEX_FLAGS_HEADERS);
 	if(mail->flags == NULL) {
 		fputs("Couldn't extract flags.\n", stderr);
+		free_string_array(content);
 		free_email(mail);
 		free(mail);
 		return NULL;
@@ -1642,6 +1644,7 @@ Email *parse_email_headers(char *payload, char *chunk, char *mailbox) {
 	mail->from = parse_header_line(&content, REGEX_FROM);
 	if(mail->from == NULL) {
 		fputs("Couldn't extract FROM.\n", stderr);
+		free_string_array(content);
 		free_email(mail);
 		free(mail);
 		return NULL;
@@ -1651,6 +1654,7 @@ Email *parse_email_headers(char *payload, char *chunk, char *mailbox) {
 	mail->to = parse_header_line(&content, REGEX_TO);
 	if(mail->to == NULL) {
 		fputs("Couldn't extract TO.\n", stderr);
+		free_string_array(content);
 		free_email(mail);
 		free(mail);
 		return NULL;
@@ -1660,6 +1664,7 @@ Email *parse_email_headers(char *payload, char *chunk, char *mailbox) {
 	mail->subject = parse_header_line(&content, REGEX_SUBJECT);
 	if(mail->subject == NULL) {
 		fputs("Couldn't extract SUBJECT.\n", stderr);
+		free_string_array(content);
 		free_email(mail);
 		free(mail);
 		return NULL;
@@ -1669,6 +1674,7 @@ Email *parse_email_headers(char *payload, char *chunk, char *mailbox) {
 	mail->date = parse_header_line(&content, REGEX_DATE);
 	if(mail->date == NULL) {
 		fputs("Couldn't extract DATE.\n", stderr);
+		free_string_array(content);
 		free_email(mail);
 		free(mail);
 		return NULL;
@@ -1678,6 +1684,7 @@ Email *parse_email_headers(char *payload, char *chunk, char *mailbox) {
 	mail->message_id = parse_header_line(&content, REGEX_MESSAGE_ID);
 	if(mail->message_id == NULL) {
 		fputs("Couldn't extract Message-ID.\n", stderr);
+		free_string_array(content);
 		free_email(mail);
 		free(mail);
 		return NULL;
@@ -1686,6 +1693,7 @@ Email *parse_email_headers(char *payload, char *chunk, char *mailbox) {
 	mail->mailbox = malloc(strlen(mailbox)+1);
 	if(mail->mailbox == NULL) {
 		fputs("Couldn't allocate for mailbox copy.\n", stderr);
+		free_string_array(content);
 		free_email(mail);
 		free(mail);
 		return NULL;
