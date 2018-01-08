@@ -131,14 +131,12 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 
 	loaded_mails = linkedlist_init();
 	if(loaded_mails == NULL) {
-		main_window_set_loading(data, FALSE);
 		window_show_error("Mémoire insuffisante.", data, "MainWindow");
 		return 0;
 	}
 
 	tree_view = GTK_TREE_VIEW (gtk_builder_get_object (data->builder, "TreeViewFolderList"));
 	if(tree_view == NULL) {
-		main_window_set_loading(data, FALSE);
 		window_show_error("Impossible de charger l'interface de dossier.", data, "MainWindow");
 		return 0;
 	}
@@ -283,25 +281,15 @@ void callback_mail_unseen(GtkMenuItem *menuitem, gpointer user_data) {
 	mail_set_seen(data, 0);
 }
 
-static gpointer threaded_browsing_refresh_folder(gpointer user_data) {
-	SGlobalData *data = (SGlobalData*) user_data;
-	browsing_refresh_folder(data->selected_folder, data);
-	main_window_set_loading(data, FALSE);
-	return NULL;
-}
-
 void callback_browsing_select(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data) {
 	GtkTreeIter iter;
-	GThread *thread;
 	SGlobalData *data = (SGlobalData*) user_data;
 	GtkTreeModel *model = gtk_tree_view_get_model (tree_view);
 	gtk_tree_model_get_iter(model, &iter, path);
 	gtk_tree_model_get (model, &iter, 0, &data->selected_folder, -1);
 	data->page = 0;
 
-	main_window_set_loading(data, TRUE);
-	thread = g_thread_new ("browsing_refresh_folder", threaded_browsing_refresh_folder, data);
-	g_thread_unref (thread);
+	browsing_refresh_folder(data->selected_folder, data);
 }
 
 gboolean callback_browsing_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data) {
@@ -455,23 +443,17 @@ void callback_mail_move(GtkMenuItem *menuitem, gpointer user_data) {
 
 void callback_page_previous(GtkButton *widget, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
-	GThread *thread;
 
 	if(data->page > 0)
 		data->page--;
 
-	main_window_set_loading(data, TRUE);
-	thread = g_thread_new ("browsing_refresh_folder", threaded_browsing_refresh_folder, data);
-	g_thread_unref (thread);
+	browsing_refresh_folder(data->selected_folder, data);
 }
 
 void callback_page_next(GtkButton *widget, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
-	GThread *thread;
 	data->page++;
 
-	main_window_set_loading(data, TRUE);
-	thread = g_thread_new ("browsing_refresh_folder", threaded_browsing_refresh_folder, data);
-	g_thread_unref (thread);
+	browsing_refresh_folder(data->selected_folder, data);
 
 }
