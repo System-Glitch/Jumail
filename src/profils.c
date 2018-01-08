@@ -5,9 +5,53 @@
  *      Author: louis
  */
 #include "profils.h"
+#include "libs/b64/b64.h"
 
 linkedlist_t * listProfile = NULL;
 Profile *current_profile = NULL;
+
+static char cipher_key[21] = "Wqzt7iRS7D5HOGy08Luq";
+
+static void xor_cipher(char *str, size_t len) {
+	for(size_t i = 0 ; i < len ; i++) {
+		str[i] ^= cipher_key[i%20];
+	}
+}
+
+static char* cipher_password(char *password) {
+	char *cpy = NULL;
+	char *result = NULL;
+	size_t len;
+
+	if(password == NULL) return NULL;
+
+	len = strlen(password);
+	cpy = malloc(len+1);
+	if(cpy == NULL) return NULL;
+
+	strcpy(cpy,password);
+
+	xor_cipher(cpy,len);
+
+	//base64 to make it parsable by libxml
+	result = b64_encode((unsigned char*)cpy, len);
+	return result;
+}
+
+static char* decipher_password(char *password) {
+	char *cpy = NULL;
+	int len;
+
+	if(password == NULL) return NULL;
+
+	len = strlen(password);
+	cpy = (char*)b64_decode(password, len);
+
+	xor_cipher(cpy,strlen(cpy));
+
+	return cpy;
+}
+
 
 // Fonction de création du fichier xml du profil
 void saveProfile(Profile * profile, char * previous_name){
@@ -15,6 +59,7 @@ void saveProfile(Profile * profile, char * previous_name){
 	xmlNodePtr root_node = NULL, node = NULL;
 	char * filename = NULL;
 	char * filename2 = NULL;
+	char *cpy = NULL;
 	filename = malloc(strlen(PROFILE_FILENAME_START) + strlen(PROFILE_FILENAME_END) + strlen(profile->name) + 1);
 	if(previous_name != NULL){
 		filename2 = malloc(strlen(PROFILE_FILENAME_START) + strlen(PROFILE_FILENAME_END) + strlen(previous_name) + 1);
@@ -46,9 +91,9 @@ void saveProfile(Profile * profile, char * previous_name){
 	// Les données
 	node = xmlNewChild(root_node, NULL, BAD_CAST "Name", NULL);
 	xmlNewProp(node, BAD_CAST "Value", BAD_CAST profile->emailAddress);
-
 	node = xmlNewChild(root_node, NULL, BAD_CAST "Password", NULL);
-	xmlNewProp(node, BAD_CAST "Value", BAD_CAST profile->password);
+	cpy = cipher_password(profile->password);
+	xmlNewProp(node, BAD_CAST "Value", BAD_CAST cpy);
 
 	node = xmlNewChild(root_node, NULL, BAD_CAST "Send", NULL);
 	xmlNewProp(node, BAD_CAST "Value", BAD_CAST profile->sendP);
@@ -78,6 +123,8 @@ void saveProfile(Profile * profile, char * previous_name){
 	xmlFreeDoc(doc);
 
 	free(filename);
+	if(cpy != NULL)
+		free(cpy);
 
 	xmlCleanupParser();
 
@@ -175,6 +222,7 @@ Profile * loadProfile(char * fileName1, Profile * profile, char * fileName2){
 // Fonction d'attribution des données du parsing
 Profile * parseFile(xmlNode * a_node, Profile * profile){
 	xmlNode *cur_node = NULL;
+	char *password;
 	// cur_node est égale au xmlNode envoie puis cur_node avance de node en node
 	for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
 		if (cur_node->type == XML_ELEMENT_NODE) {
@@ -188,7 +236,9 @@ Profile * parseFile(xmlNode * a_node, Profile * profile){
 
 			} else if(!strcmp((char*)cur_node->name, "Password")) {
 				get_attribute(cur_node, &(profile->password));
-
+				password = decipher_password(profile->password);
+				free(profile->password);
+				profile->password = (char*)password;
 			} else if(!strcmp((char*)cur_node->name, "Send")) {
 				get_attribute(cur_node, &(profile->sendP));
 
@@ -325,26 +375,22 @@ void freeListProfile(){
 
 // Fonction de verification de l'existance du dossier
 void checkProfileDirectoryExist(){
-	#if defined(_WIN32)
-		DIR* dir = opendir(PROFILE_FILENAME_START);
-	#else
-		DIR* dir = opendir(PROFILE_FILENAME_START);
-	#endif
+	DIR* dir = opendir(PROFILE_FILENAME_START);
 
 	if (dir){
-	    // Si oui
-	    closedir(dir);
+		// Si oui
+		closedir(dir);
 
 	}else if (ENOENT == errno){
-	    // Sinon
-		#if defined(_WIN32)
-    _mkdir(PROFILE_FILENAME_START);
-     	 #else
-    		mkdir(PROFILE_FILENAME_START, 0700);
-     	 #endif
+		// Sinon
+#if defined(_WIN32)
+		_mkdir(PROFILE_FILENAME_START);
+#else
+		mkdir(PROFILE_FILENAME_START, 0700);
+#endif
 
 	}else{
-	    // Erreur
+		// Erreur
 		printf("Erreur à l'ouverture/creation du dossier Profils ! \n");
 		exit(EXIT_FAILURE);
 

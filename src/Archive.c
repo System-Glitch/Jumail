@@ -8,11 +8,7 @@
 
 // Fonction de verification de l'existance du dossier
 void checkDirectoryExistArchive(){
-#if defined(_WIN32)
 	DIR* dir = opendir(MAIL_FOLDER);
-#else
-	DIR* dir = opendir(MAIL_FOLDER);
-#endif
 
 	if (dir){
 		// Si oui
@@ -20,11 +16,11 @@ void checkDirectoryExistArchive(){
 
 	}else if (ENOENT == errno){
 		// Sinon
-#if defined(_WIN32)
-		_mkdir(MAIL_FOLDER);
-#else
-		mkdir(MAIL_FOLDER, 0700);
-#endif
+		#if defined(_WIN32)
+			_mkdir(MAIL_FOLDER);
+		#else
+			mkdir(MAIL_FOLDER, 0700);
+		#endif
 
 	}else{
 		// Erreur
@@ -87,11 +83,11 @@ void createFolderForMail(char * path, char * folderName){
 
 	strcpy(finalName, path);
 	strcat(finalName, folderName);
-#if defined(_WIN32)
-	mkdir(finalName);
-#else
-	mkdir(finalName, 0700);
-#endif
+	#if defined(_WIN32)
+		mkdir(finalName);
+	#else
+		mkdir(finalName, 0700);
+	#endif
 
 	free(finalName);
 }

@@ -16,4 +16,8 @@
 #include <unistd.h>
 #include <errno.h>
 
+#if defined(_WIN32)
+#include <direct.h>
+#endif
+
 #endif /* LIBRARY_H_ */
