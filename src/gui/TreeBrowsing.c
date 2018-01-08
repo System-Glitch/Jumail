@@ -203,7 +203,6 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 		gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonPageNext")), FALSE);
 	}
 
-	main_window_set_loading(data, FALSE);
 	return 1;
 }
 
@@ -286,8 +285,8 @@ void callback_mail_unseen(GtkMenuItem *menuitem, gpointer user_data) {
 
 static gpointer threaded_browsing_refresh_folder(gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
-	main_window_set_loading(data, TRUE);
 	browsing_refresh_folder(data->selected_folder, data);
+	main_window_set_loading(data, FALSE);
 	return NULL;
 }
 
