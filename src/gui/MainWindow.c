@@ -58,8 +58,6 @@ static void main_window_activate(GtkApplication* app, gpointer user_data) {
 
 	gtk_widget_show_all (main_window);
 
-	gtk_widget_hide(GTK_WIDGET(gtk_builder_get_object (data.builder, "LoadingBar"))); //Hide future loading bar
-
 	init_settings_window(&data);
 	tree_browsing_refresh(&data); //Fill the browser
 	browsing_refresh_folder(NULL, &data);
@@ -85,6 +83,9 @@ static int init_app(int *argc, char*** argv) {
 	fputs("Loading profiles...\n", stdout);
 	loadAllProfile(selected_profile); //Loading profiles
 	free(selected_profile);
+
+	fputs("Loading archives...\n", stdout);
+	checkDirectoryExistArchive();
 
 	//Loading GUI
 	fputs("Loading GUI...\n", stdout);

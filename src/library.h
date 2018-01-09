@@ -20,4 +20,12 @@
 #include <direct.h>
 #endif
 
+#if defined(_WIN32)
+	#define FILE_SEPARATOR '\\'
+	#define FILE_SEPARATOR_STR "\\"
+#else
+	#define FILE_SEPARATOR '/'
+	#define FILE_SEPARATOR_STR "/"
+#endif
+
 #endif /* LIBRARY_H_ */

@@ -99,7 +99,6 @@ void open_compose_mail_window(SGlobalData *data) {
 	if(!gtk_widget_get_visible (window)) {
 		gtk_window_set_title(GTK_WINDOW(window), "Écrire");
 		gtk_widget_set_size_request (window, 800, 600);
-		g_signal_connect (window, "delete_event", G_CALLBACK (gtk_widget_hide), NULL);
 
 		content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailComposeTo"));
 		fill_text_entry(GTK_ENTRY(content), "");
