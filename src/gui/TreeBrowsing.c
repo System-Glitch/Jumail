@@ -123,11 +123,13 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 	Email *mail;
 	node_t *current;
 	char pageStr[100];
+	char* title;
 
 	printf("Getting folder content : %s (Page %d)\n", folder, data->page+1);
 
 	mail_window_clear(data);
 	free_list_loaded_mails();
+	gtk_window_set_title(GTK_WINDOW(gtk_builder_get_object (data->builder, "MainWindow")), "Jumail");
 
 	loaded_mails = linkedlist_init();
 	if(loaded_mails == NULL) {
@@ -192,6 +194,16 @@ int browsing_refresh_folder(char * folder, SGlobalData *data) {
 			gtk_label_set_text(GTK_LABEL(gtk_builder_get_object (data->builder, "PageLabel")), pageStr);
 			gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonPagePrevious")), data->page > 0);
 			gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonPageNext")), (data->page+1)*MAX_MAIL_PER_PAGE < *data->size);
+
+			title = malloc(9+strlen(data->selected_folder)+1);
+			if(title != NULL) {
+				strcpy(title, "Jumail - ");
+				strcat(title, data->selected_folder);
+				gtk_window_set_title(GTK_WINDOW(gtk_builder_get_object (data->builder, "MainWindow")), title);
+				free(title);
+			} else {
+				window_show_error("Une erreur est survenue.\nMémoire insuffisante", data, "MainWindow");
+			}
 		} else {
 			window_show_error("Une erreur est survenue lors de la récupération des messages.", data, "MainWindow");
 		}

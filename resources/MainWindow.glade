@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.20.0 -->
+<!-- Generated with glade 3.20.2 -->
 <interface>
   <requires lib="gtk+" version="3.12"/>
   <object class="GtkImage" id="ImageCancel">
@@ -406,6 +406,9 @@
         </child>
       </object>
     </child>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
   </object>
   <object class="GtkAboutDialog" id="AboutDialog">
     <property name="can_focus">False</property>
@@ -441,6 +444,9 @@ Louis LAURENT</property>
           <placeholder/>
         </child>
       </object>
+    </child>
+    <child>
+      <placeholder/>
     </child>
   </object>
   <object class="GtkDialog" id="CreateFolderDialog">
@@ -538,6 +544,9 @@ Louis LAURENT</property>
           </packing>
         </child>
       </object>
+    </child>
+    <child>
+      <placeholder/>
     </child>
   </object>
   <object class="GtkWindow" id="MailComposeWindow">
@@ -664,6 +673,9 @@ Louis LAURENT</property>
         </child>
       </object>
     </child>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
   </object>
   <object class="GtkDialog" id="SelectFolderDialog">
     <property name="can_focus">False</property>
@@ -778,9 +790,11 @@ Louis LAURENT</property>
         </child>
       </object>
     </child>
+    <child>
+      <placeholder/>
+    </child>
   </object>
   <object class="GtkDialog" id="SettingsWindow">
-    <property name="width_request">525</property>
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">Préférences</property>
     <property name="icon_name">preferences-system</property>
@@ -825,14 +839,17 @@ Louis LAURENT</property>
           <object class="GtkPaned" id="paned1">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="hexpand">True</property>
             <property name="position">150</property>
             <property name="position_set">True</property>
             <child>
               <object class="GtkScrolledWindow" id="scrolledwindow5">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="propagate_natural_width">True</property>
                 <child>
                   <object class="GtkTreeView" id="TreeViewProfiles">
+                    <property name="width_request">150</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="headers_visible">False</property>
@@ -847,8 +864,8 @@ Louis LAURENT</property>
                 </child>
               </object>
               <packing>
-                <property name="resize">False</property>
-                <property name="shrink">True</property>
+                <property name="resize">True</property>
+                <property name="shrink">False</property>
               </packing>
             </child>
             <child>
@@ -1045,7 +1062,7 @@ Louis LAURENT</property>
               </object>
               <packing>
                 <property name="resize">True</property>
-                <property name="shrink">True</property>
+                <property name="shrink">False</property>
               </packing>
             </child>
           </object>
@@ -1056,6 +1073,9 @@ Louis LAURENT</property>
           </packing>
         </child>
       </object>
+    </child>
+    <child>
+      <placeholder/>
     </child>
   </object>
   <object class="GtkWindow" id="MailWindow">
@@ -1169,6 +1189,7 @@ Louis LAURENT</property>
                   <object class="GtkTextView" id="MailFrom">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <property name="hexpand">True</property>
                     <property name="editable">False</property>
                     <property name="bottom_margin">6</property>
                     <property name="accepts_tab">False</property>
@@ -1300,6 +1321,9 @@ Louis LAURENT</property>
         </child>
       </object>
     </child>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
   </object>
   <object class="GtkDialog" id="MailRawWindow">
     <property name="width_request">650</property>
@@ -1354,6 +1378,9 @@ Louis LAURENT</property>
           </packing>
         </child>
       </object>
+    </child>
+    <child>
+      <placeholder/>
     </child>
   </object>
   <object class="GtkImage" id="image1">
