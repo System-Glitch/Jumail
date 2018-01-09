@@ -348,17 +348,6 @@ void callback_browsing_delete (GtkMenuItem *menuitem, gpointer user_data) {
 	show_confirm_dialog("Êtes-vous sûr de vouloir supprimer ce dossier?\nCette action est irréversible.", data, "MainWindow");
 }
 
-void callback_folder_create_entry_changed(GtkEditable *editable, gpointer user_data) {
-	SGlobalData *data = (SGlobalData*) user_data;
-	GtkWidget *button;
-
-	button = GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonConfirmCreateFolder"));
-
-	//Disable the "confirm" button if the field is empty
-	gtk_widget_set_sensitive(button, strlen(gtk_entry_get_text(GTK_ENTRY(editable))));
-
-}
-
 void callback_browsing_refresh (GtkMenuItem *menuitem, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
 	tree_browsing_refresh(data);
@@ -387,7 +376,8 @@ void callback_browsing_create(GtkMenuItem *menuitem, gpointer user_data) {
 			return;
 		}
 		strcpy(string2, string);
-		strcat(string2, "/dossier");
+		strcat(string2, FILE_SEPARATOR_STR);
+		strcat(string2, "dossier");
 		gtk_entry_set_text (GTK_ENTRY(entry), string2);
 		gtk_widget_set_sensitive(button, 1); //Set the "confirm" button active because there is text in the entry already
 	} else {
@@ -396,46 +386,6 @@ void callback_browsing_create(GtkMenuItem *menuitem, gpointer user_data) {
 
 	gtk_widget_show_all (dialog);
 	gtk_widget_grab_focus (entry);
-}
-
-void callback_create_folder_confirm(GtkButton *widget, gpointer user_data) {
-	GtkWidget *dialog;
-	GtkWidget *entry;
-	GtkTreeStore *model;
-	GtkWidget *tree_view;
-	GtkTreeIter iter;
-	int status;
-	const gchar *foldername;
-	SGlobalData *data = (SGlobalData*) user_data;
-
-	dialog = GTK_WIDGET(gtk_builder_get_object (data->builder, "CreateFolderDialog"));
-	entry = GTK_WIDGET(gtk_builder_get_object (data->builder, "EntryFolderName"));
-	tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewBrowsing"));
-	model = GTK_TREE_STORE(gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view)));
-	foldername = gtk_entry_get_text(GTK_ENTRY(entry));
-
-	status = ssl_create_folder(current_profile->emailAddress, current_profile->password, current_profile->receiveP, (char*)foldername, strequals(current_profile->SslImap, "TRUE"));
-
-	gtk_widget_hide(dialog);
-
-	if(status != 0) {
-		window_show_error("La création du dossier a échoué.", data, "MainWindow");
-	} else {
-		gtk_tree_store_append(model, &iter, NULL);
-		gtk_tree_store_set (model, &iter, 0, foldername, -1);
-	}
-	gtk_entry_set_text (GTK_ENTRY(entry), ""); //Clear text entry
-}
-
-void callback_create_folder_cancel(GtkButton *widget, gpointer user_data) {
-	GtkWidget *dialog;
-	GtkWidget *entry;
-	SGlobalData *data = (SGlobalData*) user_data;
-	dialog = GTK_WIDGET(gtk_builder_get_object (data->builder, "CreateFolderDialog"));
-	entry = GTK_WIDGET(gtk_builder_get_object (data->builder, "EntryFolderName"));
-	gtk_entry_set_text (GTK_ENTRY(entry), ""); //Clear text entry
-
-	gtk_widget_hide(dialog);
 }
 
 void callback_move_mail_cancel(GtkButton *widget, gpointer user_data) {

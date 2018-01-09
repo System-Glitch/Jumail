@@ -25,4 +25,14 @@ void free_list_loaded_archived_mails();
  */
 int tree_browsing_archives_refresh(SGlobalData *data);
 
+/**
+ * Gets all mails in the given folder and display on the GUI. Returns 1 on success, 0 on failure.
+ */
+int browsing_refresh_archives_folder(char * folder, SGlobalData *data);
+
+/**
+ * Gets the selected row in the browsing tree and puts the reference to the value of the row in "string"
+ */
+void tree_browsing_archives_get_selected_row(SGlobalData *data, gchar **string, GtkTreeIter *iter);
+
 #endif /* SRC_GUI_ARCHIVESWINDOW_H_ */

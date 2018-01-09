@@ -36,6 +36,7 @@ static void main_window_activate(GtkApplication* app, gpointer user_data) {
 	data.selected_profile_index = -1;
 	data.page = 0;
 	data.selected_folder = NULL;
+	data.selected_folder_archives = NULL;
 
 
 	filename =  g_build_filename ("resources/MainWindow.glade", NULL);

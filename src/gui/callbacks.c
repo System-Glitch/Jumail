@@ -10,6 +10,7 @@
 #include "TreeBrowsing.h"
 #include "MailWindow.h"
 #include "SettingsWindow.h"
+#include "ArchivesWindow.h"
 
 enum Action action = NONE;
 
@@ -83,7 +84,6 @@ void callback_quit(GtkMenuItem *menuitem, gpointer user_data) {
 
 void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
-	GtkTreeStore *tree_store;
 	GtkListStore *list_store;
 	GtkWidget *tree_view;
 	gchar *string;
@@ -107,10 +107,22 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 				window_show_error("Impossible de supprimer le dossier.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MainWindow");
 			} else {
 				//Remove folder from GUI
-				tree_store = GTK_TREE_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view)));
-				gtk_tree_store_remove (tree_store, &iter);
+				tree_browsing_refresh(data);
 				data->page = 0;
 				browsing_refresh_folder(NULL, data);
+			}
+			break;
+		case DELETE_ARCHIVE_FOLDER:
+			mail_window_clear(data);
+			tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewBrowsingArchives"));
+			tree_browsing_archives_get_selected_row(data, &string, &iter);
+			if(!remove_archives_dir(string)) {
+				window_show_error("Impossible de supprimer le dossier.\n", data, "ArchivesWindow");
+			} else {
+				//Remove folder from GUI
+				tree_browsing_archives_refresh(data);
+				data->page = 0;
+				browsing_refresh_archives_folder(NULL, data);
 			}
 			break;
 		case DELETE_PROFILE:
@@ -145,12 +157,6 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 				}
 			}
 			free(filename);
-			break;
-		case CREATE_FOLDER:
-		case MOVE_MAIL:
-		case MOVE_MAIL_FROM_VIEW:
-		case RESPOND_MAIL_FROM_VIEW:
-			window_show_error("Une erreur est survenue.\nAction invalide pour cette fonction.", data, "MainWindow");
 			break;
 		case DELETE_MAIL:
 			if(!check_selected_profile(data, "MainWindow")) return;
@@ -204,8 +210,66 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 		case NONE:
 			window_show_error("Une erreur est survenue.\nAction non définie.", data, "MainWindow");
 			break;
+		default:
+			window_show_error("Une erreur est survenue.\nAction invalide pour cette fonction.", data, "MainWindow");
+			break;
 		}
 	}
+}
+
+
+void callback_folder_create_entry_changed(GtkEditable *editable, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	GtkWidget *button;
+
+	button = GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonConfirmCreateFolder"));
+
+	//Disable the "confirm" button if the field is empty
+	gtk_widget_set_sensitive(button, strlen(gtk_entry_get_text(GTK_ENTRY(editable))));
+
+}
+
+void callback_create_folder_confirm(GtkButton *widget, gpointer user_data) {
+	GtkWidget *dialog;
+	GtkWidget *entry;
+	GtkTreeStore *model;
+	GtkWidget *tree_view;
+	GtkTreeIter iter;
+	int status = -1;
+	const gchar *foldername;
+	SGlobalData *data = (SGlobalData*) user_data;
+
+	dialog = GTK_WIDGET(gtk_builder_get_object (data->builder, "CreateFolderDialog"));
+	entry = GTK_WIDGET(gtk_builder_get_object (data->builder, "EntryFolderName"));
+	tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, action ==  CREATE_ARCHIVE_FOLDER ? "TreeViewBrowsingArchives" : "TreeViewBrowsing"));
+	model = GTK_TREE_STORE(gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view)));
+	foldername = gtk_entry_get_text(GTK_ENTRY(entry));
+
+	if(action == CREATE_FOLDER)
+		status = ssl_create_folder(current_profile->emailAddress, current_profile->password, current_profile->receiveP, (char*)foldername, strequals(current_profile->SslImap, "TRUE"));
+	else if(action ==  CREATE_ARCHIVE_FOLDER)
+		status = createFolderForMail((char**)&foldername);
+
+	gtk_widget_hide(dialog);
+
+	if(status != 0) {
+		window_show_error("La création du dossier a échoué.", data, action ==  CREATE_ARCHIVE_FOLDER ? "ArchivesWindow" : "MainWindow");
+	} else {
+		gtk_tree_store_append(model, &iter, NULL);
+		gtk_tree_store_set (model, &iter, 0, foldername, -1);
+	}
+	gtk_entry_set_text (GTK_ENTRY(entry), ""); //Clear text entry
+}
+
+void callback_create_folder_cancel(GtkButton *widget, gpointer user_data) {
+	GtkWidget *dialog;
+	GtkWidget *entry;
+	SGlobalData *data = (SGlobalData*) user_data;
+	dialog = GTK_WIDGET(gtk_builder_get_object (data->builder, "CreateFolderDialog"));
+	entry = GTK_WIDGET(gtk_builder_get_object (data->builder, "EntryFolderName"));
+	gtk_entry_set_text (GTK_ENTRY(entry), ""); //Clear text entry
+
+	gtk_widget_hide(dialog);
 }
 
 void callback_mail_move_confirm(GtkButton *widget, gpointer user_data) {

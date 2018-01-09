@@ -21,12 +21,14 @@
 
 void checkDirectoryExistArchive();
 void createMailFile(Email *, char *);
-void createFolderForMail(char *, char *);
+int createFolderForMail(char **);
 Email * readEmailFile(char *);
 
 /**
  * Lists recursively all the folders in the archives folder and fills the given linked list with the result.
  */
 void list_archives_folders(linkedlist_t *list, char *path);
+
+int remove_archives_dir(char* dirname);
 
 #endif /* ARCHIVE_H_ */

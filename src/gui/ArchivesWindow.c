@@ -26,9 +26,71 @@ void open_archives_window(SGlobalData *data) {
 	}
 }
 
+/**
+ * Gets the selected row in the browsing tree and puts the reference to the value of the row in "string"
+ */
+void tree_browsing_archives_get_selected_row(SGlobalData *data, gchar **string, GtkTreeIter *iter) {
+	GtkTreeModel *model;
+	GtkWidget *tree_view;
+	GtkTreeSelection *selection;
+
+	tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewBrowsingArchives"));
+	model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
+	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
+
+	if (gtk_tree_selection_count_selected_rows(selection)  == 1) {
+
+		/* Get selected row */
+		gtk_tree_selection_get_selected (selection, &model, iter);
+		gtk_tree_model_get (model, iter, 0, string, -1);
+
+	}
+}
+
 void callback_show_archives(GtkMenuItem *menuitem, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
 	open_archives_window(data);
+}
+
+void callback_browsing_archives_delete (GtkMenuItem *menuitem, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	action = DELETE_ARCHIVE_FOLDER;
+	show_confirm_dialog("Êtes-vous sûr de vouloir supprimer ce dossier?\nCette action est irréversible.", data, "ArchivesWindow");
+}
+
+void callback_browsing_archives_create(GtkMenuItem *menuitem, gpointer user_data) {
+	GtkWidget *dialog;
+	GtkWidget *entry;
+	gchar *string = NULL;
+	char *string2; //Concat of string with "/dossier"
+	GtkTreeIter iter;
+	GtkWidget *button;
+	SGlobalData *data = (SGlobalData*) user_data;
+	action = CREATE_ARCHIVE_FOLDER;
+
+	dialog = GTK_WIDGET(gtk_builder_get_object (data->builder, "CreateFolderDialog"));
+	entry = GTK_WIDGET(gtk_builder_get_object (data->builder, "EntryFolderName"));
+	button = GTK_WIDGET(gtk_builder_get_object (data->builder, "ButtonConfirmCreateFolder"));
+
+	//Get selected row to auto-fill the entry
+	tree_browsing_archives_get_selected_row(data, &string, &iter);
+	if(string != NULL) { //A row is selected
+		string2 = malloc(strlen(string)+1+8);
+		if(string2 == NULL) {
+			window_show_error("Une erreur est survenue.\nMémoire insuffisante.", data, "ArchivesWindow");
+			return;
+		}
+		strcpy(string2, string);
+		strcat(string2, FILE_SEPARATOR_STR);
+		strcat(string2, "dossier");
+		gtk_entry_set_text (GTK_ENTRY(entry), string2);
+		gtk_widget_set_sensitive(button, 1); //Set the "confirm" button active because there is text in the entry already
+	} else {
+		gtk_widget_set_sensitive(button, 0);
+	}
+
+	gtk_widget_show_all (dialog);
+	gtk_widget_grab_focus (entry);
 }
 
 /**
@@ -89,4 +151,65 @@ int tree_browsing_archives_refresh(SGlobalData *data) {
 	linkedlist_free(list); //Always free
 
 	return 1;
+}
+
+gboolean callback_browsing_archives_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
+	gchar *string;
+	GtkTreeIter iter;
+	GtkWidget *menu;
+	GtkWidget *menu_item_remove;
+
+	menu = GTK_WIDGET(gtk_builder_get_object (data->builder, "ContextMenuBrowsingArchives"));
+	menu_item_remove = GTK_WIDGET(gtk_builder_get_object (data->builder, "MenuBrowsingRemoveArchive"));
+
+
+	gtk_widget_set_sensitive(menu_item_remove, 0);
+
+	if (event->type == GDK_BUTTON_PRESS  &&  event->button == 3) {
+
+		GtkTreeSelection *selection;
+
+		selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
+
+		if (gtk_tree_selection_count_selected_rows(selection)  <= 1) {
+			GtkTreePath *path;
+
+			/* Get tree path for row that was clicked */
+			if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(tree_view),	(gint) event->x, (gint) event->y, &path, NULL, NULL, NULL)) {
+				gtk_tree_model_get_iter(model, &iter, path);
+				gtk_tree_model_get (model, &iter, 0, &string, -1);
+
+				gtk_widget_set_sensitive(menu_item_remove, 1); //Enable "Delete" button if a row is selected
+			} else {
+				gtk_tree_selection_unselect_all(selection);
+			}
+		}
+
+		gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, (event != NULL) ? event->button : 0,	gdk_event_get_time((GdkEvent*)event));
+	}
+	return FALSE;
+}
+
+void callback_browsing_archives_refresh (GtkMenuItem *menuitem, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	tree_browsing_archives_refresh(data);
+}
+
+/**
+ * Gets all mails in the given folder and display on the GUI. Returns 1 on success, 0 on failure.
+ */
+int browsing_refresh_archives_folder(char * folder, SGlobalData *data) {
+	return 0;
+}
+
+void callback_browsing_archives_select(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data) {
+	GtkTreeIter iter;
+	SGlobalData *data = (SGlobalData*) user_data;
+	GtkTreeModel *model = gtk_tree_view_get_model (tree_view);
+	gtk_tree_model_get_iter(model, &iter, path);
+	gtk_tree_model_get (model, &iter, 0, &data->selected_folder_archives, -1);
+
+	browsing_refresh_archives_folder(data->selected_folder_archives, data);
 }

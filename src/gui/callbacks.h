@@ -24,6 +24,7 @@ typedef struct
 	int page;
 	unsigned int *size;
 	gchar *selected_folder;
+	gchar *selected_folder_archives;
 } SGlobalData;
 
 enum Action {
@@ -35,7 +36,9 @@ enum Action {
 	MOVE_MAIL_FROM_VIEW,
 	RESPOND_MAIL_FROM_VIEW,
 	DELETE_PROFILE,
-	MOVE_MAIL
+	MOVE_MAIL,
+	DELETE_ARCHIVE_FOLDER,
+	CREATE_ARCHIVE_FOLDER
 };
 
 extern enum Action action;
@@ -97,5 +100,9 @@ gboolean callback_profile_context_menu(GtkWidget *tree_view, GdkEventButton *eve
 void callback_page_previous(GtkButton *widget, gpointer user_data);
 void callback_page_next(GtkButton *widget, gpointer user_data);
 void callback_show_archives(GtkMenuItem *menuitem, gpointer user_data);
+void callback_browsing_archives_select(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data);
+gboolean callback_browsing_archives_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data);
+void callback_browsing_archives_refresh (GtkMenuItem *menuitem, gpointer user_data);
+void callback_browsing_archives_delete (GtkMenuItem *menuitem, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */

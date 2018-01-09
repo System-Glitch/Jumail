@@ -68,25 +68,48 @@ void createMailFile(Email * email, char * path){
 }
 
 // Création de dossier à partir d'un chemin relatif et d'un nom
-void createFolderForMail(char * path, char * folderName){
+int createFolderForMail(char ** path){
 	char * finalName = NULL;
+	int cmp = 0;
+	int status = 0;
 
-	finalName = malloc(strlen(path) + strlen(folderName) + 1);
-
-	if(folderName == NULL || finalName == NULL){
-		printf("Erreur creation du dossier probleme alloction ou les entrees sont NULL ! \n");
-		return;
+	if(path == NULL || *path == NULL){
+		printf("Erreur creation du dossier les entrees sont NULL ! \n");
+		return -1;
 	}
 
-	strcpy(finalName, path);
-	strcat(finalName, folderName);
+	cmp = strncmp(*path,ARCHIVES_FOLDER_NAME,9);
+	if(cmp)
+		finalName = malloc(9 + strlen(*path) + 1);
+	else
+		finalName = malloc(strlen(*path) + 1);
+
+	if(finalName == NULL) {
+		printf("Erreur creation du dossier allocation ! \n");
+		return -1;
+	}
+
+	if(cmp != 0) {
+		strcpy(finalName, ARCHIVES_FOLDER_NAME);
+		strcat(finalName, *path);
+	} else
+		strcpy(finalName, *path);
+
 #if defined(_WIN32)
-	mkdir(finalName);
+	status = mkdir(finalName);
 #else
-	mkdir(finalName, 0700);
+	status = mkdir(finalName, 0700);
 #endif
 
+	*path = realloc(*path, strlen(finalName)+1);
+	if(*path == NULL) {
+		printf("Erreur creation du dossier allocation ! \n");
+		return -1;
+	}
+	strcpy(*path,finalName);
+
 	free(finalName);
+	return status;
 }
 
 // Lecture d'un fichier
@@ -184,5 +207,60 @@ void list_archives_folders(linkedlist_t *list, char *path) {
 
 	/* Finalize resources. */
 	(void)closedir(dirp);
+}
+
+int remove_archives_dir(char* path) {
+	struct dirent *direntp = NULL;
+	DIR *dirp = NULL;
+	size_t path_len;
+
+	/* Check input parameters. */
+	if (!path)
+		return 0;
+	path_len = strlen(path);
+
+	if (!path || !path_len || (path_len > 256))
+		return 0;
+
+	/* Open directory */
+	dirp = opendir(path);
+	if (dirp == NULL)
+		return 0;
+
+	while ((direntp = readdir(dirp)) != NULL)
+	{
+		/* For every directory entry... */
+		struct stat fstat;
+		char full_name[256 + 1];
+
+		/* Calculate full name, check we are in file length limts */
+		if ((path_len + strlen(direntp->d_name) + 1) > 256)
+			continue;
+
+		strcpy(full_name, path);
+		if (full_name[path_len - 1] != FILE_SEPARATOR)
+			strcat(full_name, FILE_SEPARATOR_STR);
+		strcat(full_name, direntp->d_name);
+
+		/* Ignore special directories. */
+		if ((strcmp(direntp->d_name, ".") == 0) ||
+				(strcmp(direntp->d_name, "..") == 0))
+			continue;
+
+		/* Print only if it is really directory. */
+		if (stat(full_name, &fstat) < 0)
+			continue;
+		if (S_ISDIR(fstat.st_mode))
+		{
+			remove_archives_dir(full_name);
+		} else {
+			remove(full_name);
+		}
+	}
+
+	/* Finalize resources. */
+	(void)closedir(dirp);
+	rmdir(path);
+	return 1;
 }
 
