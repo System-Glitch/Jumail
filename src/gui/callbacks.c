@@ -93,6 +93,7 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 	Profile *profile;
 	int i;
 	gint *index;
+	char *mail_path;
 
 	if(response_id == -8) { //YES
 
@@ -159,10 +160,10 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 			free(filename);
 			break;
 		case DELETE_MAIL:
-			if(!check_selected_profile(data, "MainWindow")) return;
-			mail_window_clear(data);
-			tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderList"));
 			i = list_folder_get_selected_row(data, &iter);
+			mail_window_clear(data);
+			if(!check_selected_profile(data, "MainWindow")) return;
+			tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderList"));
 			if(i >= 0) {
 				mail = linkedlist_get(loaded_mails, i);
 				if(ssl_delete_mail(current_profile->emailAddress, current_profile->password, current_profile->receiveP, mail->mailbox ,mail->message_id, !strcmp(current_profile->SslImap, "TRUE")) != 0) {
@@ -180,16 +181,14 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 			}
 
 			break;
-		case DELETE_MAIL_FROM_VIEW:
-			if(!check_selected_profile(data, "MailWindow")) return;
-			i = data->selected_mail_index;
+		case DELETE_ARCHIVED_MAIL:
+			i = archive_list_folder_get_selected_row(data, &iter);
 			mail_window_clear(data);
-			tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderList"));
+			tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderListArchives"));
 			if(i >= 0) {
-				mail = linkedlist_get(loaded_mails, i);
-				if(ssl_delete_mail(current_profile->emailAddress, current_profile->password, current_profile->receiveP, mail->mailbox ,mail->message_id, !strcmp(current_profile->SslImap, "TRUE")) != 0) {
-					window_show_error("Impossible de supprimer le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MailWindow");
-				} else {
+				mail_path = linkedlist_get(loaded_archived_mails_paths, i);
+				mail = linkedlist_get(loaded_archived_mails, i);
+				if(!remove(mail_path)) {
 					//Remove mail from GUI
 					list_store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view)));
 
@@ -199,12 +198,69 @@ void callback_confirm_response(GtkDialog *dialog, gint response_id, gpointer use
 
 					gtk_list_store_remove (list_store, &iter);
 
+					linkedlist_remove_index(loaded_archived_mails_paths, i);
 					free_email(mail);
-					linkedlist_remove_index(loaded_mails, i);
-					window_show_info("Message supprimé.", data, "MainWindow");
+					linkedlist_remove_index(loaded_archived_mails, i);
+
+					window_show_info("Message supprimé.", data, "ArchivesWindow");
 				}
 			} else {
-				window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data, "MailWindow");
+				window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data, "ArchivesWindow");
+			}
+
+			break;
+		case DELETE_MAIL_FROM_VIEW:
+			i = data->selected_mail_index;
+			mail_window_clear(data);
+
+			if(data->is_archived) {
+				tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderListArchives"));
+				if(i >= 0) {
+					mail_path = linkedlist_get(loaded_archived_mails_paths, i);
+					mail = linkedlist_get(loaded_archived_mails, i);
+					if(!remove(mail_path)) {
+						//Remove mail from GUI
+						list_store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view)));
+
+						gtk_tree_model_get_iter_first(GTK_TREE_MODEL(list_store), &iter);
+						for(int j = 0 ; j < i ; j++)
+							gtk_tree_model_iter_next (GTK_TREE_MODEL(list_store), &iter);
+
+						gtk_list_store_remove (list_store, &iter);
+
+						linkedlist_remove_index(loaded_archived_mails_paths, i);
+						free_email(mail);
+						linkedlist_remove_index(loaded_archived_mails, i);
+
+						window_show_info("Message supprimé.", data, "ArchivesWindow");
+					}
+				} else {
+					window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data, "MailWindow");
+				}
+			} else {
+				if(!check_selected_profile(data, "MailWindow")) return;
+				tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderList"));
+				if(i >= 0) {
+					mail = linkedlist_get(loaded_mails, i);
+					if(ssl_delete_mail(current_profile->emailAddress, current_profile->password, current_profile->receiveP, mail->mailbox ,mail->message_id, !strcmp(current_profile->SslImap, "TRUE")) != 0) {
+						window_show_error("Impossible de supprimer le message.\nVérifiez votre connexion internet et les paramètres de votre profil.", data, "MailWindow");
+					} else {
+						//Remove mail from GUI
+						list_store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view)));
+
+						gtk_tree_model_get_iter_first(GTK_TREE_MODEL(list_store), &iter);
+						for(int j = 0 ; j < i ; j++)
+							gtk_tree_model_iter_next (GTK_TREE_MODEL(list_store), &iter);
+
+						gtk_list_store_remove (list_store, &iter);
+
+						free_email(mail);
+						linkedlist_remove_index(loaded_mails, i);
+						window_show_info("Message supprimé.", data, "MainWindow");
+					}
+				} else {
+					window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data, "MailWindow");
+				}
 			}
 			break;
 		case NONE:
@@ -286,19 +342,22 @@ void callback_mail_move_confirm(GtkButton *widget, gpointer user_data) {
 	int status = -1;
 	int i = -1;
 	Email *mail;
+	char *mail_path = NULL;
 	int uid;
 
-	if(!check_selected_profile(data, action == MOVE_MAIL || action == ARCHIVE_MAIL ? "MainWindow" : "MailWindow")) return;
+	if(action != MOVE_ARCHIVED_MAIL) {
+		if(!check_selected_profile(data, action == MOVE_MAIL || action == ARCHIVE_MAIL ? "MainWindow" : "MailWindow")) return;
 
-	index = list_folder_get_selected_row(data, &iter);
-	if(index == -1) {
-		window_show_error("Une erreur est survenue.\nAucun message n'est sélectionné.", data, "MainWindow");
-		return;
+		index = list_folder_get_selected_row(data, &iter);
+		if(index == -1) {
+			window_show_error("Une erreur est survenue.\nAucun message n'est sélectionné.", data, "MainWindow");
+			return;
+		}
 	}
 
 	dialog = GTK_WIDGET(gtk_builder_get_object (data->builder, "SelectFolderDialog"));
 	tree_view = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderPick"));
-	tree_view_mails = GTK_WIDGET(gtk_builder_get_object (data->builder, "TreeViewFolderList"));
+	tree_view_mails = GTK_WIDGET(gtk_builder_get_object (data->builder, action == MOVE_ARCHIVED_MAIL ? "TreeViewFolderListArchives" : "TreeViewFolderList"));
 	model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
 	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
 
@@ -308,13 +367,19 @@ void callback_mail_move_confirm(GtkButton *widget, gpointer user_data) {
 		gtk_tree_selection_get_selected (selection, &model, &iter);
 		gtk_tree_model_get (model, &iter, 0, &folder_dst, -1);
 
-		if(action == MOVE_MAIL || action == ARCHIVE_MAIL)
+		if(action == MOVE_MAIL || action == ARCHIVE_MAIL) {
 			i = list_folder_get_selected_row(data, &iter); //Get selected mail
-		else if(action == MOVE_MAIL_FROM_VIEW)
-			i = data->selected_mail_index;
-		if(i >= 0) {
-
 			mail = linkedlist_get(loaded_mails, i);
+		} else if(action == MOVE_MAIL_FROM_VIEW) {
+			i = data->selected_mail_index;
+			mail = linkedlist_get(loaded_mails, i);
+		} else if(action == MOVE_ARCHIVED_MAIL) {
+			i = archive_list_folder_get_selected_row(data, &iter); //Get selected mail
+			mail = linkedlist_get(loaded_archived_mails, i);
+			mail_path = linkedlist_get(loaded_archived_mails_paths, i);
+		}
+
+		if(i >= 0) {
 
 			if(action == ARCHIVE_MAIL) {
 				uid = ssl_search_by_id_with_new_connection(current_profile->emailAddress, current_profile->password, current_profile->receiveP, mail->mailbox, mail->message_id, strequals(current_profile->SslImap, "TRUE"));
@@ -339,6 +404,26 @@ void callback_mail_move_confirm(GtkButton *widget, gpointer user_data) {
 				free_email(mail);
 				gtk_widget_hide(dialog);
 				window_show_info("Le message a été archivé.", data, "MainWindow");
+			} else if(action == MOVE_ARCHIVED_MAIL) {
+				if(move_archived_mail(mail_path, folder_dst)) {
+					window_show_error("Impossible de déplacer le message.\n", data, "ArchivesWindow");
+				} else {
+					//Remove mail from GUI
+					list_store = GTK_LIST_STORE(gtk_tree_view_get_model(GTK_TREE_VIEW(tree_view_mails)));
+
+					if(action == MOVE_MAIL_FROM_VIEW) {
+						gtk_tree_model_get_iter_first(GTK_TREE_MODEL(list_store), &iter);
+						for(int j = 0 ; j < i ; j++)
+							gtk_tree_model_iter_next (GTK_TREE_MODEL(list_store), &iter);
+					}
+
+					gtk_list_store_remove (list_store, &iter);
+
+					free_email(mail);
+					linkedlist_remove_index(loaded_mails, i);
+					gtk_widget_hide(dialog);
+					window_show_info("Le message a été déplacé.", data, "ArchivesWindow");
+				}
 			} else {
 				status = ssl_move_mail(current_profile->emailAddress, current_profile->password, current_profile->receiveP, mail->mailbox, folder_dst, mail->message_id, !strcmp(current_profile->SslImap, "TRUE"));
 
@@ -365,12 +450,12 @@ void callback_mail_move_confirm(GtkButton *widget, gpointer user_data) {
 			}
 		} else {
 			gtk_widget_hide(dialog);
-			window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data, action == MOVE_MAIL || action == ARCHIVE_MAIL ? "MainWindow" : "MailWindow");
+			window_show_error("Une erreur est survenue.\nAucun message sélectionné.", data, action == MOVE_MAIL || action == ARCHIVE_MAIL || action ==  MOVE_ARCHIVED_MAIL ? "MainWindow" : "MailWindow");
 		}
 
 	} else {
 		gtk_widget_hide(dialog);
-		window_show_error("Une erreur est survenue.\nAucun dossier n'est sélectionné.", data, action == MOVE_MAIL || action == ARCHIVE_MAIL ? "MainWindow" : "MailWindow");
+		window_show_error("Une erreur est survenue.\nAucun dossier n'est sélectionné.", data, action == MOVE_MAIL || action == ARCHIVE_MAIL || action ==  MOVE_ARCHIVED_MAIL ? "MainWindow" : "MailWindow");
 	}
 }
 
@@ -405,7 +490,7 @@ void show_folder_select_dialog(SGlobalData *data, char *parent_window_name) {
 	dialog = GTK_WIDGET(gtk_builder_get_object (data->builder, "SelectFolderDialog"));
 	parent = GTK_WIDGET(gtk_builder_get_object (data->builder, parent_window_name));
 	view = GTK_TREE_VIEW(gtk_builder_get_object (data->builder, "TreeViewFolderPick"));
-	view_browsing = GTK_TREE_VIEW(gtk_builder_get_object (data->builder, action == ARCHIVE_MAIL ? "TreeViewBrowsingArchives" : "TreeViewBrowsing"));
+	view_browsing = GTK_TREE_VIEW(gtk_builder_get_object (data->builder, action == ARCHIVE_MAIL || action == MOVE_ARCHIVED_MAIL ? "TreeViewBrowsingArchives" : "TreeViewBrowsing"));
 
 	gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(parent));
 

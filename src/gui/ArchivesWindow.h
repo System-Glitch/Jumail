@@ -16,6 +16,7 @@
 #include "../Archive.h"
 
 extern linkedlist_t * loaded_archived_mails;
+extern linkedlist_t * loaded_archived_mails_paths;
 
 void free_list_loaded_archived_mails();
 

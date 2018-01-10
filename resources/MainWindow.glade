@@ -2,6 +2,34 @@
 <!-- Generated with glade 3.20.2 -->
 <interface>
   <requires lib="gtk+" version="3.12"/>
+  <object class="GtkMenu" id="ContextMenuMailsArchived">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkMenuItem" id="MenuMailMoveArchive">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Déplacer vers...</property>
+        <signal name="activate" handler="callback_archived_mail_move" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="separatormenuitem6">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="MenuMailsRemoveArchive">
+        <property name="label" translatable="yes">Supprimer</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="image">ImageFolderRemove5</property>
+        <property name="use_stock">False</property>
+        <signal name="activate" handler="callback_archived_mail_delete" swapped="no"/>
+      </object>
+    </child>
+  </object>
   <object class="GtkImage" id="ImageCancel">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -197,6 +225,11 @@
         <signal name="activate" handler="callback_browsing_archives_refresh" swapped="no"/>
       </object>
     </child>
+  </object>
+  <object class="GtkImage" id="ImageFolderRemove5">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-delete</property>
   </object>
   <object class="GtkImage" id="ImageNext">
     <property name="visible">True</property>
@@ -561,6 +594,7 @@ Louis LAURENT</property>
                     <property name="can_focus">True</property>
                     <property name="rules_hint">True</property>
                     <property name="search_column">0</property>
+                    <signal name="button-press-event" handler="callback_list_folder_archives_context_menu" swapped="no"/>
                     <signal name="row-activated" handler="callback_show_archived_mail" swapped="no"/>
                     <child internal-child="selection">
                       <object class="GtkTreeSelection"/>
@@ -816,7 +850,7 @@ Louis LAURENT</property>
   </object>
   <object class="GtkDialog" id="SelectFolderDialog">
     <property name="can_focus">False</property>
-    <property name="title" translatable="yes">Créer un dossier</property>
+    <property name="title" translatable="yes">Sélectionner un dossier</property>
     <property name="modal">True</property>
     <property name="default_height">200</property>
     <property name="icon_name">emblem-mail</property>

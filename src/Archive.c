@@ -326,3 +326,49 @@ int archives_load_folder(linkedlist_t *list, linkedlist_t *list_paths, char *pat
 	return 1;
 }
 
+int move_archived_mail(char *path, char *dst_path) {
+	char ch;
+	char *full_dst_path;
+	char *filename;
+	FILE *file;
+	FILE *dst_file;
+	StringArray split = strsplit(path, FILE_SEPARATOR);
+
+	if(split.size <= 0) {
+		fputs("Error. Could not split source path.\n", stderr);
+		return -1;
+	}
+
+	filename = split.array[split.size-1];
+
+	full_dst_path = malloc(strlen(filename) + strlen(dst_path) + 1 + 1);
+	if(full_dst_path == NULL) {
+		fputs("Not enough memory.\n", stderr);
+		return -1;
+	}
+	strcpy(full_dst_path, dst_path);
+	strcat(full_dst_path, FILE_SEPARATOR_STR);
+	strcat(full_dst_path, filename);
+
+	if((file = fopen(path,"r")) == NULL) {
+		free_string_array(split);
+		fputs("Error. Could not open source file.\n", stderr);
+		return -1;
+	}
+
+	if((dst_file = fopen(full_dst_path,"w")) == NULL) {
+		free_string_array(split);
+		fputs("Error. Could not open destination file.\n", stderr);
+		return -1;
+	}
+
+	while( ( ch = fgetc(file) ) != EOF )
+		fputc(ch, dst_file);
+
+	fclose(file);
+	fclose(dst_file);
+
+	free(full_dst_path);
+	free_string_array(split);
+	return remove(path);
+}

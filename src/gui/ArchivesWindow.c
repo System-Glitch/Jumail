@@ -117,7 +117,7 @@ int tree_browsing_archives_refresh(SGlobalData *data) {
 	}
 	model = GTK_TREE_STORE(gtk_tree_view_get_model(tree_view));
 
-	//browsing_refresh_archives_folder(NULL, data);
+	browsing_refresh_archives_folder(NULL, data);
 	if(model != NULL) gtk_tree_store_clear(model);
 
 	list = linkedlist_init();
@@ -336,4 +336,50 @@ int archive_list_folder_get_selected_row(SGlobalData *data, GtkTreeIter *iter) {
 		return *i;
 	}
 	return -1;
+}
+
+gboolean callback_list_folder_archives_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	GtkTreeModel *model = gtk_tree_view_get_model (GTK_TREE_VIEW(tree_view));
+	gchar *string;
+	GtkTreeIter iter;
+	GtkWidget *menu;
+
+	menu = GTK_WIDGET(gtk_builder_get_object (data->builder, "ContextMenuMailsArchived"));
+
+
+	if (event->type == GDK_BUTTON_PRESS  &&  event->button == 3) {
+
+		GtkTreeSelection *selection;
+
+		selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
+
+		if (gtk_tree_selection_count_selected_rows(selection)  <= 1) {
+			GtkTreePath *path;
+
+			/* Get tree path for row that was clicked */
+			if (gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(tree_view),	(gint) event->x, (gint) event->y, &path, NULL, NULL, NULL)) {
+				gtk_tree_model_get_iter(model, &iter, path);
+				gtk_tree_model_get (model, &iter, 0, &string, -1);
+
+				//Don't show popup menu if no mail is selected
+				gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, (event != NULL) ? event->button : 0,	gdk_event_get_time((GdkEvent*)event));
+			}
+		}
+	}
+	return FALSE;
+}
+void callback_archived_mail_move(GtkMenuItem *menuitem, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	action = MOVE_ARCHIVED_MAIL;
+
+	mail_window_clear(data);
+	show_folder_select_dialog(data, "ArchivesWindow");
+}
+
+void callback_archived_mail_delete(GtkMenuItem *menuitem, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	action = DELETE_ARCHIVED_MAIL;
+
+	show_confirm_dialog("Êtes-vous sûr de vouloir supprimer ce message?\nCette action est irréversible.", data, "ArchivesWindow");
 }

@@ -26,6 +26,7 @@ int open_mail_window(Email *mail, char* mailbox, SGlobalData *data) {
 	GtkWidget *window = NULL;
 	GtkWidget *content = NULL;
 	int uid;
+	data->is_archived = FALSE;
 
 	if(!check_selected_profile(data, "MainWindow")) return 0;
 
@@ -42,6 +43,7 @@ int open_mail_window(Email *mail, char* mailbox, SGlobalData *data) {
 	window = GTK_WIDGET (gtk_builder_get_object (data->builder, "MailWindow"));
 	gtk_window_set_title(GTK_WINDOW(window), mail->subject);
 	gtk_widget_set_size_request (window, 800, 600);
+	gtk_window_set_transient_for(window, GTK_WIDGET (gtk_builder_get_object (data->builder, "MainWindow")));
 
 	if(data->current_email == NULL) {
 		gtk_widget_hide(window);
@@ -58,6 +60,8 @@ int open_mail_window(Email *mail, char* mailbox, SGlobalData *data) {
 	fill_text_view(GTK_TEXT_VIEW(content), data->current_email->date);
 	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailSubject"));
 	fill_text_view(GTK_TEXT_VIEW(content), data->current_email->subject);
+
+	gtk_widget_set_sensitive(GTK_WIDGET (gtk_builder_get_object (data->builder, "MailViewArchive")), TRUE);
 
 	gtk_widget_hide(window);
 	gtk_widget_show_all (window);
@@ -71,11 +75,13 @@ int open_mail_window_from_file(Email *mail, SGlobalData *data) {
 	GtkWidget *window = NULL;
 	GtkWidget *content = NULL;
 
+	data->is_archived = TRUE;
 	data->current_email = mail;
 
 	window = GTK_WIDGET (gtk_builder_get_object (data->builder, "MailWindow"));
 	gtk_window_set_title(GTK_WINDOW(window), mail->subject);
 	gtk_widget_set_size_request (window, 800, 600);
+	gtk_window_set_transient_for(window, GTK_WIDGET (gtk_builder_get_object (data->builder, "ArchivesWindow")));
 
 	if(data->current_email == NULL) {
 		gtk_widget_hide(window);
@@ -92,6 +98,8 @@ int open_mail_window_from_file(Email *mail, SGlobalData *data) {
 	fill_text_view(GTK_TEXT_VIEW(content), data->current_email->date);
 	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailSubject"));
 	fill_text_view(GTK_TEXT_VIEW(content), data->current_email->subject);
+
+	gtk_widget_set_sensitive(GTK_WIDGET (gtk_builder_get_object (data->builder, "MailViewArchive")), FALSE);
 
 	gtk_widget_hide(window);
 	gtk_widget_show_all (window);

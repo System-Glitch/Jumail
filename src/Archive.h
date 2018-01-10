@@ -34,4 +34,6 @@ int remove_archives_dir(char* dirname);
 
 int archives_load_folder(linkedlist_t *list, linkedlist_t *list_paths, char *path);
 
+int move_archived_mail(char *path, char *dst_path);
+
 #endif /* ARCHIVE_H_ */
