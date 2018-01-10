@@ -311,9 +311,11 @@ gboolean callback_browsing_context_menu(GtkWidget *tree_view, GdkEventButton *ev
 	GtkTreeIter iter;
 	GtkWidget *menu;
 	GtkWidget *menu_item_remove;
+	GtkWidget *menu_item_create;
 
 	menu = GTK_WIDGET(gtk_builder_get_object (data->builder, "ContextMenuBrowsing"));
 	menu_item_remove = GTK_WIDGET(gtk_builder_get_object (data->builder, "MenuBrowsingRemove"));
+	menu_item_create = GTK_WIDGET(gtk_builder_get_object (data->builder, "MenuBrowsingCreate"));
 
 	gtk_widget_set_sensitive(menu_item_remove, 0);
 
@@ -336,6 +338,8 @@ gboolean callback_browsing_context_menu(GtkWidget *tree_view, GdkEventButton *ev
 				gtk_tree_selection_unselect_all(selection);
 			}
 		}
+
+		gtk_widget_set_sensitive(menu_item_create, check_selected_profile());
 
 		gtk_menu_popup(GTK_MENU(menu), NULL, NULL, NULL, NULL, (event != NULL) ? event->button : 0,	gdk_event_get_time((GdkEvent*)event));
 	}
