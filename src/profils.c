@@ -12,9 +12,11 @@ Profile *current_profile = NULL;
 
 static char cipher_key[21] = "Wqzt7iRS7D5HOGy08Luq";
 
-static void xor_cipher(char *str, size_t len) {
+static void xor_cipher(char *str, size_t len, char cipher) {
 	for(size_t i = 0 ; i < len ; i++) {
-		str[i] ^= cipher_key[i%20] + 1;
+		if(!cipher) str[i]--;
+		str[i] ^= cipher_key[i%20];
+		if(cipher) str[i]++;
 	}
 }
 
@@ -31,7 +33,7 @@ static char* cipher_password(char *password) {
 
 	strcpy(cpy,password);
 
-	xor_cipher(cpy,len);
+	xor_cipher(cpy,len,1);
 
 	//base64 to make it parsable by libxml
 	result = b64_encode((unsigned char*)cpy, len);
@@ -47,7 +49,8 @@ static char* decipher_password(char *password) {
 	len = strlen(password);
 	cpy = (char*)b64_decode(password, len);
 
-	xor_cipher(cpy,strlen(cpy));
+	xor_cipher(cpy,strlen(cpy),0);
+	printf("%s\n",cpy);
 
 	return cpy;
 }
