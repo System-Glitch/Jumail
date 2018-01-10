@@ -43,6 +43,11 @@ int open_mail_window(Email *mail, char* mailbox, SGlobalData *data) {
 	gtk_window_set_title(GTK_WINDOW(window), mail->subject);
 	gtk_widget_set_size_request (window, 800, 600);
 
+	if(data->current_email == NULL) {
+		gtk_widget_hide(window);
+		return 0;
+	}
+
 	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailContent"));
 	fill_text_view(GTK_TEXT_VIEW(content), data->current_email->message);
 	content =  GTK_WIDGET (gtk_builder_get_object (data->builder, "MailFrom"));
@@ -135,7 +140,8 @@ void callback_show_mail(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewCo
 		if(open_mail_window(mail, folder ,data)) {
 			list_folder_get_selected_row(data, &iter);
 			gtk_list_store_set (GTK_LIST_STORE(model), &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, 4, PANGO_WEIGHT_NORMAL, 5, TRUE, -1);
-
+		} else {
+			window_show_error("Une erreur est survenue.\nImpossible de récupérer le message.", data, "MainWindow");
 		}
 	}
 

@@ -11,6 +11,7 @@
 #include "../mailing.h"
 #include "../profils.h"
 #include "../config.h"
+#include "../Archive.h"
 
 /**
  * Initializes the main window

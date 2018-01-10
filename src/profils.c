@@ -14,7 +14,7 @@ static char cipher_key[21] = "Wqzt7iRS7D5HOGy08Luq";
 
 static void xor_cipher(char *str, size_t len) {
 	for(size_t i = 0 ; i < len ; i++) {
-		str[i] ^= cipher_key[i%20];
+		str[i] ^= cipher_key[i%20] + 1;
 	}
 }
 
@@ -93,6 +93,7 @@ void saveProfile(Profile * profile, char * previous_name){
 	xmlNewProp(node, BAD_CAST "Value", BAD_CAST profile->emailAddress);
 	node = xmlNewChild(root_node, NULL, BAD_CAST "Password", NULL);
 	cpy = cipher_password(profile->password);
+
 	xmlNewProp(node, BAD_CAST "Value", BAD_CAST cpy);
 
 	node = xmlNewChild(root_node, NULL, BAD_CAST "Send", NULL);
