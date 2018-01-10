@@ -10,8 +10,23 @@
 
 static void fill_text_view(GtkTextView *text_view, char *string) {
 	GtkTextBuffer *buffer;
+	gchar *utf8 = NULL;
+	size_t len = strlen(string);
+	GError *error = NULL;
+
 	buffer = gtk_text_view_get_buffer(text_view);
-	gtk_text_buffer_set_text(buffer, string, -1);
+	if(g_utf8_validate(string, len, NULL)) {
+		gtk_text_buffer_set_text(buffer, string, len);
+	} else {
+		utf8 = g_convert(string, len, "UTF-8", "iso-8859-15", NULL, NULL, &error);
+		if (error != NULL) {
+			fputs ("Couldn't text to UTF-8\n",stderr);
+			g_error_free (error);
+		} else {
+			gtk_text_buffer_set_text(buffer, utf8, len);
+			g_free(utf8);
+		}
+	}
 }
 
 static void fill_text_entry(GtkEntry *text_entry, char *string) {
@@ -43,7 +58,7 @@ int open_mail_window(Email *mail, char* mailbox, SGlobalData *data) {
 	window = GTK_WIDGET (gtk_builder_get_object (data->builder, "MailWindow"));
 	gtk_window_set_title(GTK_WINDOW(window), mail->subject);
 	gtk_widget_set_size_request (window, 800, 600);
-	gtk_window_set_transient_for(window, GTK_WIDGET (gtk_builder_get_object (data->builder, "MainWindow")));
+	gtk_window_set_transient_for(GTK_WINDOW(window), GTK_WINDOW (gtk_builder_get_object (data->builder, "MainWindow")));
 
 	if(data->current_email == NULL) {
 		gtk_widget_hide(window);
@@ -81,7 +96,7 @@ int open_mail_window_from_file(Email *mail, SGlobalData *data) {
 	window = GTK_WIDGET (gtk_builder_get_object (data->builder, "MailWindow"));
 	gtk_window_set_title(GTK_WINDOW(window), mail->subject);
 	gtk_widget_set_size_request (window, 800, 600);
-	gtk_window_set_transient_for(window, GTK_WIDGET (gtk_builder_get_object (data->builder, "ArchivesWindow")));
+	gtk_window_set_transient_for(GTK_WINDOW(window), GTK_WINDOW(gtk_builder_get_object (data->builder, "ArchivesWindow")));
 
 	if(data->current_email == NULL) {
 		gtk_widget_hide(window);
