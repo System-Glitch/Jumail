@@ -115,5 +115,6 @@ void callback_show_archived_mail(GtkTreeView *tree_view, GtkTreePath *path, GtkT
 gboolean callback_list_folder_archives_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data);
 void callback_archived_mail_move(GtkMenuItem *menuitem, gpointer user_data);
 void callback_archived_mail_delete(GtkMenuItem *menuitem, gpointer user_data);
+void callback_mail_view_move_email(GtkButton *widget, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */

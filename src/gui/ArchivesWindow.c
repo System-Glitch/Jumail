@@ -293,7 +293,6 @@ void callback_show_archived_mail(GtkTreeView *tree_view, GtkTreePath *path, GtkT
 
 	mail_path = linkedlist_get(loaded_archived_mails_paths, *i);
 	if(mail_path != NULL) {
-		printf("%s\n", mail_path);
 		mail = readEmailFile(mail_path);
 		if(mail == NULL) {
 			window_show_error("Une erreur est survenue.\nImpossible de récupérer le message.", data, "ArchivesWindow");
