@@ -26,4 +26,6 @@ void mail_window_clear(SGlobalData *data);
  */
 void open_compose_mail_window(SGlobalData *data);
 
+int open_mail_window_from_file(Email *mail, SGlobalData *data);
+
 #endif /* SRC_GUI_MAILWINDOW_H_ */

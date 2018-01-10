@@ -12,6 +12,7 @@
 #include <gtk/gtk.h>
 #include "../mailing.h"
 #include "../profils.h"
+#include "../Archive.h"
 
 typedef struct
 {
@@ -25,6 +26,7 @@ typedef struct
 	unsigned int *size;
 	gchar *selected_folder;
 	gchar *selected_folder_archives;
+	gboolean is_archived;
 } SGlobalData;
 
 enum Action {
@@ -38,7 +40,8 @@ enum Action {
 	DELETE_PROFILE,
 	MOVE_MAIL,
 	DELETE_ARCHIVE_FOLDER,
-	CREATE_ARCHIVE_FOLDER
+	CREATE_ARCHIVE_FOLDER,
+	ARCHIVE_MAIL
 };
 
 extern enum Action action;
@@ -83,6 +86,7 @@ gboolean callback_list_folder_context_menu(GtkWidget *tree_view, GdkEventButton 
 void callback_mail_seen(GtkMenuItem *menuitem, gpointer user_data);
 void callback_mail_unseen(GtkMenuItem *menuitem, gpointer user_data);
 void callback_mail_move(GtkMenuItem *menuitem, gpointer user_data);
+void callback_mail_move_confirm(GtkButton *widget, gpointer user_data);
 void callback_mail_window_close(GtkWidget *widget, GdkEvent *event, gpointer user_data);
 void callback_mail_view_delete_email(GtkButton *widget, gpointer user_data);
 void callback_mail_view_response(GtkButton *widget, gpointer user_data);
@@ -104,5 +108,7 @@ void callback_browsing_archives_select(GtkTreeView *tree_view, GtkTreePath *path
 gboolean callback_browsing_archives_context_menu(GtkWidget *tree_view, GdkEventButton *event, gpointer user_data);
 void callback_browsing_archives_refresh (GtkMenuItem *menuitem, gpointer user_data);
 void callback_browsing_archives_delete (GtkMenuItem *menuitem, gpointer user_data);
+void callback_mail_archive(GtkMenuItem *menuitem, gpointer user_data);
+void callback_show_archived_mail(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */

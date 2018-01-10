@@ -50,7 +50,6 @@ static char* decipher_password(char *password) {
 	cpy = (char*)b64_decode(password, len);
 
 	xor_cipher(cpy,strlen(cpy),0);
-	printf("%s\n",cpy);
 
 	return cpy;
 }
@@ -79,6 +78,7 @@ void saveProfile(Profile * profile, char * previous_name){
 		printf("Erreur allocation ! \n");
 		exit(EXIT_FAILURE);
 	}
+
 	if(previous_name != NULL && strcmp(profile->name, previous_name) != 0){
 		remove(filename2);
 	}

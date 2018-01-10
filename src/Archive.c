@@ -38,8 +38,7 @@ void createMailFile(Email * email, char * path){
 
 	// Génération d'un id unique
 	filename = generate_id();
-	printf("id : %s\n", filename);
-	filename2 = malloc(strlen(filename) + strlen(path) + strlen(MAIL_FILENAME_END) + 1);
+	filename2 = malloc(strlen(filename) + strlen(path) + strlen(MAIL_FILENAME_END) + 1 + 1);
 	if(filename == NULL||filename2 == NULL){
 		printf("Erreur generation email id ou allocation ! \n");
 		fclose(file);
@@ -48,10 +47,10 @@ void createMailFile(Email * email, char * path){
 
 	// Création du nom
 	strcpy(filename2, path);
+	strcat(filename2, FILE_SEPARATOR_STR);
 	strcat(filename2, filename);
 	strcat(filename2, MAIL_FILENAME_END);
 
-	printf("path : %s\n", filename2);
 	file = fopen(filename2, "w");
 	if(file == NULL){
 		printf("Erreur création du fichier ! \n");
@@ -119,16 +118,14 @@ Email * readEmailFile(char * path){
 	char * fileContent = NULL;
 	int size = 0;
 
-	printf("path : %s\n", path);
 	file = fopen(path, "r");
 	if(file == NULL || path == NULL){
 		printf("Erreur ouverture du fichier ou chemin egal null ! \n");
 		return NULL;
 	}
-	fseek(file, 1, SEEK_SET);
-	fseek(file, 1, SEEK_END);
+	fseek(file, 0, SEEK_SET);
+	fseek(file, 0, SEEK_END);
 	size = (int)ftell(file);
-	printf("seek end : %d\n", size);
 
 	fileContent = malloc(sizeof(char) * size);
 	if(fileContent == NULL){
@@ -137,7 +134,7 @@ Email * readEmailFile(char * path){
 		return NULL;
 	}
 
-	fseek(file, 1, SEEK_SET);
+	fseek(file, 0, SEEK_SET);
 	fread(fileContent, sizeof(char), size, file);
 
 	email = parse_email(fileContent);
@@ -261,6 +258,71 @@ int remove_archives_dir(char* path) {
 	/* Finalize resources. */
 	(void)closedir(dirp);
 	rmdir(path);
+	return 1;
+}
+
+int archives_load_folder(linkedlist_t *list, linkedlist_t *list_paths, char *path) {
+	struct dirent *direntp = NULL;
+	DIR *dirp = NULL;
+	size_t path_len;
+	Email *email;
+	char *cpy;
+
+	/* Check input parameters. */
+	if (!path)
+		return -1;
+	path_len = strlen(path);
+
+	if (!path || !path_len || (path_len > 256))
+		return -1;
+
+	/* Open directory */
+	dirp = opendir(path);
+	if (dirp == NULL)
+		return -1;
+
+	while ((direntp = readdir(dirp)) != NULL)
+	{
+		/* For every directory entry... */
+		struct stat fstat;
+		char full_name[256 + 1];
+
+		/* Calculate full name, check we are in file length limts */
+		if ((path_len + strlen(direntp->d_name) + 1) > 256)
+			continue;
+
+		strcpy(full_name, path);
+		if (full_name[path_len - 1] != FILE_SEPARATOR)
+			strcat(full_name, FILE_SEPARATOR_STR);
+		strcat(full_name, direntp->d_name);
+
+		/* Ignore special directories. */
+		if ((strcmp(direntp->d_name, ".") == 0) ||
+				(strcmp(direntp->d_name, "..") == 0))
+			continue;
+
+		/* Print only if it is really directory. */
+		if (stat(full_name, &fstat) < 0)
+			continue;
+		if (!S_ISDIR(fstat.st_mode))
+		{
+			email = readEmailFile(full_name);
+			if(email != NULL) {
+				cpy = malloc(strlen(full_name)+1);
+				if(cpy == NULL) {
+					fputs("Not enough memory\n", stderr);
+					break;
+				} else {
+					strcpy(cpy,full_name);
+					linkedlist_add(list, email);
+					linkedlist_add(list_paths, cpy);
+				}
+			}
+		}
+	}
+
+	/* Finalize resources. */
+	(void)closedir(dirp);
 	return 1;
 }
 

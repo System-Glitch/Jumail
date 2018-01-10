@@ -6,8 +6,10 @@
  *  Description : Creates and manage the archive window
  */
 #include "ArchivesWindow.h"
+#include "MailWindow.h"
 
 linkedlist_t *loaded_archived_mails = NULL;
+linkedlist_t *loaded_archived_mails_paths = NULL;
 
 void free_list_loaded_archived_mails() {
 	if(loaded_archived_mails == NULL)
@@ -201,7 +203,108 @@ void callback_browsing_archives_refresh (GtkMenuItem *menuitem, gpointer user_da
  * Gets all mails in the given folder and display on the GUI. Returns 1 on success, 0 on failure.
  */
 int browsing_refresh_archives_folder(char * folder, SGlobalData *data) {
-	return 0;
+	GtkTreeIter iter;
+	GtkListStore *model;
+	GtkTreeView *tree_view;
+	GtkTreeViewColumn *column;
+	GtkCellRenderer *renderer;
+	Email *mail;
+	node_t *current;
+
+	printf("Getting archive folder content : %s\n", folder);
+
+	mail_window_clear(data);
+	free_list_loaded_archived_mails();
+	linkedlist_free(loaded_archived_mails_paths);
+
+	loaded_archived_mails_paths = linkedlist_init();
+	if(loaded_archived_mails_paths == NULL) {
+		window_show_error("Mémoire insuffisante.", data, "ArchivesWindow");
+		return 0;
+	}
+	loaded_archived_mails = linkedlist_init();
+	if(loaded_archived_mails == NULL) {
+		linkedlist_free(loaded_archived_mails_paths);
+		window_show_error("Mémoire insuffisante.", data, "ArchivesWindow");
+		return 0;
+	}
+
+	tree_view = GTK_TREE_VIEW (gtk_builder_get_object (data->builder, "TreeViewFolderListArchives"));
+	if(tree_view == NULL) {
+		window_show_error("Impossible de charger l'interface de dossier.", data, "MainWindow");
+		return 0;
+	}
+
+	model = GTK_LIST_STORE(gtk_tree_view_get_model(tree_view));
+	if(model == NULL) {
+
+		model = gtk_list_store_new (4, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
+		gtk_tree_view_set_model (tree_view, GTK_TREE_MODEL (model));
+
+		renderer = gtk_cell_renderer_text_new ();
+		column = gtk_tree_view_column_new_with_attributes ("Sujet", renderer, "text", 0, NULL);
+		gtk_tree_view_column_set_resizable (column, TRUE);
+		gtk_tree_view_append_column (tree_view, column);
+
+		column = gtk_tree_view_column_new_with_attributes ("De", renderer, "text", 1, NULL);
+		gtk_tree_view_column_set_resizable (column, TRUE);
+		gtk_tree_view_append_column (tree_view, column);
+
+		column = gtk_tree_view_column_new_with_attributes ("Pour", renderer, "text", 2, NULL);
+		gtk_tree_view_column_set_resizable (column, TRUE);
+		gtk_tree_view_append_column (tree_view, column);
+
+		column = gtk_tree_view_column_new_with_attributes ("Date", renderer, "text", 3, NULL);
+		gtk_tree_view_column_set_resizable (column, TRUE);
+		gtk_tree_view_append_column (tree_view, column);
+	}
+
+	gtk_list_store_clear(model);
+
+	if(folder != NULL) {
+		if(archives_load_folder(loaded_archived_mails,loaded_archived_mails_paths,folder)) {
+			current = loaded_archived_mails->head;
+			while(current != NULL) {
+				mail = current->val;
+				if(mail == NULL) {
+					window_show_error("Une erreur est survenue lors de la récupération des messages.", data, "ArchivesWindow");
+					break;
+				}
+				gtk_list_store_append(model, &iter);
+
+				gtk_list_store_set (model, &iter, 0, mail->subject, 1, mail->from, 2, mail->to, 3, mail->date, -1);
+				iter.user_data = (gpointer)mail;
+				current = current->next;
+			}
+		} else {
+			free_list_loaded_archived_mails();
+			window_show_error("Une erreur est survenue lors de la récupération des messages.", data, "ArchivesWindow");
+		}
+	}
+
+	return 1;
+}
+
+void callback_show_archived_mail(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data) {
+	char *mail_path;
+	SGlobalData *data = (SGlobalData*) user_data;
+	Email *mail;
+	int *i = gtk_tree_path_get_indices ( path );
+
+	mail_path = linkedlist_get(loaded_archived_mails_paths, *i);
+	if(mail_path != NULL) {
+		printf("%s\n", mail_path);
+		mail = readEmailFile(mail_path);
+		if(mail == NULL) {
+			window_show_error("Une erreur est survenue.\nImpossible de récupérer le message.", data, "ArchivesWindow");
+			return;
+		}
+		data->selected_mail_index = *i;
+		if(!open_mail_window_from_file(mail ,data)) {
+			window_show_error("Une erreur est survenue.\nImpossible de récupérer le message.", data, "ArchivesWindow");
+		}
+	}
+
 }
 
 void callback_browsing_archives_select(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data) {
@@ -212,4 +315,25 @@ void callback_browsing_archives_select(GtkTreeView *tree_view, GtkTreePath *path
 	gtk_tree_model_get (model, &iter, 0, &data->selected_folder_archives, -1);
 
 	browsing_refresh_archives_folder(data->selected_folder_archives, data);
+}
+
+/**
+ * Returns the index of the selected row in the folder content view. Returns -1 if nothing is selected
+ */
+int archive_list_folder_get_selected_row(SGlobalData *data, GtkTreeIter *iter) {
+	GtkTreeView *tree_view;
+	GtkTreeSelection * tsel;
+	GtkTreeModel * tm ;
+	GtkTreePath * path ;
+	int * i ;
+
+	tree_view = GTK_TREE_VIEW(gtk_builder_get_object (data->builder, "TreeViewFolderListArchives"));
+
+	tsel = gtk_tree_view_get_selection (tree_view);
+	if ( gtk_tree_selection_get_selected ( tsel , &tm , iter ) ) {
+		path = gtk_tree_model_get_path ( tm , iter ) ;
+		i = gtk_tree_path_get_indices ( path ) ;
+		return *i;
+	}
+	return -1;
 }

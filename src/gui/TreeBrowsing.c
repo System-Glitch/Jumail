@@ -419,3 +419,11 @@ void callback_page_next(GtkButton *widget, gpointer user_data) {
 	browsing_refresh_folder(data->selected_folder, data);
 
 }
+
+void callback_mail_archive(GtkMenuItem *menuitem, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	action = ARCHIVE_MAIL;
+
+	mail_window_clear(data);
+	show_folder_select_dialog(data, "MainWindow");
+}

@@ -133,6 +133,7 @@
         <property name="can_focus">False</property>
         <property name="image">ImageFolderRemove2</property>
         <property name="use_stock">False</property>
+        <signal name="activate" handler="callback_mail_archive" swapped="no"/>
       </object>
     </child>
     <child>
@@ -560,6 +561,7 @@ Louis LAURENT</property>
                     <property name="can_focus">True</property>
                     <property name="rules_hint">True</property>
                     <property name="search_column">0</property>
+                    <signal name="row-activated" handler="callback_show_archived_mail" swapped="no"/>
                     <child internal-child="selection">
                       <object class="GtkTreeSelection"/>
                     </child>

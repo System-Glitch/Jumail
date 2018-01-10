@@ -11,6 +11,7 @@
 #include "library.h"
 #include "mailing.h"
 #include "utilities.h"
+#include "LinkedList.h"
 
 #if defined(_WIN32)
 	#define ARCHIVES_FOLDER_NAME "Archives\\"
@@ -30,5 +31,7 @@ Email * readEmailFile(char *);
 void list_archives_folders(linkedlist_t *list, char *path);
 
 int remove_archives_dir(char* dirname);
+
+int archives_load_folder(linkedlist_t *list, linkedlist_t *list_paths, char *path);
 
 #endif /* ARCHIVE_H_ */

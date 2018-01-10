@@ -35,4 +35,9 @@ int browsing_refresh_archives_folder(char * folder, SGlobalData *data);
  */
 void tree_browsing_archives_get_selected_row(SGlobalData *data, gchar **string, GtkTreeIter *iter);
 
+/**
+ * Returns the index of the selected row in the folder content view. Returns -1 if nothing is selected
+ */
+int archive_list_folder_get_selected_row(SGlobalData *data, GtkTreeIter *iter);
+
 #endif /* SRC_GUI_ARCHIVESWINDOW_H_ */

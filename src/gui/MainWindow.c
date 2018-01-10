@@ -38,6 +38,7 @@ static void main_window_activate(GtkApplication* app, gpointer user_data) {
 	data.page = 0;
 	data.selected_folder = NULL;
 	data.selected_folder_archives = NULL;
+	data.is_archived = FALSE;
 
 
 	filename =  g_build_filename ("resources/MainWindow.glade", NULL);
@@ -62,6 +63,7 @@ static void main_window_activate(GtkApplication* app, gpointer user_data) {
 
 	init_settings_window(&data);
 	tree_browsing_refresh(&data); //Fill the browser
+	tree_browsing_archives_refresh(&data);
 	browsing_refresh_folder(NULL, &data);
 	gtk_main();
 

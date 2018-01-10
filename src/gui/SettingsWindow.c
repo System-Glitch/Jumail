@@ -134,7 +134,7 @@ void callback_profile_setting_checked(GtkToggleButton *togglebutton, gpointer us
 }
 
 //Update the profile name in the list
-void callback_profile_name_changed(GtkEditable *editable, gpointer user_data) {
+void callback_profile_name_changed(GtkEditable *editable, gpointer user_data) { //TODO call on focus out
 	SGlobalData *data = (SGlobalData*) user_data;
 	GtkTreeModel *model;
 	GtkWidget *tree_view;
