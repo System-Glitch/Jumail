@@ -51,7 +51,7 @@ void createMailFile(Email * email, char * path){
 	strcat(filename2, filename);
 	strcat(filename2, MAIL_FILENAME_END);
 
-	file = fopen(filename2, "w");
+	file = fopen(filename2, "wb");
 	if(file == NULL){
 		printf("Erreur création du fichier ! \n");
 		free(filename2);
@@ -116,18 +116,18 @@ Email * readEmailFile(char * path){
 	Email * email = NULL;
 	FILE * file = NULL;
 	char * fileContent = NULL;
-	int size = 0;
+	long int size = 0;
 
-	file = fopen(path, "r");
+	file = fopen(path, "rb");
 	if(file == NULL || path == NULL){
 		printf("Erreur ouverture du fichier ou chemin egal null ! \n");
 		return NULL;
 	}
 	fseek(file, 0, SEEK_SET);
 	fseek(file, 0, SEEK_END);
-	size = (int)ftell(file);
+	size = ftell(file);
 
-	fileContent = malloc(sizeof(char) * size);
+	fileContent = malloc(sizeof(char) * size + 1);
 	if(fileContent == NULL){
 		printf("Erreur allocation ! \n");
 		fclose(file);
@@ -136,6 +136,7 @@ Email * readEmailFile(char * path){
 
 	fseek(file, 0, SEEK_SET);
 	fread(fileContent, sizeof(char), size, file);
+	fileContent[size-1] = '\0';
 
 	email = parse_email(fileContent);
 
@@ -350,13 +351,13 @@ int move_archived_mail(char *path, char *dst_path) {
 	strcat(full_dst_path, FILE_SEPARATOR_STR);
 	strcat(full_dst_path, filename);
 
-	if((file = fopen(path,"r")) == NULL) {
+	if((file = fopen(path,"rb")) == NULL) {
 		free_string_array(split);
 		fputs("Error. Could not open source file.\n", stderr);
 		return -1;
 	}
 
-	if((dst_file = fopen(full_dst_path,"w")) == NULL) {
+	if((dst_file = fopen(full_dst_path,"wb")) == NULL) {
 		free_string_array(split);
 		fputs("Error. Could not open destination file.\n", stderr);
 		return -1;
