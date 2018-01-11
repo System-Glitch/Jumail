@@ -31,8 +31,10 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "F:\Eclipse\git\jumail\Debug\Jumail.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "F:\Eclipse\git\jumail\resources\*"; DestDir: "{app}\resources"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "C:\msys64\mingw64\share\icons\Adwaita\*"; DestDir: "{app}\share\icons\Adwaita"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\msys64\mingw64\lib\gdk-pixbuf-2.0\2.10.0\*"; DestDir: "{app}\lib\gdk-pixbuf-2.0\2.10.0"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "C:\msys64\mingw64\bin\*.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "F:\Eclipse\git\jumail\installer\emblem-mail.ico"; DestDir: "{app}"; 
+Source: "F:\Eclipse\git\jumail\installer\emblem-mail.ico"; DestDir: "{app}";
+Source: "C:\msys64\mingw64\ssl\certs\ca-bundle.crt"; DestDir: "{app}\ssl\certs\"; Flags: recursesubdirs createallsubdirs 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

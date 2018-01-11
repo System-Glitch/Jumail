@@ -115,6 +115,9 @@ StringArray *ssl_list(char * username, char * password, char * domain, char ssl)
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); //Toggle full logging
 		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
+#if defined(_WIN32)
+		curl_easy_setopt(curl, CURLOPT_CAINFO, "ssl/certs/ca-bundle.crt");
+#endif
 		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
 		curl_easy_setopt(curl, CURLOPT_URL,address);
@@ -196,6 +199,9 @@ static int ssl_folder(char * username, char * password, char * domain, char * ma
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); //Toggle full logging
 		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
+#if defined(_WIN32)
+		curl_easy_setopt(curl, CURLOPT_CAINFO, "ssl/certs/ca-bundle.crt");
+#endif
 		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
 

@@ -141,6 +141,9 @@ char * generate_id() {
 	curl_easy_setopt(curl_handle, CURLOPT_URL, "https://www.uuidgenerator.net/api/guid");
 	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, write_memory_callback);
 	curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, (void *)&chunk);
+#if defined(_WIN32)
+	curl_easy_setopt(curl_handle, CURLOPT_CAINFO, "ssl/certs/ca-bundle.crt");
+#endif
 	curl_easy_setopt(curl_handle, CURLOPT_USERAGENT, "libcurl-agent/1.0");
 	res = curl_easy_perform(curl_handle);
 
@@ -360,6 +363,9 @@ int send_mail_ssl(char * username, char * password, char * to, char * domain, ch
 		curl_easy_setopt(curl, CURLOPT_READFUNCTION, payload_source); //Set the source
 		curl_easy_setopt(curl, CURLOPT_READDATA, &upload_ctx);
 		curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
+#if defined(_WIN32)
+		curl_easy_setopt(curl, CURLOPT_CAINFO, "ssl/certs/ca-bundle.crt");
+#endif
 		curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4); //Force ipv4
 
 		infilesize = 0;
@@ -584,6 +590,9 @@ struct ParsedSearch *ssl_search_all(char * username, char * password, char * dom
 		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
 		curl_easy_setopt(curl, CURLOPT_URL,full_address);
+#if defined(_WIN32)
+		curl_easy_setopt(curl, CURLOPT_CAINFO, "ssl/certs/ca-bundle.crt");
+#endif
 
 		//enable_tls(curl);
 
@@ -703,6 +712,9 @@ Email *ssl_get_mail(char * username, char * password, char * domain, char * mail
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); //Toggle full logging
 		curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
+#if defined(_WIN32)
+		curl_easy_setopt(curl, CURLOPT_CAINFO, "ssl/certs/ca-bundle.crt");
+#endif
 		curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 		curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
 
@@ -837,6 +849,9 @@ int ssl_mail_request(char * username, char * password, char * domain, char * mai
 	curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
 	curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 	curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+#if defined(_WIN32)
+	curl_easy_setopt(curl, CURLOPT_CAINFO, "ssl/certs/ca-bundle.crt");
+#endif
 
 	curl_easy_setopt(curl, CURLOPT_URL,full_address);
 
@@ -1174,6 +1189,9 @@ int ssl_move_mail(char * username, char * password, char * domain, char * mailbo
 	curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
 	curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 	curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+#if defined(_WIN32)
+	curl_easy_setopt(curl, CURLOPT_CAINFO, "ssl/certs/ca-bundle.crt");
+#endif
 
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_to_null); //Don't print the result to stdout
 
@@ -1353,6 +1371,9 @@ int ssl_search_by_id_with_new_connection(char * username, char * password, char 
 	curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
 	curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 	curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
+#if defined(_WIN32)
+	curl_easy_setopt(curl, CURLOPT_CAINFO, "ssl/certs/ca-bundle.crt");
+#endif
 
 	//enable_tls(curl);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
@@ -1488,6 +1509,9 @@ int ssl_load_mail_headers(char * username, char * password, char * domain, char 
 
 	curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L); //Toggle full logging
 	curl_easy_setopt(curl, CURLOPT_PROTOCOLS, CURLPROTO_IMAPS);
+#if defined(_WIN32)
+	curl_easy_setopt(curl, CURLOPT_CAINFO, "ssl/certs/ca-bundle.crt");
+#endif
 	curl_easy_setopt(curl, CURLOPT_USERNAME, username);
 	curl_easy_setopt(curl, CURLOPT_PASSWORD, password);
 
