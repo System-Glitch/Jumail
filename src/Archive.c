@@ -38,10 +38,13 @@ void createMailFile(Email * email, char * path){
 
 	// Génération d'un id unique
 	filename = generate_id();
+	if(filename == NULL){
+		printf("Erreur generation id ! \n");
+		return;
+	}
 	filename2 = malloc(strlen(filename) + strlen(path) + strlen(MAIL_FILENAME_END) + 1 + 1);
-	if(filename == NULL||filename2 == NULL){
-		printf("Erreur generation email id ou allocation ! \n");
-		fclose(file);
+	if(filename2 == NULL){
+		printf("Erreur generation email allocation ! \n");
 		return;
 	}
 
@@ -126,6 +129,8 @@ Email * readEmailFile(char * path){
 	fseek(file, 0, SEEK_SET);
 	fseek(file, 0, SEEK_END);
 	size = ftell(file);
+
+	if(size <= 0) return NULL;
 
 	fileContent = malloc(sizeof(char) * size + 1);
 	if(fileContent == NULL){

@@ -1,34 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Generated with glade 3.20.2 -->
-<interface>
-  <requires lib="gtk+" version="3.12"/>
-  <object class="GtkMenu" id="ContextMenuMailsArchived">
+<interface domain="">
+  <requires lib="gtk+" version="3.20"/>
+  <object class="GtkImage" id="ImageAbout">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <child>
-      <object class="GtkMenuItem" id="MenuMailMoveArchive">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Déplacer vers...</property>
-        <signal name="activate" handler="callback_archived_mail_move" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkSeparatorMenuItem" id="separatormenuitem6">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="MenuMailsRemoveArchive">
-        <property name="label" translatable="yes">Supprimer</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="image">ImageFolderRemove5</property>
-        <property name="use_stock">False</property>
-        <signal name="activate" handler="callback_archived_mail_delete" swapped="no"/>
-      </object>
-    </child>
+    <property name="stock">gtk-about</property>
   </object>
   <object class="GtkImage" id="ImageCancel">
     <property name="visible">True</property>
@@ -74,46 +51,6 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-delete</property>
-  </object>
-  <object class="GtkMenu" id="ContextMenuBrowsing">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <child>
-      <object class="GtkImageMenuItem" id="MenuBrowsingCreate">
-        <property name="label">Créer un dossier</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="image">ImageFolderCreate</property>
-        <property name="use_stock">False</property>
-        <signal name="activate" handler="callback_browsing_create" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="MenuBrowsingRemove">
-        <property name="label">Supprimer</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="image">ImageFolderRemove</property>
-        <property name="use_stock">False</property>
-        <signal name="activate" handler="callback_browsing_delete" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkSeparatorMenuItem" id="separatormenuitem2">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-      </object>
-    </child>
-    <child>
-      <object class="GtkImageMenuItem" id="MenuBrowsingRefresh">
-        <property name="label">gtk-refresh</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="use_underline">True</property>
-        <property name="use_stock">True</property>
-        <signal name="activate" handler="callback_browsing_refresh" swapped="no"/>
-      </object>
-    </child>
   </object>
   <object class="GtkImage" id="ImageFolderRemove1">
     <property name="visible">True</property>
@@ -231,6 +168,34 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-delete</property>
   </object>
+  <object class="GtkMenu" id="ContextMenuMailsArchived">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkMenuItem" id="MenuMailMoveArchive">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Déplacer vers...</property>
+        <signal name="activate" handler="callback_archived_mail_move" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="separatormenuitem6">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="MenuMailsRemoveArchive">
+        <property name="label" translatable="yes">Supprimer</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="image">ImageFolderRemove5</property>
+        <property name="use_stock">False</property>
+        <signal name="activate" handler="callback_archived_mail_delete" swapped="no"/>
+      </object>
+    </child>
+  </object>
   <object class="GtkImage" id="ImageNext">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -240,6 +205,11 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-go-back</property>
+  </object>
+  <object class="GtkImage" id="ImageQuit">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-quit</property>
   </object>
   <object class="GtkWindow" id="MainWindow">
     <property name="can_focus">False</property>
@@ -311,11 +281,11 @@
                     </child>
                     <child>
                       <object class="GtkImageMenuItem" id="MenuItemQuit">
-                        <property name="label">gtk-quit</property>
+                        <property name="label">Quitter</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="image">ImageQuit</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="callback_quit" swapped="no"/>
                       </object>
                     </child>
@@ -335,11 +305,11 @@
                     <property name="can_focus">False</property>
                     <child>
                       <object class="GtkImageMenuItem" id="MenuItemAbout">
-                        <property name="label">gtk-about</property>
+                        <property name="label">A propos</property>
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="use_underline">True</property>
-                        <property name="use_stock">True</property>
+                        <property name="image">ImageAbout</property>
+                        <property name="use_stock">False</property>
                         <signal name="activate" handler="callback_about" swapped="no"/>
                       </object>
                     </child>
@@ -827,7 +797,7 @@ Louis LAURENT</property>
                 <property name="visible_vertical">False</property>
                 <property name="is_important">True</property>
                 <property name="label" translatable="yes">Envoyer</property>
-                <property name="icon_name">mail-send</property>
+                <property name="stock_id">gtk-apply</property>
                 <signal name="clicked" handler="callback_compose_mail_send" swapped="no"/>
               </object>
               <packing>
@@ -1017,6 +987,7 @@ Louis LAURENT</property>
               <object class="GtkScrolledWindow" id="scrolledwindow5">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
+                <property name="propagate_natural_width">True</property>
                 <child>
                   <object class="GtkTreeView" id="TreeViewProfiles">
                     <property name="width_request">150</property>
@@ -1145,7 +1116,6 @@ Louis LAURENT</property>
                         <property name="margin_right">5</property>
                         <property name="margin_top">5</property>
                         <property name="margin_bottom">5</property>
-                        <property name="xalign">0</property>
                         <property name="draw_indicator">True</property>
                         <signal name="toggled" handler="callback_profile_setting_checked" swapped="no"/>
                       </object>
@@ -1193,7 +1163,6 @@ Louis LAURENT</property>
                         <property name="margin_right">5</property>
                         <property name="margin_top">5</property>
                         <property name="margin_bottom">5</property>
-                        <property name="xalign">0</property>
                         <property name="draw_indicator">True</property>
                         <signal name="toggled" handler="callback_profile_setting_checked" swapped="no"/>
                       </object>
@@ -1213,7 +1182,6 @@ Louis LAURENT</property>
                         <property name="margin_right">5</property>
                         <property name="margin_top">5</property>
                         <property name="margin_bottom">5</property>
-                        <property name="xalign">0</property>
                         <property name="draw_indicator">True</property>
                         <signal name="toggled" handler="callback_profile_setting_checked" swapped="no"/>
                       </object>
@@ -1246,6 +1214,51 @@ Louis LAURENT</property>
     </child>
     <child>
       <placeholder/>
+    </child>
+  </object>
+  <object class="GtkImage" id="ImageRefresh">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-refresh</property>
+  </object>
+  <object class="GtkMenu" id="ContextMenuBrowsing">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkImageMenuItem" id="MenuBrowsingCreate">
+        <property name="label">Créer un dossier</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="image">ImageFolderCreate</property>
+        <property name="use_stock">False</property>
+        <signal name="activate" handler="callback_browsing_create" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="MenuBrowsingRemove">
+        <property name="label">Supprimer</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="image">ImageFolderRemove</property>
+        <property name="use_stock">False</property>
+        <signal name="activate" handler="callback_browsing_delete" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem" id="separatormenuitem2">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+      </object>
+    </child>
+    <child>
+      <object class="GtkImageMenuItem" id="MenuBrowsingRefresh">
+        <property name="label">Actualiser</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="image">ImageRefresh</property>
+        <property name="use_stock">False</property>
+        <signal name="activate" handler="callback_browsing_refresh" swapped="no"/>
+      </object>
     </child>
   </object>
   <object class="GtkWindow" id="MailWindow">
@@ -1300,6 +1313,7 @@ Louis LAURENT</property>
                 <property name="label" translatable="yes">Archiver</property>
                 <property name="use_underline">True</property>
                 <property name="stock_id">gtk-floppy</property>
+                <signal name="clicked" handler="callback_mail_archive_from_view" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>

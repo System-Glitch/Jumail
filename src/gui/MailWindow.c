@@ -415,3 +415,10 @@ void callback_mail_view_see_raw(GtkButton *widget, gpointer user_data) {
 
 	gtk_widget_show_all(window);
 }
+
+void callback_mail_archive_from_view(GtkMenuItem *menuitem, gpointer user_data) {
+	SGlobalData *data = (SGlobalData*) user_data;
+	action = ARCHIVE_MAIL_FROM_VIEW;
+
+	show_folder_select_dialog(data, "MailWindow");
+}

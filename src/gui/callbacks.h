@@ -43,6 +43,7 @@ enum Action {
 	CREATE_ARCHIVE_FOLDER,
 	DELETE_ARCHIVED_MAIL,
 	MOVE_ARCHIVED_MAIL,
+	ARCHIVE_MAIL_FROM_VIEW,
 	ARCHIVE_MAIL
 };
 
@@ -116,5 +117,6 @@ gboolean callback_list_folder_archives_context_menu(GtkWidget *tree_view, GdkEve
 void callback_archived_mail_move(GtkMenuItem *menuitem, gpointer user_data);
 void callback_archived_mail_delete(GtkMenuItem *menuitem, gpointer user_data);
 void callback_mail_view_move_email(GtkButton *widget, gpointer user_data);
+void callback_mail_archive_from_view(GtkMenuItem *menuitem, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */

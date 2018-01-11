@@ -8,6 +8,7 @@
 #include "MainWindow.h"
 #include "TreeBrowsing.h"
 #include "SettingsWindow.h"
+#include "ArchivesWindow.h"
 #include "../mailing.h"
 #include "../profils.h"
 #include "../config.h"
