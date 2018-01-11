@@ -35,17 +35,17 @@
   <object class="GtkImage" id="ImageDirectory">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-directory</property>
+    <property name="icon_name">document-save</property>
   </object>
   <object class="GtkImage" id="ImageFolderCreate">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-open</property>
+    <property name="icon_name">folder-new</property>
   </object>
   <object class="GtkImage" id="ImageFolderCreate1">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-open</property>
+    <property name="icon_name">folder-new</property>
   </object>
   <object class="GtkImage" id="ImageFolderRemove">
     <property name="visible">True</property>
@@ -60,8 +60,8 @@
   <object class="GtkImage" id="ImageFolderRemove2">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-floppy</property>
-    <property name="icon_size">5</property>
+    <property name="icon_name">document-save</property>
+    <property name="icon_size">1</property>
   </object>
   <object class="GtkMenu" id="ContextMenuMails">
     <property name="visible">True</property>
@@ -98,6 +98,7 @@
         <property name="can_focus">False</property>
         <property name="image">ImageFolderRemove2</property>
         <property name="use_stock">False</property>
+        <property name="always_show_image">True</property>
         <signal name="activate" handler="callback_mail_archive" swapped="no"/>
       </object>
     </child>
@@ -114,6 +115,7 @@
         <property name="can_focus">False</property>
         <property name="image">ImageFolderRemove1</property>
         <property name="use_stock">False</property>
+        <property name="always_show_image">True</property>
         <signal name="activate" handler="callback_mail_delete" swapped="no"/>
       </object>
     </child>
@@ -133,6 +135,7 @@
         <property name="can_focus">False</property>
         <property name="image">ImageFolderCreate1</property>
         <property name="use_stock">False</property>
+        <property name="always_show_image">True</property>
         <signal name="activate" handler="callback_browsing_archives_create" swapped="no"/>
       </object>
     </child>
@@ -143,6 +146,7 @@
         <property name="can_focus">False</property>
         <property name="image">ImageFolderRemove3</property>
         <property name="use_stock">False</property>
+        <property name="always_show_image">True</property>
         <signal name="activate" handler="callback_browsing_archives_delete" swapped="no"/>
       </object>
     </child>
@@ -159,6 +163,7 @@
         <property name="can_focus">False</property>
         <property name="use_underline">True</property>
         <property name="use_stock">True</property>
+        <property name="always_show_image">True</property>
         <signal name="activate" handler="callback_browsing_archives_refresh" swapped="no"/>
       </object>
     </child>
@@ -192,6 +197,7 @@
         <property name="can_focus">False</property>
         <property name="image">ImageFolderRemove5</property>
         <property name="use_stock">False</property>
+        <property name="always_show_image">True</property>
         <signal name="activate" handler="callback_archived_mail_delete" swapped="no"/>
       </object>
     </child>
@@ -244,6 +250,7 @@
                         <property name="can_focus">False</property>
                         <property name="image">ImageCompose</property>
                         <property name="use_stock">False</property>
+                        <property name="always_show_image">True</property>
                         <signal name="activate" handler="callback_compose_mail" swapped="no"/>
                       </object>
                     </child>
@@ -260,6 +267,7 @@
                         <property name="can_focus">False</property>
                         <property name="use_underline">True</property>
                         <property name="use_stock">True</property>
+                        <property name="always_show_image">True</property>
                         <signal name="activate" handler="callback_settings" swapped="no"/>
                       </object>
                     </child>
@@ -270,6 +278,7 @@
                         <property name="can_focus">False</property>
                         <property name="image">ImageDirectory</property>
                         <property name="use_stock">False</property>
+                        <property name="always_show_image">True</property>
                         <signal name="activate" handler="callback_show_archives" swapped="no"/>
                       </object>
                     </child>
@@ -286,6 +295,7 @@
                         <property name="can_focus">False</property>
                         <property name="image">ImageQuit</property>
                         <property name="use_stock">False</property>
+                        <property name="always_show_image">True</property>
                         <signal name="activate" handler="callback_quit" swapped="no"/>
                       </object>
                     </child>
@@ -310,6 +320,7 @@
                         <property name="can_focus">False</property>
                         <property name="image">ImageAbout</property>
                         <property name="use_stock">False</property>
+                        <property name="always_show_image">True</property>
                         <signal name="activate" handler="callback_about" swapped="no"/>
                       </object>
                     </child>
@@ -616,6 +627,7 @@ Louis LAURENT</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="image">ImageCancel2</property>
+                <property name="always_show_image">True</property>
                 <signal name="clicked" handler="callback_create_folder_cancel" swapped="no"/>
               </object>
               <packing>
@@ -631,6 +643,7 @@ Louis LAURENT</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="image">ImageCheck2</property>
+                <property name="always_show_image">True</property>
                 <signal name="clicked" handler="callback_create_folder_confirm" swapped="no"/>
               </object>
               <packing>
@@ -844,6 +857,7 @@ Louis LAURENT</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="image">ImageCancel</property>
+                <property name="always_show_image">True</property>
                 <signal name="clicked" handler="callback_move_mail_cancel" swapped="no"/>
               </object>
               <packing>
@@ -859,6 +873,7 @@ Louis LAURENT</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="image">ImageCheck</property>
+                <property name="always_show_image">True</property>
                 <signal name="clicked" handler="callback_mail_move_confirm" swapped="no"/>
               </object>
               <packing>
@@ -935,287 +950,6 @@ Louis LAURENT</property>
       <placeholder/>
     </child>
   </object>
-  <object class="GtkDialog" id="SettingsWindow">
-    <property name="can_focus">False</property>
-    <property name="title" translatable="yes">Préférences</property>
-    <property name="icon_name">preferences-system</property>
-    <property name="type_hint">dialog</property>
-    <property name="transient_for">MainWindow</property>
-    <signal name="delete-event" handler="gtk_widget_hide" swapped="no"/>
-    <child internal-child="vbox">
-      <object class="GtkBox" id="dialog-vbox5">
-        <property name="can_focus">False</property>
-        <property name="orientation">vertical</property>
-        <property name="spacing">2</property>
-        <child internal-child="action_area">
-          <object class="GtkButtonBox" id="dialog-action_area5">
-            <property name="can_focus">False</property>
-            <property name="layout_style">end</property>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <object class="GtkButton" id="SettingsButtonOk">
-                <property name="label">gtk-apply</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="use_stock">True</property>
-                <signal name="clicked" handler="callback_settings_window_close" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkPaned" id="paned1">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="hexpand">True</property>
-            <property name="position">150</property>
-            <property name="position_set">True</property>
-            <child>
-              <object class="GtkScrolledWindow" id="scrolledwindow5">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="propagate_natural_width">True</property>
-                <child>
-                  <object class="GtkTreeView" id="TreeViewProfiles">
-                    <property name="width_request">150</property>
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="headers_visible">False</property>
-                    <property name="search_column">1</property>
-                    <property name="activate_on_single_click">True</property>
-                    <signal name="button-press-event" handler="callback_profile_context_menu" swapped="no"/>
-                    <signal name="row-activated" handler="callback_profile_selected" after="yes" swapped="no"/>
-                    <child internal-child="selection">
-                      <object class="GtkTreeSelection" id="treeview-selection6"/>
-                    </child>
-                  </object>
-                </child>
-              </object>
-              <packing>
-                <property name="resize">True</property>
-                <property name="shrink">False</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkGrid" id="grid5">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="margin_left">5</property>
-                <child>
-                  <object class="GtkEntry" id="ProfileEntryName">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="tooltip_text" translatable="yes">Nom du profil</property>
-                    <property name="margin_left">5</property>
-                    <property name="margin_right">5</property>
-                    <property name="margin_top">5</property>
-                    <property name="margin_bottom">5</property>
-                    <property name="placeholder_text" translatable="yes">Nom du profil</property>
-                    <signal name="focus-out-event" handler="callback_profile_name_changed" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkEntry" id="ProfileEntryAddress">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="tooltip_text" translatable="yes">Adresse email</property>
-                    <property name="margin_left">5</property>
-                    <property name="margin_right">5</property>
-                    <property name="margin_top">5</property>
-                    <property name="margin_bottom">5</property>
-                    <property name="placeholder_text" translatable="yes">Adresse email</property>
-                    <signal name="focus-out-event" handler="callback_settings_entry_lose_focus" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">2</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkEntry" id="ProfileEntryPassword">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="tooltip_text" translatable="yes">Mot de passe</property>
-                    <property name="margin_left">5</property>
-                    <property name="margin_right">5</property>
-                    <property name="margin_top">5</property>
-                    <property name="margin_bottom">5</property>
-                    <property name="visibility">False</property>
-                    <property name="invisible_char">●</property>
-                    <property name="placeholder_text" translatable="yes">Mot de passe</property>
-                    <signal name="focus-out-event" handler="callback_settings_entry_lose_focus" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">3</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkEntry" id="ProfileEntryFullName">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="tooltip_text" translatable="yes">Nom complet</property>
-                    <property name="margin_left">5</property>
-                    <property name="margin_right">5</property>
-                    <property name="margin_top">5</property>
-                    <property name="margin_bottom">5</property>
-                    <property name="placeholder_text" translatable="yes">Nom complet</property>
-                    <signal name="focus-out-event" handler="callback_settings_entry_lose_focus" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">1</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkBox" id="box7">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkEntry" id="ProfileEntryReceive">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="tooltip_text" translatable="yes">Serveur de réception (IMAP)</property>
-                        <property name="margin_left">5</property>
-                        <property name="margin_right">5</property>
-                        <property name="margin_top">5</property>
-                        <property name="margin_bottom">5</property>
-                        <property name="placeholder_text" translatable="yes">Serveur de réception (Ex: imap.gmail.com)</property>
-                        <signal name="focus-out-event" handler="callback_settings_entry_lose_focus" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkCheckButton" id="ProfileCheckSSLReceive">
-                        <property name="label" translatable="yes">SSL</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">False</property>
-                        <property name="margin_left">5</property>
-                        <property name="margin_right">5</property>
-                        <property name="margin_top">5</property>
-                        <property name="margin_bottom">5</property>
-                        <property name="draw_indicator">True</property>
-                        <signal name="toggled" handler="callback_profile_setting_checked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">4</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkBox" id="box8">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkEntry" id="ProfileEntrySend">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="tooltip_text" translatable="yes">Serveur d'envoi (SMTP)</property>
-                        <property name="margin_left">5</property>
-                        <property name="margin_right">5</property>
-                        <property name="margin_top">5</property>
-                        <property name="margin_bottom">5</property>
-                        <property name="placeholder_text" translatable="yes">Serveur d'envoi (Ex: smtp.gmail.com)</property>
-                        <signal name="focus-out-event" handler="callback_settings_entry_lose_focus" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkCheckButton" id="ProfileCheckSSLSend">
-                        <property name="label" translatable="yes">SSL</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">False</property>
-                        <property name="margin_left">5</property>
-                        <property name="margin_right">5</property>
-                        <property name="margin_top">5</property>
-                        <property name="margin_bottom">5</property>
-                        <property name="draw_indicator">True</property>
-                        <signal name="toggled" handler="callback_profile_setting_checked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkCheckButton" id="ProfileCheckTLSSend">
-                        <property name="label" translatable="yes">TLS</property>
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="receives_default">False</property>
-                        <property name="margin_left">5</property>
-                        <property name="margin_right">5</property>
-                        <property name="margin_top">5</property>
-                        <property name="margin_bottom">5</property>
-                        <property name="draw_indicator">True</property>
-                        <signal name="toggled" handler="callback_profile_setting_checked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">2</property>
-                      </packing>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">5</property>
-                  </packing>
-                </child>
-              </object>
-              <packing>
-                <property name="resize">True</property>
-                <property name="shrink">False</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-      </object>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-  </object>
   <object class="GtkImage" id="ImageRefresh">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1231,6 +965,7 @@ Louis LAURENT</property>
         <property name="can_focus">False</property>
         <property name="image">ImageFolderCreate</property>
         <property name="use_stock">False</property>
+        <property name="always_show_image">True</property>
         <signal name="activate" handler="callback_browsing_create" swapped="no"/>
       </object>
     </child>
@@ -1241,6 +976,7 @@ Louis LAURENT</property>
         <property name="can_focus">False</property>
         <property name="image">ImageFolderRemove</property>
         <property name="use_stock">False</property>
+        <property name="always_show_image">True</property>
         <signal name="activate" handler="callback_browsing_delete" swapped="no"/>
       </object>
     </child>
@@ -1257,6 +993,7 @@ Louis LAURENT</property>
         <property name="can_focus">False</property>
         <property name="image">ImageRefresh</property>
         <property name="use_stock">False</property>
+        <property name="always_show_image">True</property>
         <signal name="activate" handler="callback_browsing_refresh" swapped="no"/>
       </object>
     </child>
@@ -1312,7 +1049,7 @@ Louis LAURENT</property>
                 <property name="is_important">True</property>
                 <property name="label" translatable="yes">Archiver</property>
                 <property name="use_underline">True</property>
-                <property name="stock_id">gtk-floppy</property>
+                <property name="icon_name">document-save</property>
                 <signal name="clicked" handler="callback_mail_archive_from_view" swapped="no"/>
               </object>
               <packing>
@@ -1587,6 +1324,7 @@ Louis LAURENT</property>
         <property name="can_focus">False</property>
         <property name="image">image1</property>
         <property name="use_stock">False</property>
+        <property name="always_show_image">True</property>
         <signal name="activate" handler="callback_profile_create" swapped="no"/>
       </object>
     </child>
@@ -1603,8 +1341,296 @@ Louis LAURENT</property>
         <property name="can_focus">False</property>
         <property name="image">image2</property>
         <property name="use_stock">False</property>
+        <property name="always_show_image">True</property>
         <signal name="activate" handler="callback_profile_delete" swapped="no"/>
       </object>
+    </child>
+  </object>
+  <object class="GtkImage" id="image3">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-apply</property>
+  </object>
+  <object class="GtkDialog" id="SettingsWindow">
+    <property name="can_focus">False</property>
+    <property name="title" translatable="yes">Préférences</property>
+    <property name="icon_name">preferences-system</property>
+    <property name="type_hint">dialog</property>
+    <property name="transient_for">MainWindow</property>
+    <signal name="delete-event" handler="gtk_widget_hide" swapped="no"/>
+    <child internal-child="vbox">
+      <object class="GtkBox" id="dialog-vbox5">
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <property name="spacing">2</property>
+        <child internal-child="action_area">
+          <object class="GtkButtonBox" id="dialog-action_area5">
+            <property name="can_focus">False</property>
+            <property name="layout_style">end</property>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <object class="GtkButton" id="SettingsButtonOk">
+                <property name="label">Appliquer</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="image">image3</property>
+                <property name="always_show_image">True</property>
+                <signal name="clicked" handler="callback_settings_window_close" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkPaned" id="paned1">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="hexpand">True</property>
+            <property name="position">150</property>
+            <property name="position_set">True</property>
+            <child>
+              <object class="GtkScrolledWindow" id="scrolledwindow5">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="propagate_natural_width">True</property>
+                <child>
+                  <object class="GtkTreeView" id="TreeViewProfiles">
+                    <property name="width_request">150</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="headers_visible">False</property>
+                    <property name="search_column">1</property>
+                    <property name="activate_on_single_click">True</property>
+                    <signal name="button-press-event" handler="callback_profile_context_menu" swapped="no"/>
+                    <signal name="row-activated" handler="callback_profile_selected" after="yes" swapped="no"/>
+                    <child internal-child="selection">
+                      <object class="GtkTreeSelection" id="treeview-selection6"/>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="resize">True</property>
+                <property name="shrink">False</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkGrid" id="grid5">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="margin_left">5</property>
+                <child>
+                  <object class="GtkEntry" id="ProfileEntryName">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="tooltip_text" translatable="yes">Nom du profil</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="placeholder_text" translatable="yes">Nom du profil</property>
+                    <signal name="focus-out-event" handler="callback_profile_name_changed" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="ProfileEntryAddress">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="tooltip_text" translatable="yes">Adresse email</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="placeholder_text" translatable="yes">Adresse email</property>
+                    <signal name="focus-out-event" handler="callback_settings_entry_lose_focus" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="ProfileEntryPassword">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="tooltip_text" translatable="yes">Mot de passe</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="visibility">False</property>
+                    <property name="invisible_char">●</property>
+                    <property name="placeholder_text" translatable="yes">Mot de passe</property>
+                    <signal name="focus-out-event" handler="callback_settings_entry_lose_focus" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">3</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkEntry" id="ProfileEntryFullName">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="tooltip_text" translatable="yes">Nom complet</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="placeholder_text" translatable="yes">Nom complet</property>
+                    <signal name="focus-out-event" handler="callback_settings_entry_lose_focus" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkBox" id="box7">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkEntry" id="ProfileEntryReceive">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="tooltip_text" translatable="yes">Serveur de réception (IMAP)</property>
+                        <property name="margin_left">5</property>
+                        <property name="margin_right">5</property>
+                        <property name="margin_top">5</property>
+                        <property name="margin_bottom">5</property>
+                        <property name="placeholder_text" translatable="yes">Serveur de réception (Ex: imap.gmail.com)</property>
+                        <signal name="focus-out-event" handler="callback_settings_entry_lose_focus" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="ProfileCheckSSLReceive">
+                        <property name="label" translatable="yes">SSL</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="margin_left">5</property>
+                        <property name="margin_right">5</property>
+                        <property name="margin_top">5</property>
+                        <property name="margin_bottom">5</property>
+                        <property name="draw_indicator">True</property>
+                        <signal name="toggled" handler="callback_profile_setting_checked" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">4</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkBox" id="box8">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkEntry" id="ProfileEntrySend">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="tooltip_text" translatable="yes">Serveur d'envoi (SMTP)</property>
+                        <property name="margin_left">5</property>
+                        <property name="margin_right">5</property>
+                        <property name="margin_top">5</property>
+                        <property name="margin_bottom">5</property>
+                        <property name="placeholder_text" translatable="yes">Serveur d'envoi (Ex: smtp.gmail.com)</property>
+                        <signal name="focus-out-event" handler="callback_settings_entry_lose_focus" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="ProfileCheckSSLSend">
+                        <property name="label" translatable="yes">SSL</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="margin_left">5</property>
+                        <property name="margin_right">5</property>
+                        <property name="margin_top">5</property>
+                        <property name="margin_bottom">5</property>
+                        <property name="draw_indicator">True</property>
+                        <signal name="toggled" handler="callback_profile_setting_checked" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="ProfileCheckTLSSend">
+                        <property name="label" translatable="yes">TLS</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="margin_left">5</property>
+                        <property name="margin_right">5</property>
+                        <property name="margin_top">5</property>
+                        <property name="margin_bottom">5</property>
+                        <property name="draw_indicator">True</property>
+                        <signal name="toggled" handler="callback_profile_setting_checked" swapped="no"/>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="left_attach">0</property>
+                    <property name="top_attach">5</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="resize">True</property>
+                <property name="shrink">False</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <child>
+      <placeholder/>
     </child>
   </object>
 </interface>

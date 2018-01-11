@@ -29,8 +29,22 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "F:\Eclipse\git\jumail\Debug\Jumail.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "F:\Eclipse\git\jumail\resources\*"; DestDir: "{app}\resources"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "C:\msys64\mingw64\share\icons\Adwaita\*"; DestDir: "{app}\share\icons\Adwaita"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "F:\Eclipse\git\jumail\resources\MainWindow.glade"; DestDir: "{app}\resources"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "C:\msys64\mingw64\share\icons\Adwaita\16x16\actions\help-about.png"; DestDir: "{app}\share\icons\Adwaita\16x16\actions"; Flags: ignoreversion
+Source: "C:\msys64\mingw64\share\icons\Adwaita\16x16\actions\mail-message-new.png"; DestDir: "{app}\share\icons\Adwaita\16x16\actions"; Flags: ignoreversion
+Source: "C:\msys64\mingw64\share\icons\Adwaita\16x16\actions\document-open.png"; DestDir: "{app}\share\icons\Adwaita\16x16\actions"; Flags: ignoreversion
+Source: "C:\msys64\mingw64\share\icons\Adwaita\24x24\actions\edit-delete.png"; DestDir: "{app}\share\icons\Adwaita\24x24\actions"; Flags: ignoreversion
+Source: "C:\msys64\mingw64\share\icons\Adwaita\24x24\actions\mail-reply-sender.png"; DestDir: "{app}\share\icons\Adwaita\24x24\actions"; Flags: ignoreversion
+Source: "C:\msys64\mingw64\share\icons\Adwaita\16x16\actions\edit-delete.png"; DestDir: "{app}\share\icons\Adwaita\16x16\actions"; Flags: ignoreversion
+Source: "C:\msys64\mingw64\share\icons\Adwaita\24x24\actions\document-save.png"; DestDir: "{app}\share\icons\Adwaita\24x24\actions"; Flags: ignoreversion
+Source: "C:\msys64\mingw64\share\icons\Adwaita\16x16\actions\document-save.png"; DestDir: "{app}\share\icons\Adwaita\16x16\actions"; Flags: ignoreversion
+Source: "C:\msys64\mingw64\share\icons\Adwaita\32x32\actions\mail-mark-unread.png"; DestDir: "{app}\share\icons\Adwaita\32x32\actions"; Flags: ignoreversion
+Source: "C:\msys64\mingw64\share\icons\Adwaita\16x16\actions\view-refresh.png"; DestDir: "{app}\share\icons\Adwaita\16x16\actions"; Flags: ignoreversion
+Source: "C:\msys64\mingw64\share\icons\Adwaita\16x16\actions\folder-new.png"; DestDir: "{app}\share\icons\Adwaita\16x16\actions"; Flags: ignoreversion
+Source: "C:\msys64\mingw64\share\icons\Adwaita\16x16\actions\list-add.png"; DestDir: "{app}\share\icons\Adwaita\16x16\actions"; Flags: ignoreversion
+Source: "C:\msys64\mingw64\share\icons\Adwaita\16x16\actions\go-next.png"; DestDir: "{app}\share\icons\Adwaita\16x16\actions"; Flags: ignoreversion
+Source: "C:\msys64\mingw64\share\icons\Adwaita\16x16\actions\go-previous.png"; DestDir: "{app}\share\icons\Adwaita\16x16\actions"; Flags: ignoreversion
+Source: "C:\msys64\mingw64\share\icons\Adwaita\16x16\actions\application-exit.png"; DestDir: "{app}\share\icons\Adwaita\16x16\actions"; Flags: ignoreversion
 Source: "C:\msys64\mingw64\lib\gdk-pixbuf-2.0\2.10.0\*"; DestDir: "{app}\lib\gdk-pixbuf-2.0\2.10.0"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "C:\msys64\mingw64\bin\*.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "F:\Eclipse\git\jumail\installer\emblem-mail.ico"; DestDir: "{app}";
