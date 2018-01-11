@@ -134,7 +134,7 @@ void callback_profile_setting_checked(GtkToggleButton *togglebutton, gpointer us
 }
 
 //Update the profile name in the list
-void callback_profile_name_changed(GtkEditable *editable, gpointer user_data) { //TODO call on focus out
+void callback_profile_name_changed(GtkWidget *widget, GdkEvent *event, gpointer user_data) {
 	SGlobalData *data = (SGlobalData*) user_data;
 	GtkTreeModel *model;
 	GtkWidget *tree_view;
@@ -150,20 +150,22 @@ void callback_profile_name_changed(GtkEditable *editable, gpointer user_data) { 
 	entry = GTK_ENTRY (gtk_builder_get_object (data->builder, "ProfileEntryName"));
 	selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(tree_view));
 	string = gtk_entry_buffer_get_text(gtk_entry_get_buffer(entry));
-	gtk_tree_selection_get_selected (selection, &model, &iter);
+	gtk_tree_model_get_iter_first(GTK_TREE_MODEL(model), &iter);
+	for(int j = 0 ; j < data->selected_profile_index ; j++)
+		gtk_tree_model_iter_next (GTK_TREE_MODEL(model), &iter);
 
 	if (strlen(string) > 0 && !check_if_name_exists(string)) {
 
 		profile = (Profile*)linkedlist_get(listProfile, data->selected_profile_index);
 
 		previous_name = malloc(strlen(profile->name)+1);
+		strcpy(previous_name, profile->name);
 		profile->name = realloc(profile->name, strlen(string)+1);
 		if(profile->name == NULL || previous_name == NULL) {
 			window_show_error("Une erreur est survenue.\nMémoire insuffisante.", data, "SettingsWindow");
 			return;
 		}
 
-		strcpy(previous_name, profile->name);
 		strcpy(profile->name, string);
 		saveProfile(profile,previous_name);
 		free(previous_name);

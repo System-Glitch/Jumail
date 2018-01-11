@@ -99,7 +99,7 @@ void callback_settings(GtkMenuItem *menuitem, gpointer user_data);
 void callback_profile_toggle(GtkCellRendererToggle *cell_renderer, gchar *path, gpointer user_data);
 void callback_settings_window_close(GtkButton *widget, gpointer user_data);
 void callback_profile_selected(GtkTreeView *tree_view, GtkTreePath *path, GtkTreeViewColumn *column, gpointer user_data);
-void callback_profile_name_changed(GtkEditable *editable, gpointer user_data);
+void callback_profile_name_changed(GtkWidget *widget, GdkEvent *event, gpointer user_data);
 void callback_profile_setting_checked(GtkToggleButton *togglebutton, gpointer user_data);
 void callback_profile_create(GtkMenuItem *menuitem, gpointer user_data);
 void callback_profile_delete(GtkMenuItem *menuitem, gpointer user_data);
@@ -118,5 +118,6 @@ void callback_archived_mail_move(GtkMenuItem *menuitem, gpointer user_data);
 void callback_archived_mail_delete(GtkMenuItem *menuitem, gpointer user_data);
 void callback_mail_view_move_email(GtkButton *widget, gpointer user_data);
 void callback_mail_archive_from_view(GtkMenuItem *menuitem, gpointer user_data);
+gboolean callback_settings_entry_lose_focus(GtkWidget *widget, GdkEvent *event, gpointer user_data);
 
 #endif /* SRC_CALLBACKS_H_ */

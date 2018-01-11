@@ -997,7 +997,7 @@ Louis LAURENT</property>
                     <property name="search_column">1</property>
                     <property name="activate_on_single_click">True</property>
                     <signal name="button-press-event" handler="callback_profile_context_menu" swapped="no"/>
-                    <signal name="row-activated" handler="callback_profile_selected" swapped="no"/>
+                    <signal name="row-activated" handler="callback_profile_selected" after="yes" swapped="no"/>
                     <child internal-child="selection">
                       <object class="GtkTreeSelection" id="treeview-selection6"/>
                     </child>
@@ -1024,7 +1024,7 @@ Louis LAURENT</property>
                     <property name="margin_top">5</property>
                     <property name="margin_bottom">5</property>
                     <property name="placeholder_text" translatable="yes">Nom du profil</property>
-                    <signal name="changed" handler="callback_profile_name_changed" swapped="no"/>
+                    <signal name="focus-out-event" handler="callback_profile_name_changed" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
