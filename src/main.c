@@ -9,6 +9,7 @@
 #include "resources.h"
 
 int main(int argc, char** argv) {
+	putenv ("LANG=fr_FR");
 	return main_window_start(argc, argv);
 }
 
